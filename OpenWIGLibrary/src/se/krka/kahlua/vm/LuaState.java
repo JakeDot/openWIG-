@@ -123,7 +123,7 @@ public class LuaState {
 
 	static final int MAX_INDEX_RECURSION = 100;
 
-	private static final String meta_ops[];
+	private static final String[] meta_ops;
 
 	static {
 		meta_ops = new String[38];
@@ -245,14 +245,12 @@ public class LuaState {
 		return nReturnValues;
 	}
 
-	private final Object prepareMetatableCall(Object o) {
+	private Object prepareMetatableCall(Object o) {
 		if (o instanceof JavaFunction || o instanceof LuaClosure) {
 			return o;
 		}
 
-		Object f = getMetaOp(o, "__call");
-
-		return f;
+        return getMetaOp(o, "__call");
 	}
 
 	private final void luaMainloop() {
@@ -424,7 +422,7 @@ public class LuaState {
 					Double aDouble = BaseLib.rawTonumber(aObj);
 					Object res;
 					if (aDouble != null) {
-						res = toDouble(-fromDouble(aDouble));
+						res = -(double) aDouble;
 					} else {
 						Object metafun = getMetaOp(aObj, "__unm");
 						//BaseLib.luaAssert(metafun != null, "__unm not defined for operand");
@@ -448,10 +446,10 @@ public class LuaState {
 					Object res;
 					if (o instanceof LuaTable) {
 						LuaTable t = (LuaTable) o;
-						res = toDouble(t.len());
+						res = (double) (long) t.len();
 					} else if (o instanceof String) {
 						String s = (String) o;
-						res = toDouble(s.length());
+						res = (double) (long) s.length();
 					} else {
 						Object f = getMetaOp(o, "__len");
 						BaseLib.luaAssert(f != null, "__len not defined for operand");
@@ -534,8 +532,8 @@ public class LuaState {
 					Object co = getRegisterOrConstant(callFrame, c, prototype);
 
 					if (bo instanceof Double && co instanceof Double) {
-						double bd_primitive = fromDouble(bo);
-						double cd_primitive = fromDouble(co);
+						double bd_primitive = (double) (Double) bo;
+						double cd_primitive = (double) (Double) co;
 
 						if (opcode == OP_EQ) {
 							if ((bd_primitive == cd_primitive) == (a == 0)) {
@@ -856,20 +854,20 @@ public class LuaState {
 					a = getA8(op);
 					b = getSBx(op);
 
-					double iter = fromDouble(callFrame.get(a));
-					double step = fromDouble(callFrame.get(a + 2));
-					callFrame.set(a, toDouble(iter - step));
+					double iter = (double) (Double) callFrame.get(a);
+					double step = (double) (Double) callFrame.get(a + 2);
+					callFrame.set(a, Double.valueOf(iter - step));
 					callFrame.pc += b;
 					break;
 				}
 				case OP_FORLOOP: {
 					a = getA8(op);
 
-					double iter = fromDouble(callFrame.get(a));
-					double end = fromDouble(callFrame.get(a + 1));
-					double step = fromDouble(callFrame.get(a + 2));
+					double iter = (double) (Double) callFrame.get(a);
+					double end = (double) (Double) callFrame.get(a + 1);
+					double step = (double) (Double) callFrame.get(a + 2);
 					iter += step;
-					Double iterDouble = toDouble(iter);
+					Double iterDouble = Double.valueOf(iter);
 					callFrame.set(a, iterDouble);
 
 					if ((step > 0) ? iter <= end : iter >= end) {
@@ -916,7 +914,7 @@ public class LuaState {
 
 					LuaTable t = (LuaTable) callFrame.get(a);
 					for (int i = 1; i <= b; i++) {
-						Object key = toDouble(offset + i);
+						Object key = (double) ((long) (offset + i));
 						Object value = callFrame.get(a + i);
 						t.rawset(key, value);
 					}
@@ -1089,8 +1087,8 @@ public class LuaState {
 	}
 
 	private Double primitiveMath(Double x, Double y, int opcode) {
-		double v1 = fromDouble(x);
-		double v2 = fromDouble(y);
+		double v1 = (Double) x;
+		double v2 = (Double) y;
 		double res = 0;
 		switch (opcode) {
 		case OP_ADD:
@@ -1120,7 +1118,7 @@ public class LuaState {
 		default:
 			// this should be unreachable
 		}
-		return toDouble(res);
+		return Double.valueOf(res);
 	}
 
 	public Object call(Object fun, Object arg1, Object arg2, Object arg3) {
@@ -1340,18 +1338,6 @@ public class LuaState {
 			return ad.doubleValue() == bd.doubleValue();
 		}
 		return a == b;
-	}
-
-	public static double fromDouble(Object o) {
-		return ((Double) o).doubleValue();
-	}
-
-	public static Double toDouble(double d) {
-		return new Double(d);
-	}
-
-	public static Double toDouble(long d) {
-		return toDouble((double) d);
 	}
 
 	public static boolean boolEval(Object o) {

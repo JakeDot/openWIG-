@@ -245,8 +245,8 @@ public class Savegame {
 			case LUA_DOUBLE:
 				double d = in.readDouble();
 				if (debug) debug(String.valueOf(d));
-				return LuaState.toDouble(d);
-			case LUA_STRING:
+                return Double.valueOf(d);
+            case LUA_STRING:
 				String s = in.readUTF();
 				if (debug) debug("\"" + s + "\"");
 				return s;

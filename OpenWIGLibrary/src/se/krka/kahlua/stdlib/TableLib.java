@@ -123,7 +123,7 @@ public final class TableLib implements JavaFunction {
 				buffer.append(separator);
 			}
 
-			Double key = LuaState.toDouble(i);
+            Double key = (Double) (double) (long) i;
 			Object value = table.rawget(key);
 			buffer.append(BaseLib.rawTostring(value));
 		}
@@ -137,34 +137,34 @@ public final class TableLib implements JavaFunction {
 
 	public static void append(LuaState state, LuaTable table, Object element) {
 		int position = 1 + table.len();
-		state.tableSet(table, LuaState.toDouble(position), element);
+        state.tableSet(table, (double) (long) position, element);
 	}
 
 	public static void rawappend(LuaTable table, Object element) {
 		int position = 1 + table.len();
-		table.rawset(LuaState.toDouble(position), element);
+        table.rawset((double) (long) position, element);
 	}
 
 	public static void insert(LuaState state, LuaTable table, int position, Object element) {
 		int len = table.len();
 		for (int i = len; i >= position; i--) {
-			state.tableSet(table, LuaState.toDouble(i+1), state.tableGet(table, LuaState.toDouble(i)));
+            state.tableSet(table, (double) ((long) (i + 1)), state.tableGet(table, (double) (long) i));
 		}
-		state.tableSet(table, LuaState.toDouble(position), element);
+        state.tableSet(table, (double) (long) position, element);
 	}
 
 	public static void rawinsert(LuaTable table, int position, Object element) {
 		int len = table.len();
 		if (position <= len) {
-			Double dest = LuaState.toDouble(len + 1);
+            Double dest = (Double) (double) ((long) (len + 1));
 			for (int i = len; i >= position; i--) {
-				Double src = LuaState.toDouble(i);
+                Double src = (Double) (double) (long) i;
 				table.rawset(dest, table.rawget(src));
 				dest = src;
 			}
 			table.rawset(dest, element);
 		} else {
-			table.rawset(LuaState.toDouble(position), element);
+            table.rawset((double) (long) position, element);
 		}
 	}
 
@@ -188,20 +188,20 @@ public final class TableLib implements JavaFunction {
 	}
 	
 	public static Object remove (LuaState state, LuaTable table, int position) {
-		Object ret = state.tableGet(table, LuaState.toDouble(position));
+        Object ret = state.tableGet(table, (double) (long) position);
 		int len = table.len();
 		for (int i = position; i < len; i++) {
-			state.tableSet(table, LuaState.toDouble(i), state.tableGet(table, LuaState.toDouble(i+1)));
+            state.tableSet(table, (double) (long) i, state.tableGet(table, (double) ((long) (i + 1))));
 		}
-		state.tableSet(table, LuaState.toDouble(len), null);
+        state.tableSet(table, (double) (long) len, null);
 		return ret;
 	}
 
 	public static Object rawremove (LuaTable table, int position) {
-		Object ret = table.rawget(LuaState.toDouble(position));
+        Object ret = table.rawget((double) (long) position);
 		int len = table.len();
 		for (int i = position; i <= len; i++) {
-			table.rawset(LuaState.toDouble(i), table.rawget(LuaState.toDouble(i+1)));
+            table.rawset((double) (long) i, table.rawget((double) ((long) (i + 1))));
 		}
 		return ret;
 	}
@@ -250,11 +250,11 @@ public final class TableLib implements JavaFunction {
 		int max = 0;
 		while ((key = t.next(key)) != null) {
 			if (key instanceof Double) {
-				int what = (int)LuaState.fromDouble(key);
+				int what = (int) (double) (Double) key;
 				if (what > max) max = what;
 			}
 		}
-		callFrame.push(LuaState.toDouble(max));
+        callFrame.push((double) (long) max);
 		return 1;
 	}
 

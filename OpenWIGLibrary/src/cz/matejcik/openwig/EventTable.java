@@ -33,16 +33,6 @@ public class EventTable implements LuaTable, Serializable {
 		metatable.rawset("__tostring", new TostringJavaFunc(this));
 	}
 
-	public void serialize (DataOutputStream out) throws IOException {
-		Engine.instance.savegame.storeValue(table, out);
-	}
-
-	public void deserialize (DataInputStream in) throws IOException {
-		isDeserializing = true;
-		Engine.instance.savegame.restoreValue(in, this);
-		isDeserializing = false;
-		//setTable(table);
-	}
 
 	public String name, description;
 	public ZonePoint position = null;
@@ -89,12 +79,12 @@ public class EventTable implements LuaTable, Serializable {
 
 	protected Object getItem (String key) {
 		if ("CurrentDistance".equals(key)) {
-			if (isLocated()) return LuaState.toDouble(position.distance(Engine.instance.player.position));
-			else return LuaState.toDouble(-1);
+			if (isLocated()) return Double.valueOf(position.distance(Engine.instance.player.position));
+			else return (double) (long) -1;
 		} else if ("CurrentBearing".equals(key)) {
 			if (isLocated())
-				return LuaState.toDouble(ZonePoint.angle2azimuth(position.bearing(Engine.instance.player.position)));
-			else return LuaState.toDouble(0);
+                return Double.valueOf(ZonePoint.angle2azimuth(position.bearing(Engine.instance.player.position)));
+			else return (double) (long) 0;
 		} else return table.rawget(key);
 	}
 

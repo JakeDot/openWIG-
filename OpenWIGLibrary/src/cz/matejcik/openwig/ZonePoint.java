@@ -175,20 +175,20 @@ public class ZonePoint implements LuaTable, Serializable {
 		if (key == null) return;
 		String name = key.toString();
 		if ("latitude".equals(name))
-			latitude = LuaState.fromDouble(value);
+			latitude = (double) (Double) value;
 		else if ("longitude".equals(name))
-			longitude = LuaState.fromDouble(value);
+			longitude = (double) (Double) value;
 		else if ("altitude".equals(name)) {
-			altitude = LuaState.fromDouble(value);
+			altitude = (double) (Double) value;
 		}
 	}
 
 	public Object rawget (Object key) {
 		if (key == null) return null;
 		String name = key.toString();
-		if ("latitude".equals(name)) return LuaState.toDouble(latitude);
-		if ("longitude".equals(name)) return LuaState.toDouble(longitude);
-		if ("altitude".equals(name)) return LuaState.toDouble(altitude);
+		if ("latitude".equals(name)) return Double.valueOf(latitude);
+		if ("longitude".equals(name)) return Double.valueOf(longitude);
+		if ("altitude".equals(name)) return Double.valueOf(altitude);
 		return null;
 	}
 

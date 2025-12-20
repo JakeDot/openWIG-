@@ -22,13 +22,23 @@
 
 package se.krka.kahlua.vm;
 
-public interface LuaTable {
-	void setMetatable(LuaTable metatable);
-	LuaTable getMetatable();
+import java.util.Map;
+
+public interface LuaTable<K,V> extends Iterable<Map.Entry<K,V>> {
+	default void setMetatable(LuaTable<? extends K, ? extends V> metatable) {
+        for (Map.Entry<? extends K, ? extends V> e : metatable) {
+            rawset(e);
+        }
+    }
+	LuaTable<K, V> getMetatable();
 	
-	void rawset(Object key, Object value);
-	Object rawget(Object key);
+	<T extends K> void rawset(T key, V value);
+	<T extends K> V rawget(T key);
 	
-	Object next(Object key);
+	V next(K key);
 	int len();
+
+    default <T extends K, U extends V> void rawset(Map.Entry<T,U> entry) {
+        rawset((K) entry.getKey(), entry.getValue());
+    }
 }

@@ -302,13 +302,13 @@ public final class BaseLib implements JavaFunction {
 
         int i, j;
         if (di != null) {
-        	i = (int) LuaState.fromDouble(di);
+			i = (int) (double) (Double) di;
         } else {
         	i = 1;
         }
 
         if (dj != null) {
-        	j = (int) LuaState.fromDouble(dj);
+			j = (int) (double) (Double) dj;
         } else {
         	j = t.len();
         }
@@ -322,7 +322,7 @@ public final class BaseLib implements JavaFunction {
 
         callFrame.setTop(nReturnValues);
         for (int b = 0; b < nReturnValues; b++) {
-        	callFrame.set(b, t.rawget(LuaState.toDouble((i + b))));
+			callFrame.set(b, t.rawget((double) (long) (i + b)));
         }
         return nReturnValues;
 	}
@@ -366,12 +366,12 @@ public final class BaseLib implements JavaFunction {
 		Object arg1 = callFrame.get(0);
 		if (arg1 instanceof String) {
 			if (((String) arg1).startsWith("#")) {
-				callFrame.push(LuaState.toDouble(nArguments - 1));
+				callFrame.push((double) ((long) (nArguments - 1)));
 				return 1;
 			}
 		}
 		Double d_indexDouble = rawTonumber(arg1);
-		double d_index = LuaState.fromDouble(d_indexDouble);
+		double d_index = (Double) d_indexDouble;
 		int index = (int) d_index;
 		if (index >= 1 && index <= (nArguments - 1)) {
 			int nResults = nArguments - index;
@@ -590,7 +590,7 @@ public final class BaseLib implements JavaFunction {
 		Double radixDouble = rawTonumber(radixObj);
 		luaAssert(radixDouble != null, "Argument 2 must be a number");
 
-		double dradix = LuaState.fromDouble(radixDouble);
+		double dradix = (Double) radixDouble;
 		int radix = (int) dradix;
 		if (radix != dradix) {
 			throw new RuntimeException("base is not an integer");
@@ -613,19 +613,19 @@ public final class BaseLib implements JavaFunction {
 			if (radix == 10) {
 				return Double.valueOf(s);
 			} else {
-				return LuaState.toDouble(Integer.parseInt(s, radix));
+				return (double) (long) Integer.parseInt(s, radix);
 			}
 		} catch (NumberFormatException e) {
 			s = s.toLowerCase();
 			if (s.endsWith("nan")) {
-				return LuaState.toDouble(Double.NaN);
-			}
+                return Double.valueOf(Double.NaN);
+            }
 			if (s.endsWith("inf")) {
 				if (s.charAt(0) == '-') {
-					return LuaState.toDouble(Double.NEGATIVE_INFINITY);
-				}
-				return LuaState.toDouble(Double.POSITIVE_INFINITY);
-			}
+                    return Double.valueOf(Double.NEGATIVE_INFINITY);
+                }
+                return Double.valueOf(Double.POSITIVE_INFINITY);
+            }
 			return null;
 		}
 	}
@@ -654,8 +654,8 @@ public final class BaseLib implements JavaFunction {
 	}
 
 	private static Double toKiloBytes(long freeMemory) {
-		return LuaState.toDouble((freeMemory) / 1024.0);
-	}
+        return Double.valueOf((freeMemory) / 1024.0);
+    }
 
 	public static String rawTostring(Object o) {
 		if (o instanceof String) {

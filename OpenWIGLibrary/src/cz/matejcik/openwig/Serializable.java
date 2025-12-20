@@ -5,6 +5,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 public interface Serializable {
-	public void serialize (DataOutputStream out) throws IOException;
-	public void deserialize (DataInputStream in) throws IOException;
+
+    default void serialize (DataOutputStream out) throws IOException {
+        Engine.instance.savegame.storeValue(this, out);
+    }
+
+    default void deserialize (DataInputStream in) throws IOException {
+        Engine.instance.savegame.restoreValue(in, this);
+    }
 }

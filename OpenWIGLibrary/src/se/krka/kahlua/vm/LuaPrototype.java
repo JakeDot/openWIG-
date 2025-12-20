@@ -95,7 +95,7 @@ public final class LuaPrototype {
 				if (littleEndian) {
 					bits = rev(bits);
 				}
-				o = LuaState.toDouble(Double.longBitsToDouble(bits));
+                o = Double.valueOf(Double.longBitsToDouble(bits));
 				break;
 			case 4:
 				o = readLuaString(in, size_t, littleEndian);

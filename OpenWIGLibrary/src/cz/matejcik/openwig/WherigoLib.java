@@ -264,10 +264,10 @@ public class WherigoLib implements JavaFunction {
 			callFrame.push(new ZonePoint());
 		} else {
 			BaseLib.luaAssert(nArguments >= 2, "insufficient arguments for ZonePoint");
-			double a = LuaState.fromDouble(callFrame.get(0));
-			double b = LuaState.fromDouble(callFrame.get(1));
+			double a = (double) (Double) callFrame.get(0);
+			double b = (double) (Double) callFrame.get(1);
 			double c = 0;
-			if (nArguments > 2) c = LuaState.fromDouble(callFrame.get(2));
+			if (nArguments > 2) c = (double) (Double) callFrame.get(2);
 			callFrame.push(new ZonePoint(a,b,c));
 		}
 		return 1;
@@ -280,10 +280,10 @@ public class WherigoLib implements JavaFunction {
 	 * that as a double.
 	 */
 	private int distance (LuaCallFrame callFrame, int nArguments) {
-		double a = LuaState.fromDouble(callFrame.get(0));
+		double a = (double) (Double) callFrame.get(0);
 		String b = (String)callFrame.get(1);
 		double dist = ZonePoint.convertDistanceFrom(a, b);
-		callFrame.push(LuaState.toDouble(dist));
+        callFrame.push(Double.valueOf(dist));
 		return 1;
 	}
 	
@@ -294,10 +294,10 @@ public class WherigoLib implements JavaFunction {
 	 * and returns as double.
 	 */
 	private int distanceGetValue (LuaCallFrame callFrame, int nArguments) {
-		double a = LuaState.fromDouble(callFrame.get(0));
+		double a = (double) (Double) callFrame.get(0);
 		String b = (String)callFrame.get(1);
 		double dist = ZonePoint.convertDistanceTo(a, b);
-		callFrame.push(LuaState.toDouble(dist));
+        callFrame.push(Double.valueOf(dist));
 		return 1;
 	}
 	
@@ -337,7 +337,7 @@ public class WherigoLib implements JavaFunction {
 	}
 	
 	private int showscreen (LuaCallFrame callFrame, int nArguments) {
-		int screen = (int)LuaState.fromDouble(callFrame.get(0));
+		int screen = (int) (double) (Double) callFrame.get(0);
 		EventTable et = null;
 		if (nArguments > 1) {
 			Object o = callFrame.get(1);
@@ -351,8 +351,8 @@ public class WherigoLib implements JavaFunction {
 	private int translatePoint (LuaCallFrame callFrame, int nArguments) {
 		BaseLib.luaAssert(nArguments >= 3, "insufficient arguments for TranslatePoint");
 		ZonePoint z = (ZonePoint)callFrame.get(0);
-		double dist = LuaState.fromDouble(callFrame.get(1));
-		double angle = LuaState.fromDouble(callFrame.get(2));
+		double dist = (double) (Double) callFrame.get(1);
+		double angle = (double) (Double) callFrame.get(2);
 		callFrame.push(z.translate(angle, dist));
 		return 1;
 	}
@@ -363,8 +363,8 @@ public class WherigoLib implements JavaFunction {
 		ZonePoint b = (ZonePoint)callFrame.get(1);
 		double bearing = ZonePoint.angle2azimuth(b.bearing(a));
 		double distance = b.distance(a);
-		callFrame.push(LuaState.toDouble(distance));
-		callFrame.push(LuaState.toDouble(bearing));
+        callFrame.push(Double.valueOf(distance));
+        callFrame.push(Double.valueOf(bearing));
 		return 2;
 	}
 

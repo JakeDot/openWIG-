@@ -709,11 +709,11 @@ public final class StringLib implements JavaFunction {
 		}
 		double di2 = 1;
 		if (di != null) {
-			di2 = LuaState.fromDouble(di);
+			di2 = (Double) di;
 		}
 		double dj2 = di2;
 		if (dj != null) {
-			dj2 = LuaState.fromDouble(dj);
+			dj2 = (Double) dj;
 		}
 
 		int ii = (int) di2, ij = (int) dj2;
@@ -982,7 +982,7 @@ public final class StringLib implements JavaFunction {
 			// do a plain search
 			int pos = source.indexOf(pattern, init);
 			if ( pos > -1 ) {
-				return callFrame.push(LuaState.toDouble(pos + 1), LuaState.toDouble(pos + pattern.length()));
+                return callFrame.push((double) ((long) (pos + 1)), (double) ((long) (pos + pattern.length())));
 			}
 		} else {
 			StringPointer s = new StringPointer(source);

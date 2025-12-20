@@ -72,7 +72,7 @@ public class Player extends Thing {
 		position.latitude = Engine.gps.getLatitude();
 		position.longitude = Engine.gps.getLongitude();
 		position.altitude = Engine.gps.getAltitude();
-		table.rawset("PositionAccuracy", LuaState.toDouble(Engine.gps.getPrecision()));
+        table.rawset("PositionAccuracy", Double.valueOf(Engine.gps.getPrecision()));
 		Engine.instance.cartridge.walk(position);
 	}
 

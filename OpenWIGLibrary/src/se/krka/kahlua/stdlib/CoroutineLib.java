@@ -43,7 +43,7 @@ public class CoroutineLib implements JavaFunction {
 	private static final String[] names;
 	
 	// NOTE: LuaThread.class won't work in J2ME - so this is used as a workaround
-	private static final Class LUA_THREAD_CLASS = new LuaThread(null, null).getClass();
+	private static final Class LUA_THREAD_CLASS = LuaThread.class;
 	
 	static {
 		names = new String[NUM_FUNCTIONS];
@@ -83,17 +83,14 @@ public class CoroutineLib implements JavaFunction {
 	}
 	
 	public int call(LuaCallFrame callFrame, int nArguments) {
-		switch (index) {
-		case CREATE: return create(callFrame, nArguments);
-		case YIELD: return yield(callFrame, nArguments);
-		case RESUME: return resume(callFrame, nArguments);
-		case STATUS: return status(callFrame, nArguments);
-		case RUNNING: return running(callFrame, nArguments);
-		default:
-			// Should never happen
-			// throw new Error("Illegal function object");
-			return 0;
-		}
+		return switch (index) {
+		case CREATE -> create(callFrame, nArguments);
+		case YIELD -> CoroutineLib.yield(callFrame, nArguments);
+		case RESUME -> resume(callFrame, nArguments);
+		case STATUS -> status(callFrame, nArguments);
+		case RUNNING -> running(callFrame, nArguments);
+		default -> 0;
+		};
 	}
 
 	private int running(LuaCallFrame callFrame, int nArguments) {

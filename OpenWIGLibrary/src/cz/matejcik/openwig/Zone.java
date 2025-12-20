@@ -82,14 +82,14 @@ public class Zone extends Thing {
 			if (a != visible) callEvent("OnZoneState", null);
 			visible = a;
 		} else if ("DistanceRange".equals(key) && value instanceof Double) {
-			distanceRange = LuaState.fromDouble(value);
+            distanceRange = (double) (Double) value;
 			preprocess();
 			if (distanceRange < 0 && contain == NOWHERE) {
 				contain = ncontain = DISTANT;
 			}
 		} else if ("ProximityRange".equals(key) && value instanceof Double) {
 			preprocess();
-			proximityRange = LuaState.fromDouble(value);
+            proximityRange = (double) (Double) value;
 		} else if ("ShowObjects".equals(key)) {
 			String v = (String)value;
 			if ("Always".equals(v)) {
