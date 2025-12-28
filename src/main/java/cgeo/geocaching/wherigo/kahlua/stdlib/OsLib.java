@@ -36,15 +36,10 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
-public class OsLib implements JavaFunction {
-    private static final int DATE = 0;
-    private static final int DIFFTIME = 1;
-    private static final int TIME = 2;
-
-    private static final int NUM_FUNCS = 3;
-
-    private static String[] funcnames;
-    private static OsLib[] funcs;
+public enum OsLib implements JavaFunction {
+    DATE("date"),
+    DIFFTIME("difftime"),
+    TIME("time");
 
     private static final String TABLE_FORMAT = "*t";
     private static final String DEFAULT_FORMAT = "%c";
@@ -67,7 +62,7 @@ public class OsLib implements JavaFunction {
     private static final int MILLIS_PER_DAY = TIME_DIVIDEND * 60 * 60 * 24;
     private static final int MILLIS_PER_WEEK = MILLIS_PER_DAY * 7;
 
-    private int methodId;
+    private final String name;
 
     private static String[] shortDayNames = new String[] {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
@@ -86,24 +81,16 @@ public class OsLib implements JavaFunction {
         "July", "August", "September", "October", "November", "December"
     };
 
-    static {
-        funcnames = new String[NUM_FUNCS];
-        funcnames[DATE] = "date";
-        funcnames[DIFFTIME] = "difftime";
-        funcnames[TIME] = "time";
-
-        funcs = new OsLib[NUM_FUNCS];
-        for (int i = 0; i < NUM_FUNCS; i++) {
-            funcs[i] = new OsLib(i);
-        }
+    OsLib(String name) {
+        this.name = name;
     }
 
     public static void register(LuaState state) {
         LuaTable os = new LuaTableImpl();
         state.getEnvironment().rawset("os", os);
 
-        for (int i = 0; i < NUM_FUNCS; i++) {
-            os.rawset(funcnames[i], funcs[i]);
+        for (OsLib func : OsLib.values()) {
+            os.rawset(func.name, func);
         }
     }
 
@@ -111,20 +98,16 @@ public class OsLib implements JavaFunction {
         tzone = tz;
     }
 
-    private OsLib(int methodId) {
-        this.methodId = methodId;
-    }
-
+    @Override
     public int call(LuaCallFrame cf, int nargs) {
-        return switch (methodId) {
+        return switch (this) {
             case DATE -> date(cf, nargs);
             case DIFFTIME -> difftime(cf);
             case TIME -> time(cf, nargs);
-            default -> throw new IllegalStateException("Undefined method called on os.");
         };
     }
 
-    private int time(LuaCallFrame cf, int nargs) {
+    static int time(LuaCallFrame cf, int nargs) {
         if (nargs == 0) {
             double t = (double) System.currentTimeMillis() * TIME_DIVIDEND_INVERTED;
             cf.push(LuaState.toDouble(t));
@@ -136,14 +119,14 @@ public class OsLib implements JavaFunction {
         return 1;
     }
 
-    private int difftime(LuaCallFrame cf) {
+    static int difftime(LuaCallFrame cf) {
         double t2 = BaseLib.rawTonumber(cf.get(0)).doubleValue();
         double t1 = BaseLib.rawTonumber(cf.get(1)).doubleValue();
         cf.push(LuaState.toDouble(t2-t1));
         return 1;
     }
 
-    private int date(LuaCallFrame cf, int nargs) {
+    static int date(LuaCallFrame cf, int nargs) {
         if (nargs == 0) {
             return cf.push(getdate(DEFAULT_FORMAT));
         } else {

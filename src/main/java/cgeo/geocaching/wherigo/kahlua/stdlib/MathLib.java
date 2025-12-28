@@ -33,105 +33,60 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
-public final class MathLib implements JavaFunction {
+public enum MathLib implements JavaFunction {
+    ABS("abs"),
+    ACOS("acos"),
+    ASIN("asin"),
+    ATAN("atan"),
+    ATAN2("atan2"),
+    CEIL("ceil"),
+    COS("cos"),
+    COSH("cosh"),
+    DEG("deg"),
+    EXP("exp"),
+    FLOOR("floor"),
+    FMOD("fmod"),
+    FREXP("frexp"),
+    LDEXP("ldexp"),
+    LOG("log"),
+    LOG10("log10"),
+    MODF("modf"),
+    POW("pow"),
+    RAD("rad"),
+    RANDOM("random"),
+    RANDOMSEED("randomseed"),
+    SIN("sin"),
+    SINH("sinh"),
+    SQRT("sqrt"),
+    TAN("tan"),
+    TANH("tanh");
 
-    private static final int ABS = 0;
-    private static final int ACOS = 1;
-    private static final int ASIN = 2;
-    private static final int ATAN = 3;
-    private static final int ATAN2 = 4;
-    private static final int CEIL = 5;
-    private static final int COS = 6;
-    private static final int COSH = 7;
-    private static final int DEG = 8;
-    private static final int EXP = 9;
-    private static final int FLOOR = 10;
-    private static final int FMOD = 11;
-    private static final int FREXP = 12;
-    private static final int LDEXP = 13;
-    private static final int LOG = 14;
-    private static final int LOG10 = 15;
-    private static final int MODF = 16;
-    private static final int POW = 17;
-    private static final int RAD = 18;
-    private static final int RANDOM = 19;
-    private static final int RANDOMSEED = 20;
-    private static final int SIN = 21;
-    private static final int SINH = 22;
-    private static final int SQRT = 23;
-    private static final int TAN = 24;
-    private static final int TANH = 25;
+    private final String name;
 
-    private static final int NUM_FUNCTIONS = 26;
-
-    private static String[] names;
-    static {
-    names = new String[NUM_FUNCTIONS];
-    names[ABS] = "abs";
-    names[ACOS] = "acos";
-    names[ASIN] = "asin";
-    names[ATAN] = "atan";
-    names[ATAN2] = "atan2";
-    names[CEIL] = "ceil";
-    names[COS] = "cos";
-    names[COSH] = "cosh";
-    names[DEG] = "deg";
-    names[EXP] = "exp";
-    names[FLOOR] = "floor";
-    names[FMOD] = "fmod";
-    names[FREXP] = "frexp";
-    names[LDEXP] = "ldexp";
-    names[LOG] = "log";
-    names[LOG10] = "log10";
-    names[MODF] = "modf";
-    names[POW] = "pow";
-    names[RAD] = "rad";
-    names[RANDOM] = "random";
-    names[RANDOMSEED] = "randomseed";
-    names[SIN] = "sin";
-    names[SINH] = "sinh";
-    names[SQRT] = "sqrt";
-    names[TAN] = "tan";
-    names[TANH] = "tanh";
+    MathLib(String name) {
+        this.name = name;
     }
-
-    private int index;
-    private static MathLib[] functions;
-
-    public MathLib(int index) {
-        this.index = index;
-    }
-
 
     public static void register(LuaState state) {
-        initFunctions();
         LuaTable math = new LuaTableImpl();
         state.getEnvironment().rawset("math", math);
 
         math.rawset("pi", LuaState.toDouble(Math.PI));
         math.rawset("huge", LuaState.toDouble(Double.POSITIVE_INFINITY));
 
-        for (int i = 0; i < NUM_FUNCTIONS; i++) {
-            math.rawset(names[i], functions[i]);
+        for (MathLib func : MathLib.values()) {
+            math.rawset(func.name, func);
         }
     }
 
-
-    private static synchronized void initFunctions() {
-        if (functions == null) {
-            functions = new MathLib[NUM_FUNCTIONS];
-            for (int i = 0; i < NUM_FUNCTIONS; i++) {
-                functions[i] = new MathLib(i);
-            }
-        }
-    }
-
+    @Override
     public String toString() {
-        return "math." + names[index];
+        return "math." + name;
     }
 
+    @Override
     public int call(LuaCallFrame callFrame, int nArguments) {
-        return switch (index) {
+        return switch (this) {
             case ABS -> abs(callFrame, nArguments);
             case ACOS -> acos(callFrame, nArguments);
             case ASIN -> asin(callFrame, nArguments);
@@ -158,7 +113,6 @@ public final class MathLib implements JavaFunction {
             case SQRT -> sqrt(callFrame, nArguments);
             case TAN -> tan(callFrame, nArguments);
             case TANH -> tanh(callFrame, nArguments);
-            default -> 0;
         };
     }
 
@@ -294,7 +248,7 @@ public final class MathLib implements JavaFunction {
 
     // Random functions
 
-    private int random(LuaCallFrame callFrame, int nArguments) {
+    static int random(LuaCallFrame callFrame, int nArguments) {
         Random random = callFrame.thread.state.random;
         if (nArguments == 0) {
             callFrame.push(LuaState.toDouble(random.nextDouble()));
@@ -316,7 +270,7 @@ public final class MathLib implements JavaFunction {
         return 1;
     }
 
-    private int randomseed(LuaCallFrame callFrame, int nArguments) {
+    static int randomseed(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
         Object o = callFrame.get(0);
         if (o != null) {
