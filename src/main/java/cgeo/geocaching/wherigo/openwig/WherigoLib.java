@@ -14,62 +14,36 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import cgeo.geocaching.wherigo.kahlua.stdlib.BaseLib;
 
-public class WherigoLib implements JavaFunction {
+public enum WherigoLib implements JavaFunction {
+    COMMAND("Command"),
+    ZONEPOINT("ZonePoint"),
+    DISTANCE("Distance"),
+    CARTRIDGE("ZCartridge"),
+    MESSAGEBOX("MessageBox"),
+    ZONE("Zone"),
+    DIALOG("Dialog"),
+    ZCHARACTER("ZCharacter"),
+    ZITEM("ZItem"),
+    ZCOMMAND("ZCommand"),
+    ZMEDIA("ZMedia"),
+    ZINPUT("ZInput"),
+    ZTIMER("ZTimer"),
+    ZTASK("ZTask"),
+    AUDIO("PlayAudio"),
+    GETINPUT("GetInput"),
+    NOCASEEQUALS("NoCaseEquals"),
+    SHOWSCREEN("ShowScreen"),
+    TRANSLATEPOINT("TranslatePoint"),
+    SHOWSTATUSTEXT("ShowStatusText"),
+    VECTORTOPOINT("VectorToPoint"),
+    LOGMESSAGE("LogMessage"),
+    MADE("made"),
+    GETVALUE("GetValue");
 
-    private static final int COMMAND = 0; // Wherigo.Command
-    private static final int ZONEPOINT = 1;
-    private static final int DISTANCE = 2;
-    private static final int CARTRIDGE = 3;
-    private static final int MESSAGEBOX = 4;
-    private static final int ZONE = 5;
-    private static final int DIALOG = 6;
-    private static final int ZCHARACTER = 7;
-    private static final int ZITEM = 8;
-    private static final int ZCOMMAND = 9;
-    private static final int ZMEDIA = 10;
-    private static final int ZINPUT = 11;
-    private static final int ZTIMER = 12;
-    private static final int ZTASK = 13;
-    private static final int AUDIO = 14;
-    private static final int GETINPUT = 15;
-    private static final int NOCASEEQUALS = 16;
-    private static final int SHOWSCREEN = 17;
-    private static final int TRANSLATEPOINT = 18;
-    private static final int SHOWSTATUSTEXT = 19;
-    private static final int VECTORTOPOINT = 20;
-    private static final int LOGMESSAGE = 21;
-    private static final int MADE = 22;
-    private static final int GETVALUE = 23;
+    private final String name;
 
-    private static final int NUM_FUNCTIONS = 24;
-
-    private static final String[] names;
-    static {
-        names = new String[NUM_FUNCTIONS];
-        names[ZONEPOINT] = "ZonePoint";
-        names[DISTANCE] = "Distance";
-        names[CARTRIDGE] = "ZCartridge";
-        names[MESSAGEBOX] = "MessageBox";
-        names[ZONE] = "Zone";
-        names[DIALOG] = "Dialog";
-        names[ZCHARACTER] = "ZCharacter";
-        names[ZITEM] = "ZItem";
-        names[ZCOMMAND] = "ZCommand";
-        names[ZMEDIA] = "ZMedia";
-        names[ZINPUT] = "ZInput";
-        names[ZTIMER] = "ZTimer";
-        names[ZTASK] = "ZTask";
-        names[AUDIO] = "PlayAudio";
-        names[GETINPUT] = "GetInput";
-        names[NOCASEEQUALS] = "NoCaseEquals";
-        names[SHOWSCREEN] = "ShowScreen";
-        names[TRANSLATEPOINT] = "TranslatePoint";
-        names[SHOWSTATUSTEXT] = "ShowStatusText";
-        names[VECTORTOPOINT] = "VectorToPoint";
-        names[COMMAND] = "Command";
-        names[LOGMESSAGE] = "LogMessage";
-        names[MADE] = "made";
-        names[GETVALUE] = "GetValue";
+    WherigoLib(String name) {
+        this.name = name;
     }
 
     public static final Hashtable env = new Hashtable(); /* Wherigo's Env table */
@@ -88,20 +62,11 @@ public class WherigoLib implements JavaFunction {
         env.put("Downloaded", new Double(0));
     }
 
-    private int index;
-    private Class klass;
-
-    private static WherigoLib[] functions;
-    static {
-        functions = new WherigoLib[NUM_FUNCTIONS];
-        for (int i = 0; i < NUM_FUNCTIONS; i++) {
-            functions[i] = new WherigoLib(i);
-        }
-    }
+    private final Class klass = assignClass();
 
     private Class<?> assignClass () {
         // because i'm too lazy to type out the break;s in a switch
-        return switch (index) {
+        return switch (this) {
             case DISTANCE -> Double.class;
             case ZONEPOINT -> ZonePoint.class;
             case ZONE -> Zone.class;
@@ -116,11 +81,6 @@ public class WherigoLib implements JavaFunction {
         };
     }
 
-    public WherigoLib(int index) {
-        this.index = index;
-        this.klass = assignClass();
-    }
-
     public static void register(LuaState state) {
 
         if (env.get(DEVICE_ID) == null) throw new IllegalStateException("set your DeviceID! WherigoLib.env.put(WherigoLib.DEVICE_ID, \"some value\")");
@@ -129,15 +89,15 @@ public class WherigoLib implements JavaFunction {
 
         LuaTable wig = new LuaTableImpl();
         environment.rawset("Wherigo", wig);
-        for (int i = 0; i < NUM_FUNCTIONS; i++) {
-            Engine.instance.savegame.addJavafunc(functions[i]);
-            wig.rawset(names[i], functions[i]);
+        for (WherigoLib function : WherigoLib.values()) {
+            Engine.instance.savegame.addJavafunc(function);
+            wig.rawset(function.name, function);
         }
 
         LuaTable distanceMetatable = new LuaTableImpl();
         distanceMetatable.rawset("__index", distanceMetatable);
-        distanceMetatable.rawset("__call", functions[GETVALUE]);
-        distanceMetatable.rawset(names[GETVALUE], functions[GETVALUE]);
+        distanceMetatable.rawset("__call", GETVALUE);
+        distanceMetatable.rawset(GETVALUE.name, GETVALUE);
         state.setClassMetatable(Double.class, distanceMetatable);
 
         state.setClassMetatable(WherigoLib.class, wig);
@@ -175,13 +135,14 @@ public class WherigoLib implements JavaFunction {
         Media.reset();
     }
 
+    @Override
     public String toString() {
-        return names[index];
+        return name;
     }
 
-
+    @Override
     public int call(LuaCallFrame callFrame, int nArguments) {
-        return switch (index) {
+        return switch (this) {
             case MADE -> made(callFrame, nArguments);
 
             // special constructors:

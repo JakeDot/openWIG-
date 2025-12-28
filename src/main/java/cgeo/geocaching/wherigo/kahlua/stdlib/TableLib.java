@@ -31,66 +31,54 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
-public final class TableLib implements JavaFunction {
+public enum TableLib implements JavaFunction {
+    CONCAT("concat") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return concat(callFrame, nArguments);
+        }
+    },
+    INSERT("insert") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return insert(callFrame, nArguments);
+        }
+    },
+    REMOVE("remove") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return remove(callFrame, nArguments);
+        }
+    },
+    MAXN("maxn") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return maxn(callFrame, nArguments);
+        }
+    };
 
-    private static final int CONCAT = 0;
-    private static final int INSERT = 1;
-    private static final int REMOVE = 2;
-    private static final int MAXN = 3;
-    private static final int NUM_FUNCTIONS = 4;
+    private final String name;
 
-    private static final String[] names;
-    private static TableLib[] functions;
-
-    static {
-        names = new String[NUM_FUNCTIONS];
-        names[CONCAT] = "concat";
-        names[INSERT] = "insert";
-        names[REMOVE] = "remove";
-        names[MAXN] = "maxn";
+    TableLib(String name) {
+        this.name = name;
     }
 
-    private int index;
-
-    public TableLib (int index) {
-        this.index = index;
-    }
-
-    public static void register (LuaState state) {
-        initFunctions();
+    public static void register(LuaState state) {
         LuaTable table = new LuaTableImpl();
         state.getEnvironment().rawset("table", table);
 
-        for (int i = 0; i < NUM_FUNCTIONS; i++) {
-            table.rawset(names[i], functions[i]);
+        for (TableLib function : TableLib.values()) {
+            table.rawset(function.name, function);
         }
     }
 
-    private static synchronized void initFunctions () {
-        if (functions == null) {
-            functions = new TableLib[NUM_FUNCTIONS];
-            for (int i = 0; i < NUM_FUNCTIONS; i++) {
-                functions[i] = new TableLib(i);
-            }
-        }
+    @Override
+    public String toString() {
+        return "table." + name;
     }
 
-    public String toString () {
-        if (index < names.length) {
-            return "table." + names[index];
-        }
-        return super.toString();
-    }
-
-    public int call (LuaCallFrame callFrame, int nArguments) {
-        return switch (index) {
-            case CONCAT -> concat(callFrame, nArguments);
-            case INSERT -> insert(callFrame, nArguments);
-            case REMOVE -> remove(callFrame, nArguments);
-            case MAXN -> maxn(callFrame, nArguments);
-            default -> 0;
-        };
-    }
+    @Override
+    public abstract int call(LuaCallFrame callFrame, int nArguments);
 
     private static int concat (LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "expected table, got no arguments");

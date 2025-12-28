@@ -33,20 +33,67 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
-public final class StringLib implements JavaFunction {
-
-    private static final int SUB = 0;
-    private static final int CHAR = 1;
-    private static final int BYTE = 2;
-    private static final int LOWER = 3;
-    private static final int UPPER = 4;
-    private static final int REVERSE = 5;
-    private static final int FORMAT = 6;
-    private static final int FIND = 7;
-    private static final int MATCH = 8;
-    private static final int GSUB = 9;
-
-    private static final int NUM_FUNCTIONS = 10;
+public enum StringLib implements JavaFunction {
+    SUB("sub") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return sub(callFrame, nArguments);
+        }
+    },
+    CHAR("char") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return stringChar(callFrame, nArguments);
+        }
+    },
+    BYTE("byte") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return stringByte(callFrame, nArguments);
+        }
+    },
+    LOWER("lower") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return lower(callFrame, nArguments);
+        }
+    },
+    UPPER("upper") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return upper(callFrame, nArguments);
+        }
+    },
+    REVERSE("reverse") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return reverse(callFrame, nArguments);
+        }
+    },
+    FORMAT("format") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return format(callFrame);
+        }
+    },
+    FIND("find") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return findAux(callFrame, true);
+        }
+    },
+    MATCH("match") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return findAux(callFrame, false);
+        }
+    },
+    GSUB("gsub") {
+        @Override
+        public int call(LuaCallFrame callFrame, int nArguments) {
+            return gsub(callFrame);
+        }
+    };
 
     private static final boolean[] SPECIALS = new boolean[256];
     static {
@@ -61,70 +108,37 @@ public final class StringLib implements JavaFunction {
     private static final int CAP_UNFINISHED = ( -1 );
     private static final int CAP_POSITION = ( -2 );
 
-    private static final String[] names;
-    private static StringLib[] functions;
-
     // NOTE: String.class won't work in J2ME - so this is used as a workaround
     public static final Class STRING_CLASS = "".getClass();
 
     private static final char[] digits = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
-    static {
-        names = new String[NUM_FUNCTIONS];
-        names[SUB] = "sub";
-        names[CHAR] = "char";
-        names[BYTE] = "byte";
-        names[LOWER] = "lower";
-        names[UPPER] = "upper";
-        names[REVERSE] = "reverse";
-        names[FORMAT] = "format";
-        names[FIND] = "find";
-        names[MATCH] = "match";
-        names[GSUB] = "gsub";
+    private final String name;
 
-        functions = new StringLib[NUM_FUNCTIONS];
-        for (int i = 0; i < NUM_FUNCTIONS; i++) {
-            functions[i] = new StringLib(i);
-        }
-    }
-
-    private int methodId;
-    public StringLib(int index) {
-        this.methodId = index;
+    StringLib(String name) {
+        this.name = name;
     }
 
     public static void register(LuaState state) {
         LuaTable string = new LuaTableImpl();
         state.getEnvironment().rawset("string", string);
-        for (int i = 0; i < NUM_FUNCTIONS; i++) {
-            string.rawset(names[i], functions[i]);
+        for (StringLib function : StringLib.values()) {
+            string.rawset(function.name, function);
         }
 
         string.rawset("__index", string);
         state.setClassMetatable(STRING_CLASS, string);
     }
 
+    @Override
     public String toString() {
-        return names[methodId];
+        return name;
     }
 
-    public int call(LuaCallFrame callFrame, int nArguments)  {
-        return switch (methodId) {
-            case SUB -> sub(callFrame, nArguments);
-            case CHAR -> stringChar(callFrame, nArguments);
-            case BYTE -> stringByte(callFrame, nArguments);
-            case LOWER -> lower(callFrame, nArguments);
-            case UPPER -> upper(callFrame, nArguments);
-            case REVERSE -> reverse(callFrame, nArguments);
-            case FORMAT -> format(callFrame);
-            case FIND -> findAux(callFrame, true);
-            case MATCH -> findAux(callFrame, false);
-            case GSUB -> gsub(callFrame);
-            default -> 0; // Should never happen.
-        };
-    }
+    @Override
+    public abstract int call(LuaCallFrame callFrame, int nArguments);
 
-    private long unsigned(long vv) {
+    static long unsigned(long vv) {
         long v = vv;
         if (v < 0L) {
             v += (1L << 32);
@@ -133,7 +147,7 @@ public final class StringLib implements JavaFunction {
     }
 
     @SuppressWarnings({"PMD.NPathComplexity", "PMD.ExcessiveMethodLength"})
-    private int format(LuaCallFrame callFrame) {
+    static int format(LuaCallFrame callFrame) {
         String f = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, names[FORMAT]);
 
         int len = f.length();
@@ -488,13 +502,13 @@ public final class StringLib implements JavaFunction {
         return 1;
     }
 
-    private void append(StringBuffer buffer, String s, int start, int end) {
+    static void append(StringBuffer buffer, String s, int start, int end) {
         for (int i = start; i < end; i++) {
             buffer.append(s.charAt(i));
         }
     }
 
-    private void extend(StringBuffer buffer, int extraWidth, char padCharacter) {
+    static void extend(StringBuffer buffer, int extraWidth, char padCharacter) {
         int preLength = buffer.length();
         buffer.setLength(preLength + extraWidth);
         for (int i = extraWidth - 1; i >= 0; i--) {
@@ -502,7 +516,7 @@ public final class StringLib implements JavaFunction {
         }
     }
 
-    private void stringBufferUpperCase(StringBuffer buffer, int start) {
+    static void stringBufferUpperCase(StringBuffer buffer, int start) {
         int length = buffer.length();
         for (int i = start; i < length; i++) {
             char c = buffer.charAt(i);
@@ -552,7 +566,7 @@ public final class StringLib implements JavaFunction {
     /**
      * Only works with non-negative numbers
      */
-    private void appendPrecisionNumber(StringBuffer buffer, double pNumber, int precision, boolean requirePeriod) {
+    static void appendPrecisionNumber(StringBuffer buffer, double pNumber, int precision, boolean requirePeriod) {
         double number = MathLib.roundToPrecision(pNumber, precision);
         double iPart = Math.floor(number);
         double fPart = number - iPart;
@@ -574,7 +588,7 @@ public final class StringLib implements JavaFunction {
     /**
      * Only works with non-negative numbers
      */
-    private void appendSignificantNumber(StringBuffer buffer, double number, int pSignificantDecimals, boolean includeTrailingZeros) {
+    static void appendSignificantNumber(StringBuffer buffer, double number, int pSignificantDecimals, boolean includeTrailingZeros) {
         int significantDecimals = pSignificantDecimals;
         double iPart = Math.floor(number);
 
@@ -621,7 +635,7 @@ public final class StringLib implements JavaFunction {
         }
     }
 
-    private void appendScientificNumber(StringBuffer buffer, double xx, int precision, boolean repr, boolean useSignificantNumbers) {
+    static void appendScientificNumber(StringBuffer buffer, double xx, int precision, boolean repr, boolean useSignificantNumbers) {
         int exponent = 0;
         double x = xx;
 
@@ -657,23 +671,23 @@ public final class StringLib implements JavaFunction {
         stringBufferAppend(buffer, absExponent, 10, true, 2);
     }
 
-    private String getStringArg(LuaCallFrame callFrame, int argc) {
+    static String getStringArg(LuaCallFrame callFrame, int argc) {
         return getStringArg(callFrame, argc, names[FORMAT]);
     }
 
-    private String getStringArg(LuaCallFrame callFrame, int argc, String funcname) {
+    static String getStringArg(LuaCallFrame callFrame, int argc, String funcname) {
         return (String) BaseLib.getArg(callFrame, argc, BaseLib.TYPE_STRING, funcname);
     }
 
-    private Double getDoubleArg(LuaCallFrame callFrame, int argc) {
+    static Double getDoubleArg(LuaCallFrame callFrame, int argc) {
         return getDoubleArg(callFrame, argc, names[FORMAT]);
     }
 
-    private Double getDoubleArg(LuaCallFrame callFrame, int argc, String funcname) {
+    static Double getDoubleArg(LuaCallFrame callFrame, int argc, String funcname) {
         return (Double)BaseLib.getArg(callFrame, argc, BaseLib.TYPE_NUMBER, funcname);
     }
 
-    private int lower(LuaCallFrame callFrame, int nArguments) {
+    static int lower(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
         String s = getStringArg(callFrame,1,names[LOWER]);
 
@@ -681,7 +695,7 @@ public final class StringLib implements JavaFunction {
         return 1;
     }
 
-    private int upper(LuaCallFrame callFrame, int nArguments) {
+    static int upper(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
         String s = getStringArg(callFrame,1,names[UPPER]);
 
@@ -689,7 +703,7 @@ public final class StringLib implements JavaFunction {
         return 1;
     }
 
-    private int reverse(LuaCallFrame callFrame, int nArguments) {
+    static int reverse(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
         String s = getStringArg(callFrame, 1, names[REVERSE]);
         s = new StringBuffer(s).reverse().toString();
@@ -698,7 +712,7 @@ public final class StringLib implements JavaFunction {
     }
 
     @SuppressWarnings({"PMD.NPathComplexity", "PMD.ExcessiveMethodLength"})
-    private int stringByte(LuaCallFrame callFrame, int nArguments) {
+    static int stringByte(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
         String s = getStringArg(callFrame, 1, names[BYTE]);
 
@@ -748,7 +762,7 @@ public final class StringLib implements JavaFunction {
         return nReturns;
     }
 
-    private int stringChar(LuaCallFrame callFrame, int nArguments) {
+    static int stringChar(LuaCallFrame callFrame, int nArguments) {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < nArguments; i++) {
             int num = getDoubleArg(callFrame, i + 1, names[CHAR]).intValue();
@@ -757,7 +771,7 @@ public final class StringLib implements JavaFunction {
         return callFrame.push(sb.toString());
     }
 
-    private int sub(LuaCallFrame callFrame, int nArguments) {
+    static int sub(LuaCallFrame callFrame, int nArguments) {
         String s = getStringArg(callFrame, 1, names[SUB]);
         double start = getDoubleArg(callFrame, 2, names[SUB]).doubleValue();
         double end = -1;
