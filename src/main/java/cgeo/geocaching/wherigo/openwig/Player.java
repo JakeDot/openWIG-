@@ -88,6 +88,7 @@ public class Player extends Thing {
 
     protected String luaTostring () { return "a Player instance"; }
 
+    @Override
     public void deserialize (DataInputStream in)
     throws IOException {
         super.deserialize(in);

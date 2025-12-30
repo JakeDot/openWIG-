@@ -44,7 +44,7 @@ import java.util.Iterator;
  *
  * @see LuaTableImpl
  */
-public class EventTable extends LuaTableImpl {
+public class EventTable extends LuaTableImpl implements Serializable {
 
     private boolean isDeserializing = false;
 
@@ -71,19 +71,10 @@ public class EventTable extends LuaTableImpl {
         super.setMetatable(metatable);
     }
 
-    public void serialize (DataOutputStream out) throws IOException {
-        Engine currentEngine = Engine.getCurrentInstance();
-        if (currentEngine != null) {
-            currentEngine.savegame.storeValue(this, out);
-        }
-    }
-
+    @Override
     public void deserialize (DataInputStream in) throws IOException {
         isDeserializing = true;
-        Engine currentEngine = Engine.getCurrentInstance();
-        if (currentEngine != null) {
-            currentEngine.savegame.restoreValue(in, this);
-        }
+        Engine.instance.savegame.restoreValue(in, this);
         isDeserializing = false;
         //setTable(table);
     }
@@ -165,14 +156,11 @@ public class EventTable extends LuaTableImpl {
      */
     protected Object getItem (String key) {
         if ("CurrentDistance".equals(key)) {
-            Engine currentEngine = Engine.getCurrentInstance();
-            if (isLocated() && currentEngine != null && currentEngine.player != null) 
-                return LuaState.toDouble(position.distance(currentEngine.player.position));
+            if (isLocated()) return LuaState.toDouble(position.distance(Engine.instance.player.position));
             else return LuaState.toDouble(-1);
         } else if ("CurrentBearing".equals(key)) {
-            Engine currentEngine = Engine.getCurrentInstance();
-            if (isLocated() && currentEngine != null && currentEngine.player != null)
-                return LuaState.toDouble(ZonePoint.angle2azimuth(position.bearing(currentEngine.player.position)));
+            if (isLocated())
+                return LuaState.toDouble(ZonePoint.angle2azimuth(position.bearing(Engine.instance.player.position)));
             else return LuaState.toDouble(0);
         } else return this.rawget(key);
     }
@@ -213,12 +201,10 @@ public class EventTable extends LuaTableImpl {
 
         try {
             Object o = this.rawget(name);
-            if (o instanceof LuaClosure event) {
+            if (o instanceof LuaClosure) {
                 Engine.log("EVNT: " + toString() + "." + name + (param!=null ? " (" + param.toString() + ")" : ""), Engine.LOG_CALL);
-                Engine currentEngine = Engine.getCurrentInstance();
-                if (currentEngine != null) {
-                    currentEngine.luaState.call(event, this, param, null);
-                }
+                LuaClosure event = (LuaClosure) o;
+                Engine.state.call(event, this, param, null);
                 Engine.log("EEND: " + toString() + "." + name, Engine.LOG_CALL);
             }
         } catch (Throwable t) {
@@ -245,8 +231,8 @@ public class EventTable extends LuaTableImpl {
     @Override
     public void rawset(Object key, Object value) {
         // TODO unify rawset/setItem
-        if (key instanceof String s) {
-            setItem(s, value);
+        if (key instanceof String) {
+            setItem((String) key, value);
         }
         super.rawset(key, value);
         Engine.log("PROP: " + toString() + "." + key + " is set to " + (value == null ? "nil" : value.toString()), Engine.LOG_PROP);

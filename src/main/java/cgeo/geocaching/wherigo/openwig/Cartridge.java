@@ -156,6 +156,7 @@ public class Cartridge extends EventTable {
         else if (o instanceof Thing t) things.addElement(t);
     }
 
+    @Override
     public void deserialize (DataInputStream in)
     throws IOException {
         super.deserialize(in);

@@ -386,12 +386,14 @@ public class Zone extends Thing {
         } else return super.contains(t);
     }
 
+    @Override
     public void serialize (DataOutputStream out) throws IOException {
         out.writeInt(contain);
         out.writeInt(ncontain);
         super.serialize(out);
     }
 
+    @Override
     public void deserialize (DataInputStream in) throws IOException {
         contain = in.readInt();
         ncontain = in.readInt();

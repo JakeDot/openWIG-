@@ -39,11 +39,13 @@ public class Thing extends Container {
         // for serialization
     }
 
+    @Override
     public void serialize (DataOutputStream out) throws IOException {
         out.writeBoolean(character);
         super.serialize(out);
     }
 
+    @Override
     public void deserialize (DataInputStream in) throws IOException {
         character = in.readBoolean();
         super.deserialize(in);

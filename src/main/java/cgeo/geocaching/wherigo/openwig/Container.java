@@ -112,6 +112,7 @@ public class Container extends EventTable {
         else return super.rawget(key);
     }
 
+    @Override
     public void deserialize (DataInputStream in)
     throws IOException {
         super.deserialize(in);
