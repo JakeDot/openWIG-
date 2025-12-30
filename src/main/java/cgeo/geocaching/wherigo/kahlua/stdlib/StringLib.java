@@ -98,7 +98,6 @@ public enum StringLib implements JavaFunction {
             case FIND -> findAux(callFrame, true);
             case MATCH -> findAux(callFrame, false);
             case GSUB -> gsub(callFrame);
-            default -> throw new AssertionError(this);
         };
     }
 

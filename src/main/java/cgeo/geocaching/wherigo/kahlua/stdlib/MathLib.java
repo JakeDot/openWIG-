@@ -113,7 +113,6 @@ public enum MathLib implements JavaFunction {
             case SQRT -> sqrt(callFrame, nArguments);
             case TAN -> tan(callFrame, nArguments);
             case TANH -> tanh(callFrame, nArguments);
-            default -> throw new AssertionError(this);
         };
     }
 
