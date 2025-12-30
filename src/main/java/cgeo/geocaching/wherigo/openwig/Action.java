@@ -50,7 +50,7 @@ public class Action extends EventTable {
         this.table = table; // XXX deep copy needed?
         Object o = null;
         while ((o = table.next(o)) != null) {
-            if (o instanceof String) setItem((String)o, table.rawget(o));
+            if (o instanceof String s) setItem(s, table.rawget(o));
         }
     }
 
@@ -130,8 +130,7 @@ public class Action extends EventTable {
         Object key = null;
         while ((key = where.inventory.next(key)) != null) {
             Object o = where.inventory.rawget(key);
-            if (!(o instanceof Thing)) continue;
-            Thing t = (Thing)o;
+            if (!(o instanceof Thing t)) continue;
             if (t.isVisible() && (targets.contains(t) || isUniversal())) count++;
         }
         return count;
@@ -142,8 +141,7 @@ public class Action extends EventTable {
         Object key = null;
         while ((key = v.next(key)) != null) {
             Object o = v.rawget(key);
-            if (!(o instanceof Thing)) continue;
-            Thing t = (Thing)o;
+            if (!(o instanceof Thing t)) continue;
             if (t.isVisible() && (targets.contains(t) || isUniversal())) count++;
         }
         return count;
