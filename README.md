@@ -14,6 +14,7 @@ Wherigo is a platform for creating and playing location-based games. OpenWIG is 
 - Event-driven architecture
 - Media playback (images, audio)
 - Task and inventory management
+- **NEW:** Parallel cartridge execution - run multiple cartridges simultaneously
 
 ## Requirements
 
@@ -149,6 +150,33 @@ engine.store();
 // Load saved game:
 engine.restore(); // instead of engine.start()
 ```
+
+## Parallel Cartridge Execution
+
+OpenWIG now supports running multiple cartridges simultaneously on different threads. This is useful for:
+- Testing multiple scenarios
+- Running background cartridges
+- Multi-user applications
+
+### Basic Parallel Execution
+
+```java
+// Create engines for multiple cartridges
+Engine engine1 = new Engine(cartridge1, log1, ui1, gps1);
+Engine engine2 = new Engine(cartridge2, log2, ui2, gps2);
+
+// Run on separate threads
+ExecutorService executor = Executors.newFixedThreadPool(2);
+executor.submit(() -> engine1.start());
+executor.submit(() -> engine2.start());
+```
+
+**Important:**
+- Each engine must have its own UI and LocationService instance
+- Engines must run on separate threads
+- Static methods automatically resolve to the current thread's engine
+
+For detailed information, see [PARALLEL_EXECUTION.md](PARALLEL_EXECUTION.md).
 
 ## API Documentation
 
