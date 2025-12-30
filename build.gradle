@@ -1,3 +1,19 @@
+// first of all the buildscript block, then the plugins block
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // Android Gradle Plugin
+        classpath 'com.android.tools.build:gradle:8.2.2'
+    }
+}
+
+plugins {
+    id 'maven-publish'
+}
+
 apply plugin: 'com.android.library'
 
 android {

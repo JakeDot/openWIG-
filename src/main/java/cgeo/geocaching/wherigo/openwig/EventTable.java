@@ -44,7 +44,7 @@ import java.util.Iterator;
  * 
  * @see LuaTableImpl
  */
-public class EventTable extends LuaTableImpl {
+public class EventTable extends LuaTableImpl implements Serializable {
 
     private boolean isDeserializing = false;
 
@@ -71,6 +71,7 @@ public class EventTable extends LuaTableImpl {
         super.setMetatable(metatable);
     }
 
+    @Override
     public void serialize (DataOutputStream out) throws IOException {
         Engine currentEngine = Engine.getCurrentInstance();
         if (currentEngine != null) {
@@ -78,6 +79,7 @@ public class EventTable extends LuaTableImpl {
         }
     }
 
+    @Override
     public void deserialize (DataInputStream in) throws IOException {
         isDeserializing = true;
         Engine currentEngine = Engine.getCurrentInstance();
@@ -215,6 +217,7 @@ public class EventTable extends LuaTableImpl {
             Object o = this.rawget(name);
             if (o instanceof LuaClosure event) {
                 Engine.log("EVNT: " + toString() + "." + name + (param!=null ? " (" + param.toString() + ")" : ""), Engine.LOG_CALL);
+                LuaClosure event = (LuaClosure) o;
                 Engine currentEngine = Engine.getCurrentInstance();
                 if (currentEngine != null) {
                     currentEngine.luaState.call(event, this, param, null);
