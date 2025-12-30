@@ -221,7 +221,7 @@ public class EventTable extends LuaTableImpl {
 
     @NonNull
     @Override
-    public String toString ()  {
+    public String toString () {
         return baseToString(this) + BaseLib.luaTableToString(this, value ->
             value instanceof EventTable ? baseToString((EventTable) value) : null);
     }
