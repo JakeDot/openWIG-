@@ -61,6 +61,14 @@ public enum MathLib implements JavaFunction {
     TAN("tan"),
     TANH("tanh");
 
+    // Array mapping enum constants to their names for error messages
+    private static final String[] names = new String[values().length];
+    static {
+        for (MathLib lib : values()) {
+            names[lib.ordinal()] = lib.name;
+        }
+    }
+
     private final String name;
 
     MathLib(String name) {
@@ -123,14 +131,14 @@ public enum MathLib implements JavaFunction {
     // Generic math functions
     private static int abs(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[ABS]);
+        double x = getDoubleArg(callFrame,1,names[ABS.ordinal()]);
         callFrame.push(LuaState.toDouble(Math.abs(x)));
         return 1;
     }
 
     private static int ceil(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x =getDoubleArg(callFrame,1,names[CEIL]);
+        double x =getDoubleArg(callFrame,1,names[CEIL.ordinal()]);
         callFrame.push(LuaState.toDouble(Math.ceil(x)));
         return 1;
     }
@@ -138,7 +146,7 @@ public enum MathLib implements JavaFunction {
 
     private static int floor(LuaCallFrame callFrame, int nArguments)  {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[FLOOR]);
+        double x = getDoubleArg(callFrame,1,names[FLOOR.ordinal()]);
         callFrame.push(LuaState.toDouble(Math.floor(x)));
         return 1;
     }
@@ -197,7 +205,7 @@ public enum MathLib implements JavaFunction {
 
     private static int modf(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[MODF]);
+        double x = getDoubleArg(callFrame,1,names[MODF.ordinal()]);
 
         boolean negate = false;
         if (MathLib.isNegative(x)) {
@@ -221,8 +229,8 @@ public enum MathLib implements JavaFunction {
 
     private static int fmod(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 2, "Not enough arguments");
-        double v1 = getDoubleArg(callFrame,1,names[FMOD]);
-        double v2 = getDoubleArg(callFrame,2,names[FMOD]);
+        double v1 = getDoubleArg(callFrame,1,names[FMOD.ordinal()]);
+        double v2 = getDoubleArg(callFrame,2,names[FMOD.ordinal()]);
 
         double res;
         if (Double.isInfinite(v1) || Double.isNaN(v1)) {
@@ -255,14 +263,14 @@ public enum MathLib implements JavaFunction {
             return 1;
         }
 
-        double tmp = getDoubleArg(callFrame,1,names[RANDOM]);
+        double tmp = getDoubleArg(callFrame,1,names[RANDOM.ordinal()]);
         int m = (int) tmp;
         int n;
         if (nArguments == 1) {
             n = m;
             m = 1;
         } else {
-            tmp = getDoubleArg(callFrame,2,names[RANDOM]);
+            tmp = getDoubleArg(callFrame,2,names[RANDOM.ordinal()]);
             n = (int) tmp;
         }
         callFrame.push(LuaState.toDouble(m + random.nextInt(n - m + 1)));
@@ -283,7 +291,7 @@ public enum MathLib implements JavaFunction {
 
     private static int cosh(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[COSH]);
+        double x = getDoubleArg(callFrame,1,names[COSH.ordinal()]);
 
         double exp_x = exp(x);
         double res = (exp_x + 1 / exp_x) * 0.5;
@@ -294,7 +302,7 @@ public enum MathLib implements JavaFunction {
 
     private static int sinh(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[SINH]);
+        double x = getDoubleArg(callFrame,1,names[SINH.ordinal()]);
 
         double exp_x = exp(x);
         double res = (exp_x - 1 / exp_x) * 0.5;
@@ -305,7 +313,7 @@ public enum MathLib implements JavaFunction {
 
     private static int tanh(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[TANH]);
+        double x = getDoubleArg(callFrame,1,names[TANH.ordinal()]);
 
         double exp_x = exp(2 * x);
         double res = (exp_x - 1) / (exp_x + 1);
@@ -317,43 +325,43 @@ public enum MathLib implements JavaFunction {
     // Trig functions
     private static int deg(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[DEG]);
+        double x = getDoubleArg(callFrame,1,names[DEG.ordinal()]);
         callFrame.push(LuaState.toDouble(Math.toDegrees(x)));
         return 1;
     }
 
     private static int rad(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[RAD]);
+        double x = getDoubleArg(callFrame,1,names[RAD.ordinal()]);
         callFrame.push(LuaState.toDouble(Math.toRadians(x)));
         return 1;
     }
 
     private static int acos(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[ACOS]);
+        double x = getDoubleArg(callFrame,1,names[ACOS.ordinal()]);
         callFrame.push(LuaState.toDouble(acos(x)));
         return 1;
     }
 
     private static int asin(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[ASIN]);
+        double x = getDoubleArg(callFrame,1,names[ASIN.ordinal()]);
         callFrame.push(LuaState.toDouble(asin(x)));
         return 1;
     }
 
     private static int atan(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[ATAN]);
+        double x = getDoubleArg(callFrame,1,names[ATAN.ordinal()]);
         callFrame.push(LuaState.toDouble(atan(x)));
         return 1;
     }
 
     private static int atan2(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 2, "Not enough arguments");
-        double y = getDoubleArg(callFrame,1,names[ATAN2]);
-        double x = getDoubleArg(callFrame,2,names[ATAN2]);
+        double y = getDoubleArg(callFrame,1,names[ATAN2.ordinal()]);
+        double x = getDoubleArg(callFrame,2,names[ATAN2.ordinal()]);
         callFrame.push(LuaState.toDouble(atan2(y, x)));
         return 1;
     }
@@ -361,21 +369,21 @@ public enum MathLib implements JavaFunction {
 
     private static int cos(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[COS]);
+        double x = getDoubleArg(callFrame,1,names[COS.ordinal()]);
         callFrame.push(LuaState.toDouble(Math.cos(x)));
         return 1;
     }
 
     private static int sin(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[SIN]);
+        double x = getDoubleArg(callFrame,1,names[SIN.ordinal()]);
         callFrame.push(LuaState.toDouble(Math.sin(x)));
         return 1;
     }
 
     private static int tan(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[TAN]);
+        double x = getDoubleArg(callFrame,1,names[TAN.ordinal()]);
         callFrame.push(LuaState.toDouble(Math.tan(x)));
         return 1;
     }
@@ -383,29 +391,29 @@ public enum MathLib implements JavaFunction {
     // Power functions
     private static int sqrt(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[SQRT]);
+        double x = getDoubleArg(callFrame,1,names[SQRT.ordinal()]);
         callFrame.push(LuaState.toDouble(Math.sqrt(x)));
         return 1;
     }
 
     private static int exp(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[EXP]);
+        double x = getDoubleArg(callFrame,1,names[EXP.ordinal()]);
         callFrame.push(LuaState.toDouble(exp(x)));
         return 1;
     }
 
     private static int pow(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 2, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[POW]);
-        double y = getDoubleArg(callFrame,2,names[POW]);
+        double x = getDoubleArg(callFrame,1,names[POW.ordinal()]);
+        double y = getDoubleArg(callFrame,2,names[POW.ordinal()]);
         callFrame.push(LuaState.toDouble(pow(x, y)));
         return 1;
     }
 
     private static int log(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[LOG]);
+        double x = getDoubleArg(callFrame,1,names[LOG.ordinal()]);
         callFrame.push(LuaState.toDouble(ln(x)));
         return 1;
     }
@@ -414,7 +422,7 @@ public enum MathLib implements JavaFunction {
 
     private static int log10(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[LOG10]);
+        double x = getDoubleArg(callFrame,1,names[LOG10.ordinal()]);
         callFrame.push(LuaState.toDouble(ln(x) * LN10_INV));
         return 1;
     }
@@ -424,7 +432,7 @@ public enum MathLib implements JavaFunction {
 
     private static int frexp(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "Not enough arguments");
-        double x = getDoubleArg(callFrame,1,names[FREXP]);
+        double x = getDoubleArg(callFrame,1,names[FREXP.ordinal()]);
 
         double e, m;
         if (Double.isInfinite(x) || Double.isNaN(x)) {
@@ -441,8 +449,8 @@ public enum MathLib implements JavaFunction {
 
     private static int ldexp(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 2, "Not enough arguments");
-        double m = getDoubleArg(callFrame,1,names[LDEXP]);
-        double dE = getDoubleArg(callFrame,2,names[LDEXP]);
+        double m = getDoubleArg(callFrame,1,names[LDEXP.ordinal()]);
+        double dE = getDoubleArg(callFrame,2,names[LDEXP.ordinal()]);
 
         double ret;
         double tmp = m + dE;
