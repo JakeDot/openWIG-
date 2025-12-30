@@ -34,66 +34,16 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
 public enum StringLib implements JavaFunction {
-    SUB("sub") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return sub(callFrame, nArguments);
-        }
-    },
-    CHAR("char") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return stringChar(callFrame, nArguments);
-        }
-    },
-    BYTE("byte") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return stringByte(callFrame, nArguments);
-        }
-    },
-    LOWER("lower") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return lower(callFrame, nArguments);
-        }
-    },
-    UPPER("upper") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return upper(callFrame, nArguments);
-        }
-    },
-    REVERSE("reverse") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return reverse(callFrame, nArguments);
-        }
-    },
-    FORMAT("format") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return format(callFrame);
-        }
-    },
-    FIND("find") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return findAux(callFrame, true);
-        }
-    },
-    MATCH("match") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return findAux(callFrame, false);
-        }
-    },
-    GSUB("gsub") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return gsub(callFrame);
-        }
-    };
+    SUB("sub"),
+    CHAR("char"),
+    BYTE("byte"),
+    LOWER("lower"),
+    UPPER("upper"),
+    REVERSE("reverse"),
+    FORMAT("format"),
+    FIND("find"),
+    MATCH("match"),
+    GSUB("gsub");
 
     private static final boolean[] SPECIALS = new boolean[256];
     static {
@@ -136,7 +86,21 @@ public enum StringLib implements JavaFunction {
     }
 
     @Override
-    public abstract int call(LuaCallFrame callFrame, int nArguments);
+    public int call(LuaCallFrame callFrame, int nArguments) {
+        return switch (this) {
+            case SUB -> sub(callFrame, nArguments);
+            case CHAR -> stringChar(callFrame, nArguments);
+            case BYTE -> stringByte(callFrame, nArguments);
+            case LOWER -> lower(callFrame, nArguments);
+            case UPPER -> upper(callFrame, nArguments);
+            case REVERSE -> reverse(callFrame, nArguments);
+            case FORMAT -> format(callFrame);
+            case FIND -> findAux(callFrame, true);
+            case MATCH -> findAux(callFrame, false);
+            case GSUB -> gsub(callFrame);
+            default -> throw new AssertionError(this);
+        };
+    }
 
     static long unsigned(long vv) {
         long v = vv;
@@ -148,7 +112,7 @@ public enum StringLib implements JavaFunction {
 
     @SuppressWarnings({"PMD.NPathComplexity", "PMD.ExcessiveMethodLength"})
     static int format(LuaCallFrame callFrame) {
-        String f = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, names[FORMAT]);
+        String f = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, FORMAT.name);
 
         int len = f.length();
         int argc = 2;
@@ -672,7 +636,7 @@ public enum StringLib implements JavaFunction {
     }
 
     static String getStringArg(LuaCallFrame callFrame, int argc) {
-        return getStringArg(callFrame, argc, names[FORMAT]);
+        return getStringArg(callFrame, argc, FORMAT.name);
     }
 
     static String getStringArg(LuaCallFrame callFrame, int argc, String funcname) {
@@ -680,7 +644,7 @@ public enum StringLib implements JavaFunction {
     }
 
     static Double getDoubleArg(LuaCallFrame callFrame, int argc) {
-        return getDoubleArg(callFrame, argc, names[FORMAT]);
+        return getDoubleArg(callFrame, argc, FORMAT.name);
     }
 
     static Double getDoubleArg(LuaCallFrame callFrame, int argc, String funcname) {
@@ -689,7 +653,7 @@ public enum StringLib implements JavaFunction {
 
     static int lower(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-        String s = getStringArg(callFrame,1,names[LOWER]);
+        String s = getStringArg(callFrame,1,LOWER.name);
 
         callFrame.push(s.toLowerCase(Locale.getDefault()));
         return 1;
@@ -697,7 +661,7 @@ public enum StringLib implements JavaFunction {
 
     static int upper(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-        String s = getStringArg(callFrame,1,names[UPPER]);
+        String s = getStringArg(callFrame,1,UPPER.name);
 
         callFrame.push(s.toUpperCase(Locale.getDefault()));
         return 1;
@@ -705,7 +669,7 @@ public enum StringLib implements JavaFunction {
 
     static int reverse(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-        String s = getStringArg(callFrame, 1, names[REVERSE]);
+        String s = getStringArg(callFrame, 1, REVERSE.name);
         s = new StringBuffer(s).reverse().toString();
         callFrame.push(s);
         return 1;
@@ -714,14 +678,14 @@ public enum StringLib implements JavaFunction {
     @SuppressWarnings({"PMD.NPathComplexity", "PMD.ExcessiveMethodLength"})
     static int stringByte(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-        String s = getStringArg(callFrame, 1, names[BYTE]);
+        String s = getStringArg(callFrame, 1, BYTE.name);
 
         Double di = null;
         Double dj = null;
         if (nArguments >= 2) {
-            di = getDoubleArg(callFrame, 2, names[BYTE]);
+            di = getDoubleArg(callFrame, 2, BYTE.name);
             if (nArguments >= 3) {
-                dj = getDoubleArg(callFrame, 3, names[BYTE]);
+                dj = getDoubleArg(callFrame, 3, BYTE.name);
             }
         }
         double di2 = 1;
@@ -765,18 +729,18 @@ public enum StringLib implements JavaFunction {
     static int stringChar(LuaCallFrame callFrame, int nArguments) {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < nArguments; i++) {
-            int num = getDoubleArg(callFrame, i + 1, names[CHAR]).intValue();
+            int num = getDoubleArg(callFrame, i + 1, CHAR.name).intValue();
             sb.append((char) num);
         }
         return callFrame.push(sb.toString());
     }
 
     static int sub(LuaCallFrame callFrame, int nArguments) {
-        String s = getStringArg(callFrame, 1, names[SUB]);
-        double start = getDoubleArg(callFrame, 2, names[SUB]).doubleValue();
+        String s = getStringArg(callFrame, 1, SUB.name);
+        double start = getDoubleArg(callFrame, 2, SUB.name).doubleValue();
         double end = -1;
         if (nArguments >= 3) {
-            end = getDoubleArg(callFrame, 3, names[SUB]).doubleValue();
+            end = getDoubleArg(callFrame, 3, SUB.name).doubleValue();
         }
         String res;
         int istart = (int) start;
@@ -981,7 +945,7 @@ public enum StringLib implements JavaFunction {
 
     @SuppressWarnings({"PMD.NPathComplexity", "PMD.ExcessiveMethodLength"})
     private static int findAux (LuaCallFrame callFrame, boolean find ) {
-        String f = find ? names[FIND] : names[MATCH];
+        String f = find ? FIND.name : MATCH.name;
         String source = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, f);
         String pattern = (String) BaseLib.getArg(callFrame, 2, BaseLib.TYPE_STRING, f);
         Double i = ((Double)(BaseLib.getOptArg(callFrame, 3, BaseLib.TYPE_NUMBER)));
@@ -1396,9 +1360,9 @@ public enum StringLib implements JavaFunction {
 
     @SuppressWarnings({"PMD.NPathComplexity", "PMD.ExcessiveMethodLength"})
     private static int gsub(LuaCallFrame cf) {
-        String srcTemp = (String)BaseLib.getArg(cf, 1, BaseLib.TYPE_STRING, names[GSUB]);
-        String pTemp = (String)BaseLib.getArg(cf, 2, BaseLib.TYPE_STRING, names[GSUB]);
-        Object repl = BaseLib.getArg(cf, 3, null, names[GSUB]);
+        String srcTemp = (String)BaseLib.getArg(cf, 1, BaseLib.TYPE_STRING, GSUB.name);
+        String pTemp = (String)BaseLib.getArg(cf, 2, BaseLib.TYPE_STRING, GSUB.name);
+        Object repl = BaseLib.getArg(cf, 3, null, GSUB.name);
         {
             String tmp = BaseLib.rawTostring(repl);
             if (tmp != null) {
