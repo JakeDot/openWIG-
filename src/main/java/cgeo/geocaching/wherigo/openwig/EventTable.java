@@ -71,9 +71,6 @@ public class EventTable extends LuaTableImpl implements Serializable {
         super.setMetatable(metatable);
     }
 
-<<<<<<< HEAD
-    @Override
-=======
     public void serialize (DataOutputStream out) throws IOException {
         Engine currentEngine = Engine.getCurrentInstance();
         if (currentEngine != null) {
@@ -81,7 +78,7 @@ public class EventTable extends LuaTableImpl implements Serializable {
         }
     }
 
->>>>>>> 0231bfb (Update EventTable, Media, WherigoLib, Savegame to use getCurrentInstance())
+    @Override
     public void deserialize (DataInputStream in) throws IOException {
         isDeserializing = true;
         Engine currentEngine = Engine.getCurrentInstance();
