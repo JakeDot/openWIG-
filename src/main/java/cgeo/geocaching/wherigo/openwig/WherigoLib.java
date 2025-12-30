@@ -102,16 +102,16 @@ public enum WherigoLib implements JavaFunction {
         };
     }
 
-    public static void register(LuaState state) {
+    public static void register(Engine engine) {
 
         if (env.get(DEVICE_ID) == null) throw new IllegalStateException("set your DeviceID! WherigoLib.env.put(WherigoLib.DEVICE_ID, \"some value\")");
 
-        LuaTable environment = state.getEnvironment();
+        LuaTable environment = engine.luaState.getEnvironment();
 
         LuaTable wig = new LuaTableImpl();
         environment.rawset("Wherigo", wig);
         for (WherigoLib function : WherigoLib.values()) {
-            Engine.instance.savegame.addJavafunc(function);
+            engine.savegame.addJavafunc(function);
             wig.rawset(function.name, function);
         }
 
@@ -119,12 +119,12 @@ public enum WherigoLib implements JavaFunction {
         distanceMetatable.rawset("__index", distanceMetatable);
         distanceMetatable.rawset("__call", GETVALUE);
         distanceMetatable.rawset(GETVALUE.name, GETVALUE);
-        state.setClassMetatable(Double.class, distanceMetatable);
+        engine.luaState.setClassMetatable(Double.class, distanceMetatable);
 
-        state.setClassMetatable(WherigoLib.class, wig);
+        engine.luaState.setClassMetatable(WherigoLib.class, wig);
         wig.rawset("__index", wig);
 
-        wig.rawset("Player", Engine.instance.player);
+        wig.rawset("Player", engine.player);
         wig.rawset("INVALID_ZONEPOINT", null);
 
         // screen constants
@@ -145,7 +145,7 @@ public enum WherigoLib implements JavaFunction {
             String key = (String)e.nextElement();
             envtable.rawset(key, env.get(key));
         }
-        envtable.rawset("Device", Engine.instance.gwcfile.device);
+        envtable.rawset("Device", engine.gwcfile.device);
         environment.rawset("Env", envtable);
 
         Cartridge.register();
@@ -154,6 +154,15 @@ public enum WherigoLib implements JavaFunction {
         Timer.register();
 
         Media.reset();
+    }
+    
+    /** Deprecated method for backward compatibility */
+    @Deprecated
+    public static void register(LuaState state) {
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null) {
+            register(currentEngine);
+        }
     }
 
     @Override
@@ -173,8 +182,14 @@ public enum WherigoLib implements JavaFunction {
             // generic constructors:
             case ZITEM -> construct(new Thing(false), callFrame, nArguments);
             case ZCHARACTER -> construct(new Thing(true), callFrame, nArguments);
-            case CARTRIDGE ->
-                    construct(Engine.instance.cartridge = new Cartridge(), callFrame, nArguments);
+            case CARTRIDGE -> {
+                Engine currentEngine = Engine.getCurrentInstance();
+                if (currentEngine != null) {
+                    currentEngine.cartridge = new Cartridge(currentEngine);
+                    yield construct(currentEngine.cartridge, callFrame, nArguments);
+                }
+                yield 0;
+            }
             case ZONE, ZCOMMAND, ZMEDIA, ZINPUT, ZTIMER, ZTASK -> construct(callFrame, nArguments);
 
             // functions:
@@ -231,8 +246,15 @@ public enum WherigoLib implements JavaFunction {
                     cont.moveTo(target);
             }
         }
-        if (c == null) c = Engine.instance.cartridge;
-        c.addObject(what);
+        if (c == null) {
+            Engine currentEngine = Engine.getCurrentInstance();
+            if (currentEngine != null) {
+                c = currentEngine.cartridge;
+            }
+        }
+        if (c != null) {
+            c.addObject(what);
+        }
         return callFrame.push(what);
     }
 

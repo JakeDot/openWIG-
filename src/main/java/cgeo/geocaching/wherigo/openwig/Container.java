@@ -52,8 +52,11 @@ public class Container extends EventTable {
     };
 
     public static void register () {
-        Engine.instance.savegame.addJavafunc(moveTo);
-        Engine.instance.savegame.addJavafunc(contains);
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null) {
+            currentEngine.savegame.addJavafunc(moveTo);
+            currentEngine.savegame.addJavafunc(contains);
+        }
     }
 
     public Container() {
@@ -64,15 +67,16 @@ public class Container extends EventTable {
     }
 
     public void moveTo(Container c) {
+        Engine currentEngine = Engine.getCurrentInstance();
         String cn = c == null ? "(nowhere)" : c.name;
         Engine.log("MOVE: "+name+" to "+cn, Engine.LOG_CALL);
         if (container != null) TableLib.removeItem(container.inventory, this);
         // location.things.removeElement(this);
         if (c != null) {
             TableLib.rawappend(c.inventory, this);
-            if (c == Engine.instance.player) setPosition(null);
+            if (currentEngine != null && c == currentEngine.player) setPosition(null);
             else if (position != null) setPosition(c.position);
-            else if (container == Engine.instance.player) setPosition(ZonePoint.copy(Engine.instance.player.position));
+            else if (currentEngine != null && container == currentEngine.player) setPosition(ZonePoint.copy(currentEngine.player.position));
             container = c;
         } else {
             container = null;
@@ -95,7 +99,8 @@ public class Container extends EventTable {
 
     public boolean visibleToPlayer () {
         if (!isVisible()) return false;
-        if (container == Engine.instance.player) return true;
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null && container == currentEngine.player) return true;
         if (container instanceof Zone) {
             Zone z = (Zone)container;
             return z.showThings();

@@ -36,13 +36,25 @@ public class Player extends Thing {
 
     private LuaTableImpl insideOfZones = new LuaTableImpl();
 
-    private static JavaFunction refreshLocation = (callFrame, nArguments) -> {
-        Engine.instance.player.refreshLocation();
+    private final JavaFunction refreshLocation = (callFrame, nArguments) -> {
+        refreshLocation();
         return 0;
     };
 
     public static void register () {
-        Engine.instance.savegame.addJavafunc(refreshLocation);
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null) {
+            currentEngine.savegame.addJavafunc(new JavaFunction() {
+                @Override
+                public int call(LuaCallFrame callFrame, int nArguments) {
+                    Engine engine = Engine.getCurrentInstance();
+                    if (engine != null) {
+                        engine.player.refreshLocation();
+                    }
+                    return 0;
+                }
+            });
+        }
     }
 
     public Player() {
@@ -80,7 +92,10 @@ public class Player extends Thing {
     public void deserialize (DataInputStream in)
     throws IOException {
         super.deserialize(in);
-        Engine.instance.player = this;
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null) {
+            currentEngine.player = this;
+        }
         //setPosition(new ZonePoint(360,360,0));
     }
 
@@ -95,11 +110,14 @@ public class Player extends Thing {
     }
 
     public void refreshLocation() {
-        position.latitude = Engine.gps.getLatitude();
-        position.longitude = Engine.gps.getLongitude();
-        position.altitude = Engine.gps.getAltitude();
-        rawset("PositionAccuracy", LuaState.toDouble(Engine.gps.getPrecision()));
-        Engine.instance.cartridge.walk(position);
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null) {
+            position.latitude = currentEngine.gpsInstance.getLatitude();
+            position.longitude = currentEngine.gpsInstance.getLongitude();
+            position.altitude = currentEngine.gpsInstance.getAltitude();
+            rawset("PositionAccuracy", LuaState.toDouble(currentEngine.gpsInstance.getPrecision()));
+            currentEngine.cartridge.walk(position);
+        }
     }
 
     public void rawset (Object key, Object value) {

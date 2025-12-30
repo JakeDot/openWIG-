@@ -84,10 +84,13 @@ public class Media extends EventTable {
 
     public void play () {
         try {
+            Engine currentEngine = Engine.getCurrentInstance();
+            if (currentEngine == null) return;
+            
             String mime = null;
             if ("wav".equals(type)) mime = "audio/x-wav";
             else if ("mp3".equals(type)) mime = "audio/mpeg";
-            Engine.ui.playSound(Engine.mediaFile(this), mime);
+            currentEngine.uiInstance.playSound(Engine.mediaFile(this), mime);
         } catch (IOException e) {
             // meh
         }
