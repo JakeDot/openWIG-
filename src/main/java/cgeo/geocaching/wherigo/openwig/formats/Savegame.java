@@ -97,7 +97,10 @@ public class Savegame {
             resetObjectStore();
 
             //specialcase cartridge:
-            storeValue(Engine.instance.cartridge, out);
+            Engine currentEngine = Engine.getCurrentInstance();
+            if (currentEngine != null) {
+                storeValue(currentEngine.cartridge, out);
+            }
 
             storeValue(table, out);
             Engine.log("STOR: store successful", Engine.LOG_CALL);
@@ -129,7 +132,12 @@ public class Savegame {
             resetObjectStore();
 
             // specialcase cartridge: (TODO make a generic mechanism for this)
-            Engine.instance.cartridge = (Cartridge)restoreValue(dis, null);
+            Engine currentEngine = Engine.getCurrentInstance();
+            if (currentEngine != null) {
+                currentEngine.cartridge = (Cartridge)restoreValue(dis, null);
+            } else {
+                restoreValue(dis, null); // still need to read from stream
+            }
 
             restoreValue(dis, table);
         } catch (IOException e) {
@@ -402,7 +410,9 @@ public class Savegame {
 
     private LuaClosure deserializeLuaClosure (DataInputStream in)
     throws IOException {
-        LuaClosure closure = LuaPrototype.loadByteCode(in, Engine.state.getEnvironment());
+        Engine currentEngine = Engine.getCurrentInstance();
+        LuaClosure closure = LuaPrototype.loadByteCode(in, 
+            currentEngine != null ? currentEngine.luaState.getEnvironment() : null);
         restCache(closure);
         for (int i = 0; i < closure.upvalues.length; i++) {
             UpValue u = new UpValue();

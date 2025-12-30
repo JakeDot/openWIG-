@@ -72,12 +72,18 @@ public class EventTable extends LuaTableImpl {
     }
 
     public void serialize (DataOutputStream out) throws IOException {
-        Engine.instance.savegame.storeValue(this, out);
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null) {
+            currentEngine.savegame.storeValue(this, out);
+        }
     }
 
     public void deserialize (DataInputStream in) throws IOException {
         isDeserializing = true;
-        Engine.instance.savegame.restoreValue(in, this);
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null) {
+            currentEngine.savegame.restoreValue(in, this);
+        }
         isDeserializing = false;
         //setTable(table);
     }
@@ -159,11 +165,14 @@ public class EventTable extends LuaTableImpl {
      */
     protected Object getItem (String key) {
         if ("CurrentDistance".equals(key)) {
-            if (isLocated()) return LuaState.toDouble(position.distance(Engine.instance.player.position));
+            Engine currentEngine = Engine.getCurrentInstance();
+            if (isLocated() && currentEngine != null && currentEngine.player != null) 
+                return LuaState.toDouble(position.distance(currentEngine.player.position));
             else return LuaState.toDouble(-1);
         } else if ("CurrentBearing".equals(key)) {
-            if (isLocated())
-                return LuaState.toDouble(ZonePoint.angle2azimuth(position.bearing(Engine.instance.player.position)));
+            Engine currentEngine = Engine.getCurrentInstance();
+            if (isLocated() && currentEngine != null && currentEngine.player != null)
+                return LuaState.toDouble(ZonePoint.angle2azimuth(position.bearing(currentEngine.player.position)));
             else return LuaState.toDouble(0);
         } else return this.rawget(key);
     }
@@ -207,7 +216,10 @@ public class EventTable extends LuaTableImpl {
             if (o instanceof LuaClosure) {
                 Engine.log("EVNT: " + toString() + "." + name + (param!=null ? " (" + param.toString() + ")" : ""), Engine.LOG_CALL);
                 LuaClosure event = (LuaClosure) o;
-                Engine.state.call(event, this, param, null);
+                Engine currentEngine = Engine.getCurrentInstance();
+                if (currentEngine != null) {
+                    currentEngine.luaState.call(event, this, param, null);
+                }
                 Engine.log("EEND: " + toString() + "." + name, Engine.LOG_CALL);
             }
         } catch (Throwable t) {
