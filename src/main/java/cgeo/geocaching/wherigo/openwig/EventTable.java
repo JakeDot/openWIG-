@@ -40,7 +40,10 @@ public class EventTable extends LuaTableImpl {
     protected String luaTostring () { return "a ZObject instance"; }
 
     public EventTable() {
-        super.getMetatable().rawset("__tostring", new TostringJavaFunc(this));
+        // Initialize metatable to support __tostring
+        LuaTable metatable = new LuaTableImpl();
+        metatable.rawset("__tostring", new TostringJavaFunc(this));
+        super.setMetatable(metatable);
     }
 
     public void serialize (DataOutputStream out) throws IOException {
@@ -155,12 +158,13 @@ public class EventTable extends LuaTableImpl {
             (et.name == null ? "(unnamed)" : et.name);
     }
 
+    @Override
     public void rawset(Object key, Object value) {
         // TODO unify rawset/setItem
         if (key instanceof String) {
             setItem((String) key, value);
         }
-        this.rawset(key, value);
+        super.rawset(key, value);
         Engine.log("PROP: " + toString() + "." + key + " is set to " + (value == null ? "nil" : value.toString()), Engine.LOG_PROP);
     }
 }

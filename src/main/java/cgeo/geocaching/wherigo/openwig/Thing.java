@@ -36,7 +36,7 @@ public class Thing extends Container {
 
     public Thing(boolean character) {
         this.character = character;
-        table.rawset("Commands", new LuaTableImpl());
+        rawset("Commands", new LuaTableImpl());
     }
 
     protected void setItem (String key, Object value) {
