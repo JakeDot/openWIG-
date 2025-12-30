@@ -14,6 +14,7 @@ import cgeo.geocaching.wherigo.openwig.platform.LocationService;
 import cgeo.geocaching.wherigo.openwig.platform.UI;
 
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.*;
 
 
@@ -412,12 +413,12 @@ public class Engine implements Runnable {
         if (currentEngine == null || currentEngine.log == null) return;
         if (level < currentEngine.loglevel) return;
         synchronized (currentEngine.log) {
-        Calendar now = Calendar.getInstance();
-        currentEngine.log.print(now.get(Calendar.HOUR_OF_DAY));
+        LocalDateTime now = LocalDateTime.now();
+        currentEngine.log.print(now.getHour());
         currentEngine.log.print(':');
-        currentEngine.log.print(now.get(Calendar.MINUTE));
+        currentEngine.log.print(now.getMinute());
         currentEngine.log.print(':');
-        currentEngine.log.print(now.get(Calendar.SECOND));
+        currentEngine.log.print(now.getSecond());
         currentEngine.log.print('|');
         currentEngine.log.print((int)(currentEngine.gpsInstance.getLatitude() * 10000 + 0.5) / 10000.0);
         currentEngine.log.print('|');
@@ -429,26 +430,6 @@ public class Engine implements Runnable {
         currentEngine.log.print("|:: ");
         currentEngine.log.println(s);
         currentEngine.log.flush();
-        }
-    }
-        synchronized (instance.log) {
-        Calendar now = Calendar.getInstance();
-        instance.log.print(now.get(Calendar.HOUR_OF_DAY));
-        instance.log.print(':');
-        instance.log.print(now.get(Calendar.MINUTE));
-        instance.log.print(':');
-        instance.log.print(now.get(Calendar.SECOND));
-        instance.log.print('|');
-        instance.log.print((int)(gps.getLatitude() * 10000 + 0.5) / 10000.0);
-        instance.log.print('|');
-        instance.log.print((int)(gps.getLongitude() * 10000 + 0.5) / 10000.0);
-        instance.log.print('|');
-        instance.log.print(gps.getAltitude());
-        instance.log.print('|');
-        instance.log.print(gps.getPrecision());
-        instance.log.print("|:: ");
-        instance.log.println(s);
-        instance.log.flush();
         }
     }
 

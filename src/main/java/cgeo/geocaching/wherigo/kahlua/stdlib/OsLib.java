@@ -26,9 +26,12 @@ Release 1.1.0 / 4386a025b88aac759e1e67cb27bcc50692d61d9a, Base Package se.krka.k
 
 package cgeo.geocaching.wherigo.kahlua.stdlib;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.TimeZone;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 
 import cgeo.geocaching.wherigo.kahlua.vm.JavaFunction;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaCallFrame;
@@ -55,7 +58,7 @@ public enum OsLib implements JavaFunction {
     private static final Object MILLISECOND = "milli";
     //private static final String ISDST = "isdst";
 
-    private static TimeZone tzone = TimeZone.getDefault();
+    private static ZoneId tzone = ZoneId.systemDefault();
 
     public static final int TIME_DIVIDEND = 1000; // number to divide by for converting from milliseconds.
     public static final double TIME_DIVIDEND_INVERTED = 1.0 / TIME_DIVIDEND; // number to divide by for converting from milliseconds.
@@ -94,7 +97,7 @@ public enum OsLib implements JavaFunction {
         }
     }
 
-    public static void setTimeZone (TimeZone tz) {
+    public static void setTimeZone (ZoneId tz) {
         tzone = tz;
     }
 
@@ -113,7 +116,7 @@ public enum OsLib implements JavaFunction {
             cf.push(LuaState.toDouble(t));
         } else {
             LuaTable table = (LuaTable) BaseLib.getArg(cf, 1, BaseLib.TYPE_TABLE, "time");
-            double t = (double) getDateFromTable(table).getTime() * TIME_DIVIDEND_INVERTED;
+            double t = (double) getInstantFromTable(table).toEpochMilli() * TIME_DIVIDEND_INVERTED;
             cf.push(LuaState.toDouble(t));
         }
         return 1;
@@ -142,31 +145,30 @@ public enum OsLib implements JavaFunction {
     }
 
     public static Object getdate(String format) {
-        return getdate(format, Calendar.getInstance().getTime().getTime());
+        return getdate(format, Instant.now().toEpochMilli());
     }
 
     public static Object getdate(String format, long time) {
         //boolean universalTime = format.startsWith("!");
-        Calendar calendar = null;
+        ZonedDateTime dateTime = null;
         int si = 0;
         if (format.charAt(si) == '!') { // UTC?
-            calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+            dateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(time), ZoneId.of("UTC"));
             si++;  // skip '!'
         } else {
-            calendar = Calendar.getInstance(tzone); // TODO: user-defined timezone
+            dateTime = ZonedDateTime.ofInstant(Instant.ofEpochMilli(time), tzone);
         }
-        calendar.setTime(new Date(time));
 
-        if (calendar == null) { // invalid calendar?
+        if (dateTime == null) { // invalid dateTime?
             return null;
         } else if (format.substring(si, 2 + si).equals(TABLE_FORMAT)) {
-            return getTableFromDate(calendar);
+            return getTableFromDate(dateTime);
         } else {
-            return formatTime(format.substring(si), calendar);
+            return formatTime(format.substring(si), dateTime);
         }
     }
 
-    public static String formatTime(String format, Calendar cal) {
+    public static String formatTime(String format, ZonedDateTime dt) {
 
         StringBuffer buffer = new StringBuffer();
         for (int stringIndex = 0; stringIndex < format.length(); stringIndex ++) {
@@ -174,131 +176,107 @@ public enum OsLib implements JavaFunction {
                 buffer.append(format.charAt(stringIndex));
             } else {
                 ++stringIndex;
-                buffer.append(strftime(format.charAt(stringIndex), cal));
+                buffer.append(strftime(format.charAt(stringIndex), dt));
             }
         }
         return buffer.toString();
     }
 
-    private static String strftime(char format, Calendar cal) {
+    private static String strftime(char format, ZonedDateTime dt) {
         return switch (format) {
-            case 'a' -> shortDayNames[cal.get(Calendar.DAY_OF_WEEK) - 1];
-            case 'A' -> longDayNames[cal.get(Calendar.DAY_OF_WEEK) - 1];
-            case 'b' -> shortMonthNames[cal.get(Calendar.MONTH)];
-            case 'B' -> longMonthNames[cal.get(Calendar.MONTH)];
-            case 'c' -> cal.getTime().toString();
-            case 'C' -> Integer.toString(cal.get(Calendar.YEAR) / 100);
-            case 'd' -> Integer.toString(cal.get(Calendar.DAY_OF_MONTH));
-            case 'D' -> formatTime("%m/%d/%y", cal);
-            case 'e' -> cal.get(Calendar.DAY_OF_MONTH) < 10 ?
-                    " " + strftime('d', cal) : strftime('d', cal);
-            case 'h' -> strftime('b', cal);
-            case 'H' -> Integer.toString(cal.get(Calendar.HOUR_OF_DAY));
-            case 'I' -> Integer.toString(cal.get(Calendar.HOUR));
-            case 'j' -> Integer.toString(getDayOfYear(cal));
-            case 'm' -> Integer.toString(cal.get(Calendar.MONTH) + 1);
-            case 'M' -> Integer.toString(cal.get(Calendar.MINUTE));
+            case 'a' -> shortDayNames[dt.getDayOfWeek().getValue() % 7];
+            case 'A' -> longDayNames[dt.getDayOfWeek().getValue() % 7];
+            case 'b' -> shortMonthNames[dt.getMonthValue() - 1];
+            case 'B' -> longMonthNames[dt.getMonthValue() - 1];
+            case 'c' -> dt.toString();
+            case 'C' -> Integer.toString(dt.getYear() / 100);
+            case 'd' -> Integer.toString(dt.getDayOfMonth());
+            case 'D' -> formatTime("%m/%d/%y", dt);
+            case 'e' -> dt.getDayOfMonth() < 10 ?
+                    " " + strftime('d', dt) : strftime('d', dt);
+            case 'h' -> strftime('b', dt);
+            case 'H' -> Integer.toString(dt.getHour());
+            case 'I' -> Integer.toString(dt.getHour() % 12 == 0 ? 12 : dt.getHour() % 12);
+            case 'j' -> Integer.toString(dt.getDayOfYear());
+            case 'm' -> Integer.toString(dt.getMonthValue());
+            case 'M' -> Integer.toString(dt.getMinute());
             case 'n' -> "\n";
-            case 'p' -> cal.get(Calendar.AM_PM) == Calendar.AM ? "AM" : "PM";
-            case 'r' -> formatTime("%I:%M:%S %p", cal);
-            case 'R' -> formatTime("%H:%M", cal);
-            case 'S' -> Integer.toString(cal.get(Calendar.SECOND));
-            case 'U' -> Integer.toString(getWeekOfYear(cal, true, false));
-            case 'V' -> Integer.toString(getWeekOfYear(cal, false, true));
-            case 'w' -> Integer.toString(cal.get(Calendar.DAY_OF_WEEK) - 1);
-            case 'W' -> Integer.toString(getWeekOfYear(cal, false, false));
+            case 'p' -> dt.getHour() < 12 ? "AM" : "PM";
+            case 'r' -> formatTime("%I:%M:%S %p", dt);
+            case 'R' -> formatTime("%H:%M", dt);
+            case 'S' -> Integer.toString(dt.getSecond());
+            case 'U' -> Integer.toString(getWeekOfYear(dt, true, false));
+            case 'V' -> Integer.toString(getWeekOfYear(dt, false, true));
+            case 'w' -> Integer.toString(dt.getDayOfWeek().getValue() % 7);
+            case 'W' -> Integer.toString(getWeekOfYear(dt, false, false));
             /* commented out until we have a way to define locale and get locale formats working
             case 'x':
-                String str = Integer.toString(cal.get(Calendar.YEAR));
-                return Integer.toString(cal.get(Calendar.MONTH)) + "/" + Integer.toString(cal.get(Calendar.DAY_OF_MONTH)) +
+                String str = Integer.toString(dt.getYear());
+                return Integer.toString(dt.getMonthValue()) + "/" + Integer.toString(dt.getDayOfMonth()) +
                         "/" + str.substring(2, str.length());
-            case 'X': return Integer.toString(cal.get(Calendar.HOUR_OF_DAY)) + ":" + Integer.toString(cal.get(Calendar.MINUTE)) +
-                        ":" + Integer.toString(cal.get(Calendar.SECOND));
+            case 'X': return Integer.toString(dt.getHour()) + ":" + Integer.toString(dt.getMinute()) +
+                        ":" + Integer.toString(dt.getSecond());
             */
-            case 'y' -> Integer.toString(cal.get(Calendar.YEAR) % 100);
-            case 'Y' -> Integer.toString(cal.get(Calendar.YEAR));
-            case 'Z' -> cal.getTimeZone().getID();
+            case 'y' -> Integer.toString(dt.getYear() % 100);
+            case 'Y' -> Integer.toString(dt.getYear());
+            case 'Z' -> dt.getZone().getId();
             default -> null; // bad input format.
         };
     }
 
-    public static LuaTable getTableFromDate(Calendar c) {
+    public static LuaTable getTableFromDate(ZonedDateTime dt) {
         LuaTable time = new LuaTableImpl();
-        time.rawset(YEAR, LuaState.toDouble(c.get(Calendar.YEAR)));
-        time.rawset(MONTH, LuaState.toDouble(c.get(Calendar.MONTH)+1));
-        time.rawset(DAY, LuaState.toDouble(c.get(Calendar.DAY_OF_MONTH)));
-        time.rawset(HOUR, LuaState.toDouble(c.get(Calendar.HOUR_OF_DAY)));
-        time.rawset(MIN, LuaState.toDouble(c.get(Calendar.MINUTE)));
-        time.rawset(SEC, LuaState.toDouble(c.get(Calendar.SECOND)));
-        time.rawset(WDAY, LuaState.toDouble(c.get(Calendar.DAY_OF_WEEK)));
-        time.rawset(YDAY, LuaState.toDouble(getDayOfYear(c)));
-        time.rawset(MILLISECOND, LuaState.toDouble(c.get(Calendar.MILLISECOND)));
+        time.rawset(YEAR, LuaState.toDouble(dt.getYear()));
+        time.rawset(MONTH, LuaState.toDouble(dt.getMonthValue()));
+        time.rawset(DAY, LuaState.toDouble(dt.getDayOfMonth()));
+        time.rawset(HOUR, LuaState.toDouble(dt.getHour()));
+        time.rawset(MIN, LuaState.toDouble(dt.getMinute()));
+        time.rawset(SEC, LuaState.toDouble(dt.getSecond()));
+        time.rawset(WDAY, LuaState.toDouble(dt.getDayOfWeek().getValue() % 7 + 1));
+        time.rawset(YDAY, LuaState.toDouble(dt.getDayOfYear()));
+        time.rawset(MILLISECOND, LuaState.toDouble(dt.get(ChronoField.MILLI_OF_SECOND)));
         //time.rawset(ISDST, null);
         return time;
     }
 
     /**
-     * converts the relevant fields in the given luatable to a Date object.
+     * converts the relevant fields in the given luatable to an Instant object.
      * @param time LuaTable with entries for year month and day, and optionally hour/min/sec
-     * @return a date object representing the date frim the luatable.
+     * @return an Instant object representing the date from the luatable.
      */
-    public static Date getDateFromTable(LuaTable time) {
-        Calendar c = Calendar.getInstance(tzone);
-        c.set(Calendar.YEAR,(int)LuaState.fromDouble(time.rawget(YEAR)));
-        c.set(Calendar.MONTH,(int)LuaState.fromDouble(time.rawget(MONTH))-1);
-        c.set(Calendar.DAY_OF_MONTH,(int)LuaState.fromDouble(time.rawget(DAY)));
+    public static Instant getInstantFromTable(LuaTable time) {
+        int year = (int)LuaState.fromDouble(time.rawget(YEAR));
+        int month = (int)LuaState.fromDouble(time.rawget(MONTH));
+        int day = (int)LuaState.fromDouble(time.rawget(DAY));
+        
         Object hour = time.rawget(HOUR);
         Object minute = time.rawget(MIN);
         Object seconds = time.rawget(SEC);
         Object milliseconds = time.rawget(MILLISECOND);
         //Object isDst = time.rawget(ISDST);
-        if (hour != null) {
-            c.set(Calendar.HOUR_OF_DAY,(int)LuaState.fromDouble(hour));
-        } else {
-            c.set(Calendar.HOUR_OF_DAY, 0);
-        }
-        if (minute != null) {
-            c.set(Calendar.MINUTE,(int)LuaState.fromDouble(minute));
-        } else {
-            c.set(Calendar.MINUTE, 0);
-        }
-        if (seconds != null) {
-            c.set(Calendar.SECOND,(int)LuaState.fromDouble(seconds));
-        } else {
-            c.set(Calendar.SECOND, 0);
-        }
-        if (milliseconds != null) {
-            c.set(Calendar.MILLISECOND, (int)LuaState.fromDouble(milliseconds));
-        } else {
-            c.set(Calendar.MILLISECOND, 0);
-        }
+        
+        int hourVal = hour != null ? (int)LuaState.fromDouble(hour) : 0;
+        int minuteVal = minute != null ? (int)LuaState.fromDouble(minute) : 0;
+        int secondVal = seconds != null ? (int)LuaState.fromDouble(seconds) : 0;
+        int milliVal = milliseconds != null ? (int)LuaState.fromDouble(milliseconds) : 0;
+        
+        LocalDateTime ldt = LocalDateTime.of(year, month, day, hourVal, minuteVal, secondVal, milliVal * 1_000_000);
+        ZonedDateTime zdt = ZonedDateTime.of(ldt, tzone);
         // TODO: daylight savings support(is it possible?)
-        return c.getTime();
+        return zdt.toInstant();
     }
 
-    public static int getDayOfYear(Calendar c) {
-        Calendar c2 = Calendar.getInstance(c.getTimeZone());
-        c2.setTime(c.getTime());
-        c2.set(Calendar.MONTH, Calendar.JANUARY);
-        c2.set(Calendar.DAY_OF_MONTH, 1);
-        long diff = c.getTime().getTime() - c2.getTime().getTime();
-
-        return (int)Math.ceil((double)diff / MILLIS_PER_DAY);
-    }
-
-    public static int getWeekOfYear(Calendar c, boolean weekStartsSunday, boolean jan1midweek) {
-        Calendar c2 = Calendar.getInstance(c.getTimeZone());
-        c2.setTime(c.getTime());
-        c2.set(Calendar.MONTH, Calendar.JANUARY);
-        c2.set(Calendar.DAY_OF_MONTH, 1);
-        int dayOfWeek = c2.get(Calendar.DAY_OF_WEEK);
-        if (weekStartsSunday && dayOfWeek != Calendar.SUNDAY) {
-            c2.set(Calendar.DAY_OF_MONTH,(7 - dayOfWeek) + 1);
-        } else if (dayOfWeek != Calendar.MONDAY) {
-            c2.set(Calendar.DAY_OF_MONTH,(7 - dayOfWeek + 1) + 1);
+    public static int getWeekOfYear(ZonedDateTime dt, boolean weekStartsSunday, boolean jan1midweek) {
+        ZonedDateTime startOfYear = dt.withDayOfYear(1);
+        int dayOfWeek = startOfYear.getDayOfWeek().getValue(); // Monday=1, Sunday=7
+        
+        if (weekStartsSunday && dayOfWeek != 7) { // Sunday is 7 in ISO
+            startOfYear = startOfYear.plusDays(7 - dayOfWeek + 1);
+        } else if (!weekStartsSunday && dayOfWeek != 1) { // Monday is 1 in ISO
+            startOfYear = startOfYear.plusDays(7 - dayOfWeek + 1 + 1);
         }
-        long diff = c.getTime().getTime() - c2.getTime().getTime();
-
+        
+        long diff = ChronoUnit.MILLIS.between(startOfYear, dt);
         int w = (int)(diff / MILLIS_PER_WEEK);
 
         if (jan1midweek && 7-dayOfWeek >= 4)
