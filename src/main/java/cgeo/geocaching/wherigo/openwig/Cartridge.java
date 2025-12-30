@@ -34,6 +34,8 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
  * Engine.instance.cartridge. It represents the loaded .gwc cartridge file.
  */
 public class Cartridge extends EventTable {
+    private Engine engine; // Reference to the engine instance
+    
     public Vector<Zone> zones = new Vector<>();
     public Vector<Timer> timers = new Vector<>();
 
@@ -44,20 +46,34 @@ public class Cartridge extends EventTable {
 
     public LuaTable allZObjects = new LuaTableImpl();
 
-    private static final JavaFunction requestSync = new JavaFunction() {
+    private final JavaFunction requestSync = new JavaFunction() {
         public int call (LuaCallFrame callFrame, int nArguments) {
-            Engine.instance.store();
+            if (engine != null) {
+                engine.store();
+            } else {
+                Engine.getCurrentInstance().store();
+            }
             return 0;
         }
     };
 
     public static void register () {
-        Engine.instance.savegame.addJavafunc(requestSync);
+        Engine.getCurrentInstance().savegame.addJavafunc(new JavaFunction() {
+            public int call (LuaCallFrame callFrame, int nArguments) {
+                Engine.getCurrentInstance().store();
+                return 0;
+            }
+        });
     }
 
     protected String luaTostring () { return "a ZCartridge instance"; }
 
     public Cartridge () {
+        this(null);
+    }
+    
+    public Cartridge (Engine engine) {
+        this.engine = engine;
         rawset("RequestSync", requestSync);
         rawset("AllZObjects", allZObjects);
         TableLib.rawappend(allZObjects, this);
@@ -143,7 +159,11 @@ public class Cartridge extends EventTable {
     public void deserialize (DataInputStream in)
     throws IOException {
         super.deserialize(in);
-        Engine.instance.cartridge = this;
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null) {
+            currentEngine.cartridge = this;
+            this.engine = currentEngine;
+        }
         allZObjects = rawget("AllZObjects");
         Object next = null;
         while ((next = allZObjects.next(next)) != null) {

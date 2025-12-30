@@ -43,6 +43,9 @@ public class Engine implements Runnable {
 
     public static final String VERSION = "428";
 
+    /** ThreadLocal storage for engine instances to support parallel cartridge execution */
+    private static final ThreadLocal<Engine> threadLocalInstance = new ThreadLocal<>();
+
     /** the main instance - deprecated, use instance-based approach for parallel cartridges */
     @Deprecated
     public static Engine instance;
@@ -89,6 +92,18 @@ public class Engine implements Runnable {
     private int loglevel = LOG_WARN;
 
     private Thread thread = null;
+
+    /**
+     * Gets the Engine instance for the current thread.
+     * This allows multiple engines to run in parallel on different threads.
+     * Falls back to the static instance if no thread-local instance is set.
+     * 
+     * @return the Engine instance for the current thread, or null if none exists
+     */
+    public static Engine getCurrentInstance() {
+        Engine threadEngine = threadLocalInstance.get();
+        return threadEngine != null ? threadEngine : instance;
+    }
 
     /** creates a new global Engine instance - deprecated, use constructor for parallel cartridges */
     @Deprecated
@@ -144,6 +159,9 @@ public class Engine implements Runnable {
     throws IOException {
         uiInstance.debugMsg("Creating state...\n");
         luaState = new LuaState(System.out);
+        
+        // Set ThreadLocal instance for this thread
+        threadLocalInstance.set(this);
         
         // Set static references for backward compatibility
         state = luaState;
@@ -234,6 +252,9 @@ public class Engine implements Runnable {
             uiInstance.end();
             stacktrace(t);
         } finally {
+            // Clear ThreadLocal for this thread
+            threadLocalInstance.remove();
+            
             // Clear static references if this is the current instance
             if (instance == this) {
                 instance = null;
@@ -294,8 +315,9 @@ public class Engine implements Runnable {
     /** Deprecated static version for backward compatibility */
     @Deprecated
     public static void stacktrace (Throwable e) {
-        if (instance != null) {
-            instance.stacktrace(e);
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine != null) {
+            currentEngine.stacktrace(e);
         } else {
             e.printStackTrace();
         }
@@ -303,13 +325,16 @@ public class Engine implements Runnable {
 
     /** stops Engine */
     public static void kill () {
-        if (instance == null) return;
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
         Timer.kill();
-        instance.end = true;
+        currentEngine.end = true;
     }
 
     /** builds and calls a dialog from a Message table */
     public static void message (LuaTable message) {
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
         String[] texts = {removeHtml((String)message.rawget("Text"))};
         log("CALL: MessageBox - " + texts[0].substring(0, Math.min(100,texts[0].length())), LOG_CALL);
         Media[] media = {(Media)message.rawget("Media")};
@@ -320,27 +345,33 @@ public class Engine implements Runnable {
             button2 = (String)buttons.rawget(new Double(2));
         }
         LuaClosure callback = (LuaClosure)message.rawget("Callback");
-        ui.pushDialog(texts, media, button1, button2, callback);
+        currentEngine.uiInstance.pushDialog(texts, media, button1, button2, callback);
     }
 
     /** builds and calls a dialog from a Dialog table */
     public static void dialog (String[] texts, Media[] media) {
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
         if (texts.length > 0) {
             log("CALL: Dialog - " + texts[0].substring(0, Math.min(100,texts[0].length())), LOG_CALL);
         }
-        ui.pushDialog(texts, media, null, null, null);
+        currentEngine.uiInstance.pushDialog(texts, media, null, null, null);
     }
 
     /** calls input to UI */
     public static void input (EventTable input) {
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
         log("CALL: GetInput - "+input.name, LOG_CALL);
-        ui.pushInput(input);
+        currentEngine.uiInstance.pushInput(input);
     }
 
     /** fires the specified event on the specified object in the event thread */
     public static void callEvent (final EventTable subject, final String name, final Object param) {
         if (!subject.hasEvent(name)) return;
-        instance.eventRunner.perform(new Runnable() {
+        final Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
+        currentEngine.eventRunner.perform(new Runnable() {
             public void run () {
                 subject.callEvent(name, param);
                 // callEvent handles its failures, so no catch here
@@ -350,11 +381,13 @@ public class Engine implements Runnable {
 
     /** invokes a Lua callback in the event thread */
     public static void invokeCallback (final LuaClosure callback, final Object value) {
-        instance.eventRunner.perform(new Runnable() {
+        final Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
+        currentEngine.eventRunner.perform(new Runnable() {
             public void run () {
                 try {
                     Engine.log("BTTN: " + (value == null ? "(cancel)" : value.toString()) + " pressed", LOG_CALL);
-                    Engine.state.call(callback, value, null, null);
+                    currentEngine.luaState.call(callback, value, null, null);
                     Engine.log("BTTN END", LOG_CALL);
                 } catch (Throwable t) {
                     stacktrace(t);
@@ -368,13 +401,36 @@ public class Engine implements Runnable {
     public static byte[] mediaFile (Media media) throws IOException {
         /*String filename = media.jarFilename();
         return media.getClass().getResourceAsStream("/media/"+filename);*/
-        return instance.gwcfile.getFile(media.id);
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) throw new IOException("No engine instance available");
+        return currentEngine.gwcfile.getFile(media.id);
     }
 
     /** tries to log the specified message, if verbosity is higher than its level */
     public static void log (String s, int level) {
-        if (instance == null || instance.log == null) return;
-        if (level < instance.loglevel) return;
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null || currentEngine.log == null) return;
+        if (level < currentEngine.loglevel) return;
+        synchronized (currentEngine.log) {
+        Calendar now = Calendar.getInstance();
+        currentEngine.log.print(now.get(Calendar.HOUR_OF_DAY));
+        currentEngine.log.print(':');
+        currentEngine.log.print(now.get(Calendar.MINUTE));
+        currentEngine.log.print(':');
+        currentEngine.log.print(now.get(Calendar.SECOND));
+        currentEngine.log.print('|');
+        currentEngine.log.print((int)(currentEngine.gpsInstance.getLatitude() * 10000 + 0.5) / 10000.0);
+        currentEngine.log.print('|');
+        currentEngine.log.print((int)(currentEngine.gpsInstance.getLongitude() * 10000 + 0.5) / 10000.0);
+        currentEngine.log.print('|');
+        currentEngine.log.print(currentEngine.gpsInstance.getAltitude());
+        currentEngine.log.print('|');
+        currentEngine.log.print(currentEngine.gpsInstance.getPrecision());
+        currentEngine.log.print("|:: ");
+        currentEngine.log.println(s);
+        currentEngine.log.flush();
+        }
+    }
         synchronized (instance.log) {
         Calendar now = Calendar.getInstance();
         instance.log.print(now.get(Calendar.HOUR_OF_DAY));
@@ -435,11 +491,12 @@ public class Engine implements Runnable {
     private boolean refreshScheduled = false;
 
     public static void refreshUI () {
-        if (instance == null) return;
-        synchronized (instance) {
-            if (!instance.refreshScheduled) {
-                instance.refreshScheduled = true;
-                instance.eventRunner.perform(instance.refresh);
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
+        synchronized (currentEngine) {
+            if (!currentEngine.refreshScheduled) {
+                currentEngine.refreshScheduled = true;
+                currentEngine.eventRunner.perform(currentEngine.refresh);
             }
         }
     }
@@ -466,7 +523,8 @@ public class Engine implements Runnable {
 
     /** requests save in event thread */
     public static void requestSync () {
-        if (instance == null) return;
-        instance.eventRunner.perform(instance.store);
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
+        currentEngine.eventRunner.perform(currentEngine.store);
     }
 }
