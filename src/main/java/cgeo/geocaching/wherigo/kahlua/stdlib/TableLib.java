@@ -32,30 +32,10 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
 public enum TableLib implements JavaFunction {
-    CONCAT("concat") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return concat(callFrame, nArguments);
-        }
-    },
-    INSERT("insert") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return insert(callFrame, nArguments);
-        }
-    },
-    REMOVE("remove") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return remove(callFrame, nArguments);
-        }
-    },
-    MAXN("maxn") {
-        @Override
-        public int call(LuaCallFrame callFrame, int nArguments) {
-            return maxn(callFrame, nArguments);
-        }
-    };
+    CONCAT("concat"),
+    INSERT("insert"),
+    REMOVE("remove"),
+    MAXN("maxn");
 
     private final String name;
 
@@ -78,7 +58,15 @@ public enum TableLib implements JavaFunction {
     }
 
     @Override
-    public abstract int call(LuaCallFrame callFrame, int nArguments);
+    public int call(LuaCallFrame callFrame, int nArguments) {
+        return switch (this) {
+            case CONCAT -> concat(callFrame, nArguments);
+            case INSERT -> insert(callFrame, nArguments);
+            case REMOVE -> remove(callFrame, nArguments);
+            case MAXN -> maxn(callFrame, nArguments);
+            default -> throw new AssertionError(this);
+        };
+    }
 
     private static int concat (LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "expected table, got no arguments");

@@ -104,6 +104,7 @@ public enum OsLib implements JavaFunction {
             case DATE -> date(cf, nargs);
             case DIFFTIME -> difftime(cf);
             case TIME -> time(cf, nargs);
+            default -> throw new AssertionError(this);
         };
     }
 
