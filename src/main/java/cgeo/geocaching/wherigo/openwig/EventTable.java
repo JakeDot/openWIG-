@@ -44,7 +44,7 @@ import java.util.Iterator;
  * 
  * @see LuaTableImpl
  */
-public class EventTable extends LuaTableImpl {
+public class EventTable extends LuaTableImpl implements Serializable {
 
     private boolean isDeserializing = false;
 
@@ -71,10 +71,7 @@ public class EventTable extends LuaTableImpl {
         super.setMetatable(metatable);
     }
 
-    public void serialize (DataOutputStream out) throws IOException {
-        Engine.instance.savegame.storeValue(this, out);
-    }
-
+    @Override
     public void deserialize (DataInputStream in) throws IOException {
         isDeserializing = true;
         Engine.instance.savegame.restoreValue(in, this);

@@ -179,12 +179,14 @@ public class Timer extends EventTable {
         globalTimer = null;
     }
 
+    @Override
     public void serialize (DataOutputStream out) throws IOException {
         out.writeBoolean(task != null);
         out.writeLong(lastTick);
         super.serialize(out);
     }
 
+    @Override
     public void deserialize (DataInputStream in) throws IOException {
         boolean resume = in.readBoolean();
         lastTick = in.readLong();
