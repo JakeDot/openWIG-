@@ -115,12 +115,28 @@ public class LuaTableImpl implements LuaTable {
         freeIndex = capacity;
     }
 
+    /**
+     * Gets the main position (MP) for a key in the hash table.
+     * The main position is the preferred index where a key should be stored,
+     * calculated by hashing the key and masking to fit within the table capacity.
+     * 
+     * @param key The key to hash (must not be null)
+     * @return The index in the range [0, capacity-1]
+     */
     private int getMP(Object key) {
         // assert key != null
         int capacity = keys.length;
         return luaHashcode(key) & (capacity - 1);
     }
 
+    /**
+     * Unwraps a weak reference if weak mode is enabled.
+     * If the object is not a candidate for weak references (String, Double, Boolean, null),
+     * returns it unchanged. Otherwise, dereferences the WeakReference.
+     * 
+     * @param o The object to unwrap (may be a WeakReference)
+     * @return The actual object, or null if the WeakReference was garbage collected
+     */
     private Object unref(Object o) {
         if (!canBeWeakObject(o)) {
             return o;
@@ -130,6 +146,14 @@ public class LuaTableImpl implements LuaTable {
         return ((WeakReference<?>) o).get();
     }
 
+    /**
+     * Wraps an object in a WeakReference if weak mode is enabled.
+     * Strings, Doubles, Booleans, and null are never wrapped because they are
+     * either interned or require strong references for proper semantics.
+     * 
+     * @param o The object to wrap
+     * @return A WeakReference wrapping the object, or the object unchanged
+     */
     private Object ref(Object o) {
         if (!canBeWeakObject(o)) {
             return o;
@@ -138,6 +162,16 @@ public class LuaTableImpl implements LuaTable {
         return new WeakReference<>(o);
     }
 
+    /**
+     * Determines if an object can be stored as a weak reference.
+     * Strings, Doubles, and Booleans are never weak because:
+     * - Strings may be interned
+     * - Doubles need special equality handling for NaN
+     * - Booleans have only two instances
+     * 
+     * @param o The object to check
+     * @return true if the object can be weakly referenced, false otherwise
+     */
     private boolean canBeWeakObject(Object o) {
         return !(o == null || o instanceof String
                 || o instanceof Double || o instanceof Boolean);
@@ -173,6 +207,22 @@ public class LuaTableImpl implements LuaTable {
         values[index] = value;
     }
 
+    /**
+     * Searches for a key in the hash table starting from a given index.
+     * Follows the collision chain using the next[] array until the key is found or
+     * the end of the chain is reached.
+     * 
+     * <p>Special handling for different types:</p>
+     * <ul>
+     *   <li>Doubles: Uses value equality (==) instead of object identity to handle NaN correctly</li>
+     *   <li>Strings: Uses equals() for value comparison</li>
+     *   <li>Other types: Uses identity equality (==) for performance</li>
+     * </ul>
+     * 
+     * @param key The key to search for
+     * @param index The starting index (typically the main position)
+     * @return The index where the key was found, or -1 if not found
+     */
     private int hash_primitiveFindKey(Object key, int index) {
         Object currentKey = __getKey(index);
 
@@ -228,6 +278,23 @@ public class LuaTableImpl implements LuaTable {
         }
     }
 
+    /**
+     * Inserts a new key into the hash table at its main position or finds a free slot.
+     * This method handles collision resolution using separate chaining.
+     * 
+     * <p>Algorithm:</p>
+     * <ol>
+     *   <li>If main position (mp) is free, store the key there</li>
+     *   <li>If mp is occupied by a key with the same mp, add new key to the chain</li>
+     *   <li>If mp is occupied by a key with a different mp (collision), move the old key
+     *       to a free slot and store the new key at mp</li>
+     *   <li>If no free slots exist, trigger rehashing and return -1</li>
+     * </ol>
+     * 
+     * @param key The key to insert (must not already exist in the table)
+     * @param mp The main position for this key
+     * @return The index where the key was inserted, or -1 if rehashing was triggered
+     */
     private int hash_primitiveNewKey(Object key, int mp) {
         keyIndexCacheKey = null;
         keyIndexCacheValue = -1;
@@ -290,6 +357,24 @@ public class LuaTableImpl implements LuaTable {
         return mp;
     }
 
+    /**
+     * Rehashes the table to a larger capacity when the current capacity is exceeded.
+     * 
+     * <p>The rehashing process:</p>
+     * <ol>
+     *   <li>Temporarily disables weak references to prevent garbage collection during rehash</li>
+     *   <li>Counts the number of used entries</li>
+     *   <li>Calculates new capacity as 2 * nearest_power_of_2(used_count + 1)</li>
+     *   <li>Creates new arrays with the larger capacity</li>
+     *   <li>Re-inserts all existing entries into the new arrays</li>
+     *   <li>Restores weak reference settings</li>
+     * </ol>
+     * 
+     * <p>Note: The newKey parameter is included in the count but is not inserted during
+     * rehashing. The caller must insert it after this method returns.</p>
+     * 
+     * @param newKey The key that triggered the rehash (used for counting only)
+     */
     private void hash_rehash(Object newKey) {
         // NOTE: it's important to avoid GC of weak stuff here, so convert it
         // to plain before rehashing
@@ -334,6 +419,15 @@ public class LuaTableImpl implements LuaTable {
 
     private LuaTable metatable;
 
+    /**
+     * Sets a value in the table for a given key.
+     * If the key doesn't exist, it will be added. If it exists, the value will be updated.
+     * Setting a value to null effectively removes the key from the table.
+     * 
+     * @param key The key to set (must not be null or NaN)
+     * @param value The value to associate with the key, or null to remove the key
+     * @throws RuntimeException if key is null (via checkKey)
+     */
     public void rawset(Object key, Object value) {
         checkKey(key);
         rawsetHash(key, value);
@@ -352,14 +446,36 @@ public class LuaTableImpl implements LuaTable {
         __setValue(index, value);
     }
 
+    /**
+     * Gets a value from the table by integer index.
+     * Converts the integer to a Double key as per Lua semantics.
+     * 
+     * @param index The integer index
+     * @return The value at that index, or null if not present
+     */
     public Object rawget(int index) {
         return rawgetHash(LuaState.toDouble(index));
     }
 
+    /**
+     * Sets a value in the table by integer index.
+     * Converts the integer to a Double key as per Lua semantics.
+     * 
+     * @param index The integer index
+     * @param value The value to set
+     */
     public void rawset(int index, Object value) {
         rawsetHash(LuaState.toDouble(index), value);
     }
 
+    /**
+     * Gets a value from the table for a given key.
+     * 
+     * @param <T> The expected return type (unchecked cast)
+     * @param key The key to look up (must not be null or NaN)
+     * @return The value associated with the key, or null if not present
+     * @throws RuntimeException if key is null or NaN
+     */
     public final <T> T rawget(Object key) {
         checkKey(key);
         if (key instanceof Double) {
