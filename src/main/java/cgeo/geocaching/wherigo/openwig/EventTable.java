@@ -64,7 +64,7 @@ public class EventTable extends LuaTableImpl {
 
     protected String luaTostring () { return "a ZObject instance"; }
 
-    public EventTable () {
+    public EventTable() {
         // Initialize metatable to support __tostring
         LuaTable metatable = new LuaTableImpl();
         metatable.rawset("__tostring", new TostringJavaFunc(this));
@@ -96,14 +96,14 @@ public class EventTable extends LuaTableImpl {
         return Engine.mediaFile(icon);
     }
 
-    public boolean isVisible () { return visible; }
+    public boolean isVisible() { return visible; }
 
-    public void setPosition (ZonePoint location) {
+    public void setPosition(ZonePoint location) {
         position = location;
         this.rawset("ObjectLocation", location);
     }
 
-    public boolean isLocated () {
+    public boolean isLocated() {
         return position != null;
     }
 
@@ -125,7 +125,7 @@ public class EventTable extends LuaTableImpl {
      * @param key The property name
      * @param value The value being set
      */
-    protected void setItem (String key, Object value) {
+    protected void setItem(String key, Object value) {
         if ("Name".equals(key)) {
             name = BaseLib.rawTostring(value);
         } else if ("Description".equals(key)) {
@@ -192,7 +192,7 @@ public class EventTable extends LuaTableImpl {
      * @param name The event name (e.g., "OnTick", "OnStart", "OnStop")
      * @param param Optional parameter to pass to the event callback, or null
      */
-    public void callEvent (String name, Object param) {
+    public void callEvent(String name, Object param) {
         /*
          workaround: suppress RuntimeException if callEvent() is called at deserialiation
          @see https://github.com/cgeo/openWIG/issues/8#issuecomment-612182631
@@ -215,13 +215,13 @@ public class EventTable extends LuaTableImpl {
         }
     }
 
-    public boolean hasEvent (String name) {
+    public boolean hasEvent(String name) {
         return (this.rawget(name)) instanceof LuaClosure;
     }
 
     @NonNull
     @Override
-    public String toString () {
+    public String toString() {
         return baseToString(this) + BaseLib.luaTableToString(this, value ->
             value instanceof EventTable ? baseToString((EventTable) value) : null);
     }
@@ -232,7 +232,7 @@ public class EventTable extends LuaTableImpl {
     }
 
     @Override
-    public void rawset (Object key, Object value) {
+    public void rawset(Object key, Object value) {
         // TODO unify rawset/setItem
         if (key instanceof String) {
             setItem((String) key, value);
