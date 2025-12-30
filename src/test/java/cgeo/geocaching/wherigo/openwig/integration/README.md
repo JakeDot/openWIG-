@@ -85,12 +85,12 @@ Despite not running full execution, the test still validates:
 
 The following aspects require testing in a full Android environment:
 
-- ❌ Lua script execution
-- ❌ Event system operation
-- ❌ GPS-based zone detection
-- ❌ Save/restore functionality
-- ❌ Media playback
-- ❌ Full game loop execution
+- [ ] Lua script execution
+- [ ] Event system operation
+- [ ] GPS-based zone detection
+- [ ] Save/restore functionality
+- [ ] Media playback
+- [ ] Full game loop execution
 
 ## Running the Tests
 
