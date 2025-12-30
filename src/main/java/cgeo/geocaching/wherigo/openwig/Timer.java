@@ -9,6 +9,26 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 
 import java.io.*;
 
+/**
+ * Represents a timer in a Wherigo game.
+ * <p>
+ * Timer extends EventTable to provide time-based event triggering. Timers can
+ * operate in two modes: countdown (fires once after a duration) or interval
+ * (fires repeatedly at regular intervals).
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Supports countdown mode - fires OnTick event once after specified duration</li>
+ * <li>Supports interval mode - fires OnTick event repeatedly at regular intervals</li>
+ * <li>Can be started and stopped via Start() and Stop() methods</li>
+ * <li>Duration can be set dynamically</li>
+ * <li>Remaining time is accessible to scripts</li>
+ * <li>Uses a shared global Timer for efficiency</li>
+ * </ul>
+ * <p>
+ * Timers are commonly used for time-based challenges, delayed events, and
+ * periodic game state updates.
+ */
 public class Timer extends EventTable {
 
     private static java.util.Timer globalTimer;

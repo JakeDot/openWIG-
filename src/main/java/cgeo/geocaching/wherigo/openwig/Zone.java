@@ -9,6 +9,28 @@ import cgeo.geocaching.wherigo.kahlua.stdlib.TableLib;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 
+/**
+ * Represents a geographic zone in a Wherigo game.
+ * <p>
+ * Zone extends Thing to provide location-based gameplay. A zone is a geographic
+ * area defined by a set of points that forms a polygon. The engine continuously
+ * monitors the player's position relative to zones to trigger events when the
+ * player enters, exits, or approaches zones.
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Defined by a set of geographic points forming a polygon</li>
+ * <li>Tracks player state: INSIDE, PROXIMITY, DISTANT, or NOWHERE</li>
+ * <li>Can be active/inactive and visible/invisible</li>
+ * <li>Triggers events on state changes (OnEnter, OnExit, OnProximity)</li>
+ * <li>Calculates distance to player and nearest point</li>
+ * <li>Supports proximity detection with configurable ranges</li>
+ * <li>Can contain items that are shown when player enters the zone</li>
+ * </ul>
+ * <p>
+ * Zones use bounding boxes and distance calculations to efficiently determine
+ * player proximity without requiring complex polygon tests every frame.
+ */
 public class Zone extends Thing {
 
     protected String luaTostring() { return "a Zone instance"; }

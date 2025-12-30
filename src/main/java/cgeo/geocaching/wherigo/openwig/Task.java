@@ -6,6 +6,22 @@ package cgeo.geocaching.wherigo.openwig;
 
 import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 
+/**
+ * Represents a task or objective in a Wherigo game.
+ * <p>
+ * Task extends EventTable to provide quest/objective tracking. Tasks can be
+ * active or inactive, complete or incomplete, and have a correctness state
+ * (done or failed).
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Tracks active state - whether the task is currently active</li>
+ * <li>Tracks completion state - whether the task has been completed</li>
+ * <li>Tracks correctness - whether completed correctly (DONE) or incorrectly (FAILED)</li>
+ * <li>Triggers events on state changes (OnSetActive, OnSetComplete, OnSetCorrectState)</li>
+ * <li>Only visible when both visible flag is true and task is active</li>
+ * </ul>
+ */
 public class Task extends EventTable {
 
     private boolean active;

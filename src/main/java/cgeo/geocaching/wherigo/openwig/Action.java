@@ -9,6 +9,26 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 
 import java.util.Vector;
 
+/**
+ * Represents a command or action that can be executed in a Wherigo game.
+ * <p>
+ * Action extends EventTable to provide interactive commands (ZCommands) that
+ * players can execute on game objects. Actions can require parameters (target
+ * objects) and can be enabled or disabled based on game state.
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Can be associated with Things (actor) and require target Things (parameter)</li>
+ * <li>Supports reciprocal actions - shown on both actor and target objects</li>
+ * <li>Supports universal actions - available from anywhere in the game</li>
+ * <li>Can be enabled/disabled dynamically based on game state</li>
+ * <li>Executes OnClick event when activated by player</li>
+ * <li>Provides text descriptions and "no target" messages</li>
+ * </ul>
+ * <p>
+ * Actions are used for object interactions like "Open box", "Talk to character",
+ * "Use key on door", etc. They form the primary interaction mechanism in Wherigo.
+ */
 public class Action extends EventTable {
 
     private boolean parameter;

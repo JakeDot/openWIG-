@@ -12,6 +12,26 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaCallFrame;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
+/**
+ * Represents the player character in a Wherigo game.
+ * <p>
+ * Player extends Thing to provide special handling for the human player.
+ * Unlike other Things, the player cannot be moved to containers and has
+ * special location tracking that syncs with the GPS position.
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Position automatically synchronized with GPS via RefreshLocation()</li>
+ * <li>Tracks zones the player is currently inside (InsideOfZones)</li>
+ * <li>Cannot be moved via MoveTo() - location tied to GPS</li>
+ * <li>Acts as a container for items in player's inventory</li>
+ * <li>Provides access to position accuracy from GPS</li>
+ * <li>Automatically triggers zone events as player moves</li>
+ * </ul>
+ * <p>
+ * There is always exactly one Player instance per game, accessible via
+ * Engine.instance.player.
+ */
 public class Player extends Thing {
 
     private LuaTableImpl insideOfZones = new LuaTableImpl();

@@ -13,6 +13,26 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Locale;
 
+/**
+ * Represents a media resource (image, audio) in a Wherigo game.
+ * <p>
+ * Media extends EventTable to provide access to multimedia resources embedded
+ * in cartridge files. Media objects reference images, sounds, and other assets
+ * that can be displayed or played during gameplay.
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>References media files by unique ID in the cartridge</li>
+ * <li>Supports images (png, jpg, gif) and audio (wav, mp3)</li>
+ * <li>Provides alternative text for accessibility</li>
+ * <li>Can be played (audio) or displayed (images) via UI</li>
+ * <li>Type information extracted from resource metadata</li>
+ * <li>Generates filenames for media extraction</li>
+ * </ul>
+ * <p>
+ * Media objects are typically associated with zones, items, dialogs, and
+ * other game objects to provide visual and audio feedback.
+ */
 public class Media extends EventTable {
 
     private static int media_no;
