@@ -62,7 +62,7 @@ public class Timer extends EventTable {
 
     private class TimerTask extends java.util.TimerTask {
         public boolean restart = false;
-        public void run() {
+    public void run () {
             tick();
             Engine.refreshUI();
             if (restart) {
@@ -174,7 +174,7 @@ public class Timer extends EventTable {
         }
     }
 
-    public static void kill() {
+    public static void kill () {
         if (globalTimer != null) globalTimer.cancel();
         globalTimer = null;
     }
