@@ -228,12 +228,14 @@ public class ZonePoint implements LuaTable, Serializable {
 
     public void updateWeakSettings (boolean weakKeys, boolean weakValues) { }
 
+    @Override
     public void serialize (DataOutputStream out) throws IOException {
         out.writeDouble(latitude);
         out.writeDouble(longitude);
         out.writeDouble(altitude);
     }
 
+    @Override
     public void deserialize (DataInputStream in) throws IOException {
         latitude = in.readDouble();
         longitude = in.readDouble();

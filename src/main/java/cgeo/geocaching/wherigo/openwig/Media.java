@@ -49,11 +49,13 @@ public class Media extends EventTable {
         id = media_no++;
     }
 
+    @Override
     public void serialize (DataOutputStream out) throws IOException {
         out.writeInt(id);
         super.serialize(out);
     }
 
+    @Override
     public void deserialize (DataInputStream in) throws IOException {
         media_no--; // deserialize must be called directly after construction
         id = in.readInt();
