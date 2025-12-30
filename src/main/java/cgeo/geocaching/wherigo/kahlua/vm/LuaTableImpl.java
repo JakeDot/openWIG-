@@ -428,6 +428,7 @@ public class LuaTableImpl implements LuaTable {
      * @param value The value to associate with the key, or null to remove the key
      * @throws RuntimeException if key is null (via checkKey)
      */
+    @Override
     public void rawset (Object key, Object value) {
         checkKey(key);
         rawsetHash(key, value);
@@ -476,6 +477,8 @@ public class LuaTableImpl implements LuaTable {
      * @return The value associated with the key, or null if not present
      * @throws RuntimeException if key is null or NaN
      */
+    @SuppressWarnings("unchecked")
+    @Override
     public final <T> T rawget (Object key) {
         checkKey(key);
         if (key instanceof Double) {
@@ -531,10 +534,12 @@ public class LuaTableImpl implements LuaTable {
         }
     }
 
+    @Override
     public final Object next (Object key) {
         return nextHash(key);
     }
 
+    @Override
     public final int len () {
         int high = 2 * keys.length;
         int low = 0;
@@ -553,6 +558,7 @@ public class LuaTableImpl implements LuaTable {
         return low;
     }
 
+    @Override
     public Iterator<Object> keys () {
         return IteratorUtils.filteredIterator(IteratorUtils.arrayIterator(keys), Objects::nonNull);
     }
@@ -603,10 +609,12 @@ public class LuaTableImpl implements LuaTable {
         }
     }
 
+    @Override
     public LuaTable getMetatable () {
         return metatable;
     }
 
+    @Override
     public void setMetatable (LuaTable metatable) {
         this.metatable = metatable;
         boolean weakKeys = false, weakValues = false;
