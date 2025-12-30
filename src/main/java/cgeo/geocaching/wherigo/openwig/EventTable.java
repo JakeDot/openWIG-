@@ -19,6 +19,20 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
 
+/**
+ * Base class for all Wherigo game objects (ZObjects).
+ * <p>
+ * EventTable extends LuaTableImpl to provide a bridge between Java objects
+ * and Lua tables, allowing Wherigo scripts to interact with game objects.
+ * All Wherigo game entities (zones, items, characters, tasks, etc.) inherit
+ * from this class.
+ * <p>
+ * EventTable provides common properties like name, description, visibility,
+ * and position, as well as event handling capabilities for responding to
+ * game events (e.g., onClick, onEnter).
+ * <p>
+ * This class also handles serialization and deserialization for game saves.
+ */
 public class EventTable extends LuaTableImpl {
 
     private boolean isDeserializing = false;

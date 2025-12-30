@@ -13,6 +13,21 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
+/**
+ * Represents a container that can hold items in a Wherigo game.
+ * <p>
+ * Container extends EventTable to provide inventory management capabilities.
+ * Items (Things) can be moved into or out of containers. The player is also
+ * a container, as are zones and characters that can hold items.
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Maintains an inventory of contained items</li>
+ * <li>Supports moving items between containers via MoveTo()</li>
+ * <li>Can check if it contains a specific item via Contains()</li>
+ * <li>Tracks its own container (nested containment)</li>
+ * </ul>
+ */
 public class Container extends EventTable {
 
     public LuaTable inventory = new LuaTableImpl();
