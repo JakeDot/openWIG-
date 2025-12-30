@@ -213,9 +213,8 @@ public class EventTable extends LuaTableImpl {
 
         try {
             Object o = this.rawget(name);
-            if (o instanceof LuaClosure) {
+            if (o instanceof LuaClosure event) {
                 Engine.log("EVNT: " + toString() + "." + name + (param!=null ? " (" + param.toString() + ")" : ""), Engine.LOG_CALL);
-                LuaClosure event = (LuaClosure) o;
                 Engine currentEngine = Engine.getCurrentInstance();
                 if (currentEngine != null) {
                     currentEngine.luaState.call(event, this, param, null);
@@ -246,8 +245,8 @@ public class EventTable extends LuaTableImpl {
     @Override
     public void rawset(Object key, Object value) {
         // TODO unify rawset/setItem
-        if (key instanceof String) {
-            setItem((String) key, value);
+        if (key instanceof String s) {
+            setItem(s, value);
         }
         super.rawset(key, value);
         Engine.log("PROP: " + toString() + "." + key + " is set to " + (value == null ? "nil" : value.toString()), Engine.LOG_PROP);

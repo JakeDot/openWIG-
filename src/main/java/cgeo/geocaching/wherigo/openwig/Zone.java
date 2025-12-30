@@ -362,8 +362,8 @@ public class Zone extends Thing {
         while ((key = inventory.next(key)) != null) {
             Object o = inventory.rawget(key);
             if (o instanceof Player) continue;
-            if (!(o instanceof Thing)) continue;
-            if (((Thing)o).isVisible()) count++;
+            if (!(o instanceof Thing thing)) continue;
+            if (thing.isVisible()) count++;
         }
         return count;
     }
@@ -374,7 +374,7 @@ public class Zone extends Thing {
         Object key = null;
         while ((key = inventory.next(key)) != null) {
             Object z = inventory.rawget(key);
-            if (z instanceof Thing && ((Thing)z).isVisible())
+            if (z instanceof Thing thing && thing.isVisible())
                 TableLib.rawappend(c, z);
         }
     }

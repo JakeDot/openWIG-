@@ -233,14 +233,12 @@ public enum WherigoLib implements JavaFunction {
     private int construct(EventTable what, LuaCallFrame callFrame, int nArguments) {
         Object param = callFrame.get(0);
         Cartridge c = null;
-        if (param instanceof Cartridge) {
-            c = (Cartridge)param;
-        } else if (param instanceof LuaTable) {
-            LuaTable lt = (LuaTable)param;
+        if (param instanceof Cartridge cart) {
+            c = cart;
+        } else if (param instanceof LuaTable lt) {
             c = (Cartridge)lt.rawget("Cartridge");
-            what.setTable((LuaTable)param);
-            if (what instanceof Container) {
-                Container cont = (Container)what;
+            what.setTable(lt);
+            if (what instanceof Container cont) {
                 Container target = (Container)lt.rawget("Container");
                 if (target != null)
                     cont.moveTo(target);
@@ -340,7 +338,7 @@ public enum WherigoLib implements JavaFunction {
         EventTable et = null;
         if (nArguments > 1) {
             Object o = callFrame.get(1);
-            if (o instanceof EventTable) et = (EventTable)o;
+            if (o instanceof EventTable e) et = e;
         }
         Engine.log("CALL: ShowScreen("+screen+") " + (et == null ? "" : et.name), Engine.LOG_CALL);
         Engine.ui.showScreen(screen, et);
@@ -385,8 +383,7 @@ public enum WherigoLib implements JavaFunction {
         if (nArguments < 1) return 0;
         Object arg = callFrame.get(0);
         String text;
-        if (arg instanceof LuaTable) {
-            LuaTable lt = (LuaTable)arg;
+        if (arg instanceof LuaTable lt) {
             text = (String)lt.rawget("Text");
         } else {
             text = arg.toString();
