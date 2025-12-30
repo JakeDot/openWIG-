@@ -126,10 +126,10 @@ public class Timer extends EventTable {
                     task.restart = true;
             }
             type = t;
-        } else if ("Duration".equals(key) && value instanceof Double) {
-            long d = (long) LuaState.fromDouble(value);
+        } else if ("Duration".equals(key) && value instanceof Double d) {
+            long duration_ms = (long) LuaState.fromDouble(d);
             rawset("Remaining", ZERO);
-            duration = d * 1000;
+            duration = duration_ms * 1000;
         } else super.setItem(key, value);
     }
 
