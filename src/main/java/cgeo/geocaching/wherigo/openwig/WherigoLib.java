@@ -14,6 +14,27 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import cgeo.geocaching.wherigo.kahlua.stdlib.BaseLib;
 
+/**
+ * Wherigo API function library and environment configuration.
+ * <p>
+ * WherigoLib is an enum that implements all the Wherigo-specific functions
+ * that are exposed to Lua scripts. It also maintains the Wherigo environment
+ * table (env) which contains platform information, device ID, and other
+ * configuration that Lua scripts can query.
+ * <p>
+ * Key responsibilities:
+ * <ul>
+ * <li>Registers Wherigo functions in the Lua environment (Zone, ZItem, etc.)</li>
+ * <li>Maintains the env table with device and platform information</li>
+ * <li>Maps Lua constructors to Java classes</li>
+ * <li>Provides factory functions for creating game objects from Lua</li>
+ * </ul>
+ * <p>
+ * <strong>Important:</strong> You must set a device ID before using OpenWIG:
+ * <pre>
+ * WherigoLib.env.put(WherigoLib.DEVICE_ID, "your-device-id");
+ * </pre>
+ */
 public enum WherigoLib implements JavaFunction {
     COMMAND("Command"),
     ZONEPOINT("ZonePoint"),
