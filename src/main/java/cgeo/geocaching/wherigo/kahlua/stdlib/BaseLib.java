@@ -115,7 +115,6 @@ public enum BaseLib implements JavaFunction {
             case COLLECTGARBAGE -> collectgarbage(callFrame, nArguments);
             case DEBUGSTACKTRACE -> debugstacktrace(callFrame, nArguments);
             case BYTECODELOADER -> bytecodeloader(callFrame, nArguments);
-            default -> throw new AssertionError(this);
         };
     }
 

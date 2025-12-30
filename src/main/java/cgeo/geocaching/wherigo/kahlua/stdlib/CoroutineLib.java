@@ -70,7 +70,6 @@ public enum CoroutineLib implements JavaFunction {
             case YIELD -> yieldFunction(callFrame, nArguments);
             case STATUS -> status(callFrame, nArguments);
             case RUNNING -> running(callFrame, nArguments);
-            default -> throw new AssertionError(this);
         };
     }
 

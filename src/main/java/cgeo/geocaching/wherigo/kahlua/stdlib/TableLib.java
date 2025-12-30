@@ -64,7 +64,6 @@ public enum TableLib implements JavaFunction {
             case INSERT -> insert(callFrame, nArguments);
             case REMOVE -> remove(callFrame, nArguments);
             case MAXN -> maxn(callFrame, nArguments);
-            default -> throw new AssertionError(this);
         };
     }
 
