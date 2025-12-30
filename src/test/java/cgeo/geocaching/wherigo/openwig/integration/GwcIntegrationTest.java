@@ -26,12 +26,15 @@ import java.nio.ByteOrder;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Integration test for downloading and executing GWC (Groundspeak Wherigo Cartridge) files.
+ * Integration test for loading and initializing GWC (Groundspeak Wherigo Cartridge) files.
  * 
- * This test validates the complete workflow:
- * 1. Creating/loading a test GWC file
- * 2. Initializing the OpenWig engine with the cartridge
- * 3. Executing the cartridge and verifying successful completion
+ * This test validates the complete load and initialization workflow:
+ * 1. Creating/loading a test GWC file (simulating download)
+ * 2. Parsing the GWC file format and extracting metadata
+ * 3. Initializing the OpenWig engine with the cartridge
+ * 
+ * Note: This test focuses on load/initialization rather than full execution because
+ * full execution requires stdlib.lbc and Android runtime environment.
  */
 public class GwcIntegrationTest {
 
