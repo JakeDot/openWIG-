@@ -57,10 +57,10 @@ public class Container extends EventTable {
     }
 
     public Container() {
-        table.rawset("MoveTo", moveTo);
-        table.rawset("Contains", contains);
-        table.rawset("Inventory", inventory);
-        table.rawset("Container", container); // fix issues 181, 191
+        rawset("MoveTo", moveTo);
+        rawset("Contains", contains);
+        rawset("Inventory", inventory);
+        rawset("Container", container); // fix issues 181, 191
     }
 
     public void moveTo(Container c) {
@@ -78,7 +78,7 @@ public class Container extends EventTable {
             container = null;
             rawset("ObjectLocation", null);
         }
-        table.rawset("Container", container); // fix issues 181, 191
+        rawset("Container", container); // fix issues 181, 191
     }
 
     public boolean contains (Thing t) {

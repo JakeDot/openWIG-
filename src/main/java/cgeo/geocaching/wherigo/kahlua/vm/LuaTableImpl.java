@@ -34,6 +34,34 @@ import java.util.Objects;
 import cgeo.geocaching.wherigo.kahlua.stdlib.BaseLib;
 
 
+/**
+ * Implementation of a Lua table using a hash table with separate chaining.
+ * 
+ * <p>This class provides a Java implementation of Lua's table data structure, which serves
+ * as both an array and a hash map. The implementation uses open addressing with chaining
+ * for collision resolution.</p>
+ * 
+ * <h3>Key Features:</h3>
+ * <ul>
+ *   <li>Supports weak keys and weak values via metatable __mode field</li>
+ *   <li>Automatically resizes when capacity is exceeded</li>
+ *   <li>Implements Lua's special semantics for Double keys (NaN handling, equality)</li>
+ *   <li>Single-entry key cache for performance optimization</li>
+ * </ul>
+ * 
+ * <h3>Thread Safety:</h3>
+ * This class is NOT thread-safe. External synchronization is required for concurrent access.
+ * 
+ * <h3>Internal Structure:</h3>
+ * The table uses three parallel arrays:
+ * <ul>
+ *   <li>{@code keys[]} - Stores keys (may be wrapped in WeakReference)</li>
+ *   <li>{@code values[]} - Stores values (may be wrapped in WeakReference)</li>
+ *   <li>{@code next[]} - Stores collision chain pointers (-1 means end of chain)</li>
+ * </ul>
+ * 
+ * @see LuaTable
+ */
 public class LuaTableImpl implements LuaTable {
     private boolean weakKeys, weakValues;
 
