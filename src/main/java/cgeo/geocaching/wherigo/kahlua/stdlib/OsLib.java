@@ -248,7 +248,7 @@ public enum OsLib implements JavaFunction {
     /**
      * converts the relevant fields in the given luatable to an Instant object.
      * @param time LuaTable with entries for year month and day, and optionally hour/min/sec
-     * @return an Instant object representing the date from the luatable.
+     * @return an Instant object representing the timestamp from the luatable.
      */
     public static Instant getInstantFromTable(LuaTable time) {
         int year = (int)LuaState.fromDouble(time.rawget(YEAR));
