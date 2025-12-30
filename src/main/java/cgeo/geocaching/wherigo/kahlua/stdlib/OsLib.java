@@ -274,18 +274,27 @@ public enum OsLib implements JavaFunction {
 
     public static int getWeekOfYear(ZonedDateTime dt, boolean weekStartsSunday, boolean jan1midweek) {
         ZonedDateTime startOfYear = dt.withDayOfYear(1);
-        int dayOfWeek = startOfYear.getDayOfWeek().getValue(); // Monday=1, Sunday=7
+        // Java DayOfWeek: Monday=1, Tuesday=2, ..., Sunday=7
+        // Old Calendar: Sunday=1, Monday=2, ..., Saturday=7
+        int dayOfWeek = startOfYear.getDayOfWeek().getValue();
         
-        if (weekStartsSunday && dayOfWeek != 7) { // Sunday is 7 in ISO
-            startOfYear = startOfYear.plusDays(7 - dayOfWeek + 1);
-        } else if (!weekStartsSunday && dayOfWeek != 1) { // Monday is 1 in ISO
-            startOfYear = startOfYear.plusDays(9 - dayOfWeek);
+        // Convert java.time dayOfWeek to old Calendar dayOfWeek for formula compatibility
+        // Java: Mon=1, Tue=2, ..., Sun=7 -> Calendar: Sun=1, Mon=2, ..., Sat=7
+        int oldCalendarDayOfWeek = (dayOfWeek % 7) + 1; // Mon(1)->2, Tue(2)->3, ..., Sun(7)->1
+        
+        // Apply original logic with old Calendar day values
+        if (weekStartsSunday && oldCalendarDayOfWeek != 1) { // 1 = Sunday in old Calendar
+            int targetDayOfMonth = (7 - oldCalendarDayOfWeek) + 1;
+            startOfYear = startOfYear.withDayOfMonth(targetDayOfMonth);
+        } else if (!weekStartsSunday && oldCalendarDayOfWeek != 2) { // 2 = Monday in old Calendar
+            int targetDayOfMonth = (7 - oldCalendarDayOfWeek + 1) + 1;
+            startOfYear = startOfYear.withDayOfMonth(targetDayOfMonth);
         }
         
         long diff = ChronoUnit.MILLIS.between(startOfYear, dt);
         int w = (int)(diff / MILLIS_PER_WEEK);
 
-        if (jan1midweek && 7-dayOfWeek >= 4)
+        if (jan1midweek && 7-oldCalendarDayOfWeek >= 4)
             w++;
 
         return w;
