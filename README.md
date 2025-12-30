@@ -194,6 +194,12 @@ Current version: **428** (compatible with Wherigo 2.11)
 
 This code was initially copied from [cgeo/openWIG](https://github.com/cgeo/openWIG) in April 2025, Release 1.1.0 (commit 4386a025b88aac759e1e67cb27bcc50692d61d9a), originally in package `cz.matejcik.openwig`.
 
+Additional Gradle and build system improvements from [bekuno's PR #20](https://github.com/cgeo/openWIG/pull/20) have been applied, including:
+- Build configuration enhancements with AGP 8.2.2
+- Maven publishing support for library distribution
+- Improved Git attributes for cross-platform development
+- Enhanced .gitignore patterns for build artifacts and IDE files
+
 ## License
 
 [Check the repository for license information]
