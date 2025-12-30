@@ -21,6 +21,53 @@ LuaTable (interface)
 └── ZonePoint (implements LuaTable directly)
 ```
 
+## Detailed Class Responsibilities
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ LuaTable (Interface)                                            │
+│ • Core table operations (rawget, rawset, next, len, keys)      │
+│ • Metatable support                                             │
+│ • Serializable for save game persistence                        │
+└─────────────────────────────────────────────────────────────────┘
+          ▲                                          ▲
+          │                                          │
+          │                                          │
+┌─────────┴───────────────────────┐    ┌────────────┴─────────────────────┐
+│ LuaTableImpl                    │    │ ZonePoint                         │
+│ • Hash table with chaining      │    │ • Geographic coordinates          │
+│ • Weak reference support         │    │ • Lightweight (3 fixed keys)     │
+│ • Dynamic resizing/rehashing     │    │ • Distance/bearing calculations  │
+│ • Key caching optimization       │    │ • No metatable support           │
+└─────────┬───────────────────────┘    └──────────────────────────────────┘
+          │
+          │
+┌─────────┴───────────────────────────────────────────────────────┐
+│ EventTable                                                       │
+│ • Event system (callEvent, hasEvent)                            │
+│ • Property interception (setItem/getItem hooks)                 │
+│ • Game object properties (name, description, position, visible) │
+│ • Serialization/deserialization for save games                  │
+│ • Media and icon management                                     │
+└─────────┬───────────────────────────────────────────────────────┘
+          │
+          ├── Timer: Countdown/interval timers with OnTick events
+          │
+          ├── Task: Quest tasks with active/complete states
+          │
+          ├── Media: Media resources (images, sounds) with file refs
+          │
+          ├── Action: Player action commands
+          │
+          └── Container: Inventory management
+                  │
+                  └── Thing: Items and characters
+                          │
+                          ├── Zone: Geographic zones with boundaries
+                          │
+                          └── Player: Player character with inventory
+```
+
 ## Core Components
 
 ### 1. LuaTable (Interface)
