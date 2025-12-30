@@ -12,6 +12,21 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 import java.util.Vector;
 import cgeo.geocaching.wherigo.kahlua.stdlib.BaseLib;
 
+/**
+ * Represents items (ZItems) and characters (ZCharacters) in a Wherigo game.
+ * <p>
+ * Thing extends Container to represent tangible game objects that can be
+ * carried, moved, and interacted with. Things can be either items or characters,
+ * distinguished by the character flag.
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Can have associated commands/actions that the player can execute</li>
+ * <li>Can be moved between containers (player inventory, zones, other containers)</li>
+ * <li>Characters and items behave similarly but have different Lua types</li>
+ * <li>Actions can be enabled/disabled based on game state</li>
+ * </ul>
+ */
 public class Thing extends Container {
 
     private boolean character = false;

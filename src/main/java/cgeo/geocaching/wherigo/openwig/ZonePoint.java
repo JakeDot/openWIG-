@@ -15,6 +15,26 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.stdlib.MathLib;
 
+/**
+ * Represents a geographic point with latitude, longitude, and altitude.
+ * <p>
+ * ZonePoint is the fundamental geographic primitive in OpenWIG, used to
+ * represent positions of players, zones, and game objects. It implements
+ * LuaTable to be accessible from Wherigo scripts.
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Stores coordinates in decimal degrees (latitude, longitude) and metres (altitude)</li>
+ * <li>Calculates distances between points using spherical Earth model</li>
+ * <li>Calculates bearings and azimuths between points</li>
+ * <li>Supports point translation by distance and bearing</li>
+ * <li>Provides coordinate system conversions (degrees to metres and vice versa)</li>
+ * <li>Serializable for game save/restore</li>
+ * </ul>
+ * <p>
+ * Distance calculations use a spherical Earth approximation with radius of
+ * 6367449 metres, which provides accuracy suitable for Wherigo gameplay.
+ */
 public class ZonePoint implements LuaTable, Serializable {
     public double latitude = 0;
     public double longitude = 0;

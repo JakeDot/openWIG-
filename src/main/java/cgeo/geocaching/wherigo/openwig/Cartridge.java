@@ -13,6 +13,26 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaCallFrame;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
+/**
+ * Represents the cartridge (game) itself in a Wherigo game.
+ * <p>
+ * Cartridge extends EventTable to act as the root container for all game
+ * objects. It maintains collections of zones, timers, tasks, things, and
+ * actions that make up the game.
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Central registry for all game objects (zones, timers, tasks, things)</li>
+ * <li>Maintains AllZObjects table - collection of all game objects</li>
+ * <li>Coordinates zone proximity checking via walk()</li>
+ * <li>Updates timers and zones via tick()</li>
+ * <li>Provides RequestSync() to trigger game saves</li>
+ * <li>Tracks universal actions available from any context</li>
+ * </ul>
+ * <p>
+ * There is always exactly one Cartridge instance per game, accessible via
+ * Engine.instance.cartridge. It represents the loaded .gwc cartridge file.
+ */
 public class Cartridge extends EventTable {
     public Vector<Zone> zones = new Vector<>();
     public Vector<Timer> timers = new Vector<>();

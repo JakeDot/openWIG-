@@ -20,6 +20,27 @@ import cgeo.geocaching.wherigo.openwig.Engine;
 import cgeo.geocaching.wherigo.openwig.Serializable;
 import cgeo.geocaching.wherigo.openwig.platform.FileHandle;
 
+/**
+ * Handles saving and loading of Wherigo game state.
+ * <p>
+ * Savegame manages the serialization and deserialization of all game objects,
+ * including the Lua state, to allow games to be saved and resumed. It handles
+ * the complex task of converting between Java objects, Lua tables, and binary
+ * data streams while maintaining object references and relationships.
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Serializes entire game state including Lua tables and Java objects</li>
+ * <li>Preserves object references and circular references</li>
+ * <li>Stores Lua closures, prototypes, and upvalues</li>
+ * <li>Version checking to prevent loading incompatible saves</li>
+ * <li>Handles legacy save files from older package names</li>
+ * <li>Maintains registry of JavaFunctions for Lua callbacks</li>
+ * </ul>
+ * <p>
+ * The save file format includes a signature, version number, and serialized
+ * game objects. Only one save file is maintained per cartridge.
+ */
 public class Savegame {
 
     private static final String SIGNATURE = "openWIG savegame\n";

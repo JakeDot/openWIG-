@@ -6,6 +6,26 @@ package cgeo.geocaching.wherigo.openwig;
 
 import java.util.Vector;
 
+/**
+ * Background thread for executing Lua events and callbacks.
+ * <p>
+ * BackgroundRunner is a utility thread that processes queued Runnable tasks
+ * sequentially in the background. It is used by the Engine to execute all
+ * Lua-related operations (events, callbacks, game saves) on a dedicated thread,
+ * keeping them separate from the main engine loop and UI thread.
+ * <p>
+ * Key features:
+ * <ul>
+ * <li>Processes queued tasks sequentially on a background thread</li>
+ * <li>Can be paused and resumed to control execution</li>
+ * <li>Ensures Lua state is only accessed from one thread</li>
+ * <li>Notifies listeners when queue is empty</li>
+ * <li>Singleton pattern for engine-wide use</li>
+ * </ul>
+ * <p>
+ * This threading model prevents race conditions in the Lua state and ensures
+ * predictable event ordering.
+ */
 public class BackgroundRunner extends Thread {
 
     private static BackgroundRunner instance;
