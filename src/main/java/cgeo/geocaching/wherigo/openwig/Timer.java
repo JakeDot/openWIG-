@@ -33,19 +33,19 @@ public class Timer extends EventTable {
 
     private static java.util.Timer globalTimer;
 
-    private static final JavaFunction start = (callFrame, nArguments) -> {
+    private final JavaFunction start = (callFrame, nArguments) -> {
         Timer t = (Timer)callFrame.get(0);
         t.start();
         return 0;
     };
 
-    private static final JavaFunction stop = (callFrame, nArguments) -> {
+    private final JavaFunction stop = (callFrame, nArguments) -> {
         Timer t = (Timer)callFrame.get(0);
         t.stop();
         return 0;
     };
 
-    private static final JavaFunction tick = (callFrame, nArguments) -> {
+    private final JavaFunction tick = (callFrame, nArguments) -> {
         Timer t = (Timer)callFrame.get(0);
         //t.tick();
         t.callEvent("OnTick", null);
@@ -53,9 +53,29 @@ public class Timer extends EventTable {
     };
 
     public static void register () {
-        Engine.instance.savegame.addJavafunc(start);
-        Engine.instance.savegame.addJavafunc(stop);
-        Engine.instance.savegame.addJavafunc(tick);
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine == null) return;
+        
+        // Create static versions for savegame compatibility
+        JavaFunction startFunc = (callFrame, nArguments) -> {
+            Timer t = (Timer)callFrame.get(0);
+            t.start();
+            return 0;
+        };
+        JavaFunction stopFunc = (callFrame, nArguments) -> {
+            Timer t = (Timer)callFrame.get(0);
+            t.stop();
+            return 0;
+        };
+        JavaFunction tickFunc = (callFrame, nArguments) -> {
+            Timer t = (Timer)callFrame.get(0);
+            t.callEvent("OnTick", null);
+            return 0;
+        };
+        
+        currentEngine.savegame.addJavafunc(startFunc);
+        currentEngine.savegame.addJavafunc(stopFunc);
+        currentEngine.savegame.addJavafunc(tickFunc);
     }
 
     protected String luaTostring () { return "a ZTimer instance"; }

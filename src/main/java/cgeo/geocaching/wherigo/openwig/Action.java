@@ -63,8 +63,9 @@ public class Action extends EventTable {
                     t.actions.addElement(this);
             }
         }
-        if (isUniversal() && !Engine.instance.cartridge.universalActions.contains(this)) {
-            Engine.instance.cartridge.universalActions.addElement(this);
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (isUniversal() && currentEngine != null && !currentEngine.cartridge.universalActions.contains(this)) {
+            currentEngine.cartridge.universalActions.addElement(this);
         }
     }
 
@@ -77,7 +78,10 @@ public class Action extends EventTable {
             }
         }
         if (isUniversal()) {
-            Engine.instance.cartridge.universalActions.removeElement(this);
+            Engine currentEngine = Engine.getCurrentInstance();
+            if (currentEngine != null) {
+                currentEngine.cartridge.universalActions.removeElement(this);
+            }
         }
     }
 

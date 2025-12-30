@@ -93,7 +93,10 @@ public class Zone extends Thing {
             }
             if (active) {
                 preprocess();
-                walk(Engine.instance.player.position);
+                Engine currentEngine = Engine.getCurrentInstance();
+                if (currentEngine != null && currentEngine.player != null) {
+                    walk(currentEngine.player.position);
+                }
                 //setcontain();
             }
         } else if ("Active".equals(key)) {
@@ -102,11 +105,17 @@ public class Zone extends Thing {
             active = a;
             if (a) preprocess();
             if (active) {
-                walk(Engine.instance.player.position);
+                Engine currentEngine = Engine.getCurrentInstance();
+                if (currentEngine != null && currentEngine.player != null) {
+                    walk(currentEngine.player.position);
+                }
                 //setcontain();
             } else { // if the zone is deactivated, remove player, just to be sure
                 contain = ncontain = (distanceRange < 0) ? DISTANT : NOWHERE;
-                Engine.instance.player.leaveZone(this);
+                Engine currentEngine = Engine.getCurrentInstance();
+                if (currentEngine != null && currentEngine.player != null) {
+                    currentEngine.player.leaveZone(this);
+                }
             }
         } else if ("Visible".equals(key)) {
             boolean a = LuaState.boolEval(value);
@@ -151,13 +160,16 @@ public class Zone extends Thing {
 
     private void setcontain () {
         if (contain == ncontain) return;
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine == null || currentEngine.player == null) return;
+        
         if (contain == INSIDE) {
-            Engine.instance.player.leaveZone(this);
+            currentEngine.player.leaveZone(this);
             Engine.callEvent(this, "OnExit", null);
         }
         contain = ncontain;
         if (contain == INSIDE) {
-            Engine.instance.player.enterZone(this);
+            currentEngine.player.enterZone(this);
         }
         switch (contain) {
             case INSIDE:
@@ -368,7 +380,8 @@ public class Zone extends Thing {
     }
 
     public boolean contains (Thing t) {
-        if (t == Engine.instance.player) {
+        Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null && t == currentEngine.player) {
             return contain == INSIDE;
         } else return super.contains(t);
     }
