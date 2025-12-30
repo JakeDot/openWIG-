@@ -66,9 +66,9 @@ public class Timer extends EventTable {
 
     public Timer () {
         if (globalTimer == null) globalTimer = new java.util.Timer();
-        table.rawset("Start", start);
-        table.rawset("Stop", stop);
-        table.rawset("Tick", tick);
+        rawset("Start", start);
+        rawset("Stop", stop);
+        rawset("Tick", tick);
     }
 
     protected void setItem (String key, Object value) {
@@ -88,7 +88,7 @@ public class Timer extends EventTable {
             type = t;
         } else if ("Duration".equals(key) && value instanceof Double) {
             long d = (long) LuaState.fromDouble(value);
-            table.rawset("Remaining", ZERO);
+            rawset("Remaining", ZERO);
             duration = d * 1000;
         } else super.setItem(key, value);
     }
@@ -146,11 +146,11 @@ public class Timer extends EventTable {
 
     public void updateRemaining () {
         if (task == null) {
-            table.rawset("Remaining", ZERO);
+            rawset("Remaining", ZERO);
         } else {
             long stm = System.currentTimeMillis();
             long remaining = (duration/1000) - ((stm - lastTick)/1000);
-            table.rawset("Remaining", LuaState.toDouble(remaining));
+            rawset("Remaining", LuaState.toDouble(remaining));
         }
     }
 
