@@ -183,9 +183,11 @@ public enum OsLib implements JavaFunction {
     }
 
     private static String strftime(char format, ZonedDateTime dt) {
+        // Java DayOfWeek: Monday=1, Sunday=7. Convert to array index: Sunday=0, Monday=1, ..., Saturday=6
+        int dayOfWeekIndex = dt.getDayOfWeek().getValue() % 7; // Sunday(7)→0, Monday(1)→1, ..., Saturday(6)→6
         return switch (format) {
-            case 'a' -> shortDayNames[dt.getDayOfWeek().getValue() % 7];
-            case 'A' -> longDayNames[dt.getDayOfWeek().getValue() % 7];
+            case 'a' -> shortDayNames[dayOfWeekIndex];
+            case 'A' -> longDayNames[dayOfWeekIndex];
             case 'b' -> shortMonthNames[dt.getMonthValue() - 1];
             case 'B' -> longMonthNames[dt.getMonthValue() - 1];
             case 'c' -> dt.toString();
@@ -207,7 +209,7 @@ public enum OsLib implements JavaFunction {
             case 'S' -> Integer.toString(dt.getSecond());
             case 'U' -> Integer.toString(getWeekOfYear(dt, true, false));
             case 'V' -> Integer.toString(getWeekOfYear(dt, false, true));
-            case 'w' -> Integer.toString(dt.getDayOfWeek().getValue() % 7);
+            case 'w' -> Integer.toString(dayOfWeekIndex); // strftime %w: Sunday=0, Monday=1, ..., Saturday=6
             case 'W' -> Integer.toString(getWeekOfYear(dt, false, false));
             /* commented out until we have a way to define locale and get locale formats working
             case 'x':
@@ -232,7 +234,11 @@ public enum OsLib implements JavaFunction {
         time.rawset(HOUR, LuaState.toDouble(dt.getHour()));
         time.rawset(MIN, LuaState.toDouble(dt.getMinute()));
         time.rawset(SEC, LuaState.toDouble(dt.getSecond()));
-        time.rawset(WDAY, LuaState.toDouble(dt.getDayOfWeek().getValue() % 7 + 1));
+        // Lua wday: 1=Sunday, 2=Monday, ..., 7=Saturday (follows C's struct tm)
+        // Java DayOfWeek: Monday=1, ..., Sunday=7
+        // Convert: Sunday(7)→1, Monday(1)→2, ..., Saturday(6)→7
+        int wday = (dt.getDayOfWeek().getValue() % 7) + 1;
+        time.rawset(WDAY, LuaState.toDouble(wday));
         time.rawset(YDAY, LuaState.toDouble(dt.getDayOfYear()));
         time.rawset(MILLISECOND, LuaState.toDouble(dt.get(ChronoField.MILLI_OF_SECOND)));
         //time.rawset(ISDST, null);
@@ -273,7 +279,7 @@ public enum OsLib implements JavaFunction {
         if (weekStartsSunday && dayOfWeek != 7) { // Sunday is 7 in ISO
             startOfYear = startOfYear.plusDays(7 - dayOfWeek + 1);
         } else if (!weekStartsSunday && dayOfWeek != 1) { // Monday is 1 in ISO
-            startOfYear = startOfYear.plusDays(7 - dayOfWeek + 1 + 1);
+            startOfYear = startOfYear.plusDays(9 - dayOfWeek);
         }
         
         long diff = ChronoUnit.MILLIS.between(startOfYear, dt);
