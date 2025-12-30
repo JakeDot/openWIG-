@@ -147,11 +147,27 @@ These tests can be integrated into CI/CD pipelines:
 
 ```yaml
 # Example GitHub Actions workflow
-- name: Run Unit Tests
-  run: ./gradlew test
+name: Run Tests
 
-- name: Run Integration Tests
-  run: ./gradlew test --tests "*.integration.*"
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      
+      - name: Run Unit Tests
+        run: ./gradlew test
+      
+      - name: Run Integration Tests
+        run: ./gradlew test --tests "*.integration.*"
 ```
 
 ## References
