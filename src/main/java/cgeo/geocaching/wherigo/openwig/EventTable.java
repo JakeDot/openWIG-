@@ -71,6 +71,7 @@ public class EventTable extends LuaTableImpl implements Serializable {
         super.setMetatable(metatable);
     }
 
+    @Override
     public void serialize (DataOutputStream out) throws IOException {
         Engine currentEngine = Engine.getCurrentInstance();
         if (currentEngine != null) {
