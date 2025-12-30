@@ -35,7 +35,9 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaThread;
 
-import java.util.Date;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.function.Function;
@@ -395,7 +397,9 @@ public enum BaseLib implements JavaFunction {
                     value instanceof String ||
                     value instanceof Character ||
                     value instanceof Boolean ||
-                    value instanceof Date) {
+                    value instanceof Instant ||
+                    value instanceof LocalDateTime ||
+                    value instanceof ZonedDateTime) {
                 sb.append(value);
             } else if (valueMapper != null) {
                 final String valueString = valueMapper.apply(value);
