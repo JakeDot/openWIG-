@@ -1,3 +1,15 @@
+// first of all the buildscript block, then the plugins block
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // Android gradle plugin
+        classpath 'com.android.tools.build:gradle:8.2.2'
+    }
+}
+
 plugins {
     id 'com.android.library'
     id 'checkstyle'
@@ -8,38 +20,14 @@ android {
     compileSdk 36
 
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
     defaultConfig {
         minSdk 26
         targetSdk 36
-    }
-
-    buildTypes {
-        debug {
-        }
-        legacy {
-        }
-        nightly {
-        }
-        rc {
-        }
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    buildFeatures {
-        androidResources = false
-        buildConfig = false
-    }
-
-    aaptOptions {
-        noCompress 'lbc'
     }
 
     sourceSets.main {
