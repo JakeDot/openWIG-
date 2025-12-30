@@ -445,7 +445,7 @@ public class GwcIntegrationTest {
             if (position >= data.length) {
                 throw new IOException("String not null-terminated");
             }
-            String result = new String(data, start, position - start);
+            String result = new String(data, start, position - start, java.nio.charset.StandardCharsets.UTF_8);
             position++; // skip null terminator
             return result;
         }
@@ -461,13 +461,14 @@ public class GwcIntegrationTest {
     
     /**
      * Test implementation of FileHandle for save game files.
+     * Uses a custom DataOutputStream wrapper that writes to an internal buffer.
      */
     private static class TestFileHandle implements FileHandle {
-        private ByteArrayOutputStream data;
+        private byte[] data;
         private boolean exists;
         
         public TestFileHandle() {
-            this.data = new ByteArrayOutputStream();
+            this.data = new byte[0];
             this.exists = false;
         }
         
@@ -476,13 +477,21 @@ public class GwcIntegrationTest {
             if (!exists) {
                 throw new IOException("File does not exist");
             }
-            return new DataInputStream(new ByteArrayInputStream(data.toByteArray()));
+            return new DataInputStream(new ByteArrayInputStream(data));
         }
         
         @Override
         public DataOutputStream openDataOutputStream() throws IOException {
-            data.reset();
-            return new DataOutputStream(data);
+            // Create a ByteArrayOutputStream that captures data when closed
+            ByteArrayOutputStream baos = new ByteArrayOutputStream() {
+                @Override
+                public void close() throws IOException {
+                    super.close();
+                    // Capture the data when the stream is closed
+                    TestFileHandle.this.data = this.toByteArray();
+                }
+            };
+            return new DataOutputStream(baos);
         }
         
         @Override
@@ -496,7 +505,7 @@ public class GwcIntegrationTest {
                 throw new IOException("File already exists");
             }
             exists = true;
-            data.reset();
+            data = new byte[0];
         }
         
         @Override
@@ -505,7 +514,7 @@ public class GwcIntegrationTest {
                 throw new IOException("File does not exist");
             }
             exists = false;
-            data.reset();
+            data = new byte[0];
         }
         
         @Override
@@ -513,8 +522,8 @@ public class GwcIntegrationTest {
             if (!exists) {
                 throw new IOException("File does not exist");
             }
-            // For testing purposes, just reset
-            data.reset();
+            // For testing purposes, truncate to empty
+            data = new byte[0];
         }
     }
     
