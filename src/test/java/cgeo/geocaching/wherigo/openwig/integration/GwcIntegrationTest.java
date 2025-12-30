@@ -162,21 +162,11 @@ public class GwcIntegrationTest {
         // Write file count (1 file - the bytecode)
         writeShort(baos, (short) 1);
         
-        // Calculate offset for bytecode file (after header and file table)
-        // Header: 7 bytes
-        // File count: 2 bytes
-        // File table entry: 2 (id) + 4 (offset) = 6 bytes
-        // Metadata header starts at: 7 + 2 + 6 = 15
-        
-        // We'll calculate the bytecode offset after we know the header size
-        int metadataHeaderStart = 15;
-        
-        // Write file table entry for bytecode (id=0)
-        writeShort(baos, (short) 0);
-        writeInt(baos, 0); // Temporary offset, will update later
-        
-        // Remember position for updating bytecode offset
-        int bytecodeOffsetPosition = 13;
+        // File table entry for bytecode (id=0)
+        // The offset field starts at position: 7 (header) + 2 (file count) + 2 (id) = 11
+        writeShort(baos, (short) 0); // File ID (position 9-10)
+        int bytecodeOffsetPosition = baos.size(); // Save position before writing offset (position 11)
+        writeInt(baos, 0); // Temporary offset placeholder, will update after calculating actual position
         
         // Build metadata header
         ByteArrayOutputStream headerStream = new ByteArrayOutputStream();
@@ -286,7 +276,7 @@ public class GwcIntegrationTest {
             baos.write(0x00);
             
             // Function header
-            writeString(baos, ""); // source name
+            writeLuaString(baos, ""); // source name
             writeInt(baos, 0); // line defined
             writeInt(baos, 0); // last line defined
             baos.write(0); // number of upvalues
@@ -345,9 +335,23 @@ public class GwcIntegrationTest {
     }
     
     private void writeString(ByteArrayOutputStream out, String str) {
-        byte[] bytes = str.getBytes();
+        byte[] bytes = str.getBytes(java.nio.charset.StandardCharsets.UTF_8);
         out.write(bytes, 0, bytes.length);
         out.write(0); // null terminator
+    }
+    
+    /**
+     * Writes a string in Lua bytecode format (size-prefixed).
+     * For Lua 5.1, strings are size_t length followed by characters (no null terminator).
+     */
+    private void writeLuaString(ByteArrayOutputStream out, String str) {
+        byte[] bytes = str.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        // For empty string, Lua uses size 0
+        // For non-empty strings, Lua uses size + 1 (includes implicit null)
+        writeInt(out, bytes.length == 0 ? 0 : bytes.length + 1);
+        if (bytes.length > 0) {
+            out.write(bytes, 0, bytes.length);
+        }
     }
 
     // Test implementation classes
