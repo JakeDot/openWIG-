@@ -19,6 +19,31 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
 
+/**
+ * Extended LuaTable implementation that adds game object functionality for Wherigo cartridges.
+ * 
+ * <p>EventTable extends the basic Lua table with:</p>
+ * <ul>
+ *   <li>Event handling system for Lua callbacks (OnTick, OnStart, OnStop, etc.)</li>
+ *   <li>Common game object properties (name, description, position, visibility)</li>
+ *   <li>Serialization support for save game persistence</li>
+ *   <li>Property interception via setItem/getItem hooks</li>
+ *   <li>Media and icon management</li>
+ * </ul>
+ * 
+ * <p>This class serves as the base for all Wherigo game objects including Timer, Task,
+ * Media, Container, Thing, Zone, and Player.</p>
+ * 
+ * <h3>Event System:</h3>
+ * Subclasses can respond to Lua events by storing LuaClosure callbacks in the table.
+ * Use {@link #callEvent(String, Object)} to invoke these callbacks.
+ * 
+ * <h3>Property Interception:</h3>
+ * Override {@link #setItem(String, Object)} and {@link #getItem(String)} to intercept
+ * specific property assignments and provide computed properties.
+ * 
+ * @see LuaTableImpl
+ */
 public class EventTable extends LuaTableImpl {
 
     private boolean isDeserializing = false;
@@ -82,6 +107,24 @@ public class EventTable extends LuaTableImpl {
         return position != null;
     }
 
+    /**
+     * Hook method called when a property is set via rawset.
+     * Subclasses override this to intercept specific property assignments and
+     * implement custom behavior (e.g., triggering events, validation, type conversion).
+     * 
+     * <p>The default implementation handles common properties:</p>
+     * <ul>
+     *   <li>Name - Sets the object's name</li>
+     *   <li>Description - Sets the description (with HTML removal)</li>
+     *   <li>Visible - Sets visibility flag</li>
+     *   <li>ObjectLocation - Sets the position</li>
+     *   <li>Media - Sets the media resource</li>
+     *   <li>Icon - Sets the icon resource</li>
+     * </ul>
+     * 
+     * @param key The property name
+     * @param value The value being set
+     */
     protected void setItem(String key, Object value) {
         if ("Name".equals(key)) {
             name = BaseLib.rawTostring(value);
@@ -100,6 +143,20 @@ public class EventTable extends LuaTableImpl {
         }
     }
 
+    /**
+     * Hook method called when a property is retrieved.
+     * Subclasses override this to provide computed properties that don't exist in the table
+     * (e.g., CurrentDistance, CurrentBearing calculated from position).
+     * 
+     * <p>The default implementation provides computed distance and bearing properties:</p>
+     * <ul>
+     *   <li>CurrentDistance - Distance from player to this object in meters</li>
+     *   <li>CurrentBearing - Bearing from player to this object in degrees (0-360)</li>
+     * </ul>
+     * 
+     * @param key The property name
+     * @return The property value, or the raw table value if no special handling
+     */
     protected Object getItem (String key) {
         if ("CurrentDistance".equals(key)) {
             if (isLocated()) return LuaState.toDouble(position.distance(Engine.instance.player.position));
@@ -120,6 +177,21 @@ public class EventTable extends LuaTableImpl {
         }
     }
 
+    /**
+     * Calls a Lua event callback if one is defined for the given event name.
+     * 
+     * <p>This method looks up the event name in the table. If the value is a LuaClosure,
+     * it invokes the closure with this object as the first parameter and the provided
+     * param as the second parameter.</p>
+     * 
+     * <p>Note: This method is suppressed during deserialization to avoid calling events
+     * before the object is fully initialized. See
+     * <a href="https://github.com/cgeo/openWIG/issues/8#issuecomment-612182631">Issue #8</a>
+     * for details.</p>
+     * 
+     * @param name The event name (e.g., "OnTick", "OnStart", "OnStop")
+     * @param param Optional parameter to pass to the event callback, or null
+     */
     public void callEvent(String name, Object param) {
         /*
          workaround: suppress RuntimeException if callEvent() is called at deserialiation
