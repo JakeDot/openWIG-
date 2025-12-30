@@ -105,7 +105,7 @@ public class LuaTableImpl implements LuaTable {
         return p;
     }
 
-    public LuaTableImpl() {
+    public LuaTableImpl () {
         int capacity = 1;
 
         keys = new Object[capacity];
@@ -428,7 +428,7 @@ public class LuaTableImpl implements LuaTable {
      * @param value The value to associate with the key, or null to remove the key
      * @throws RuntimeException if key is null (via checkKey)
      */
-    public void rawset(Object key, Object value) {
+    public void rawset (Object key, Object value) {
         checkKey(key);
         rawsetHash(key, value);
     }
@@ -453,7 +453,7 @@ public class LuaTableImpl implements LuaTable {
      * @param index The integer index
      * @return The value at that index, or null if not present
      */
-    public Object rawget(int index) {
+    public Object rawget (int index) {
         return rawgetHash(LuaState.toDouble(index));
     }
 
@@ -464,7 +464,7 @@ public class LuaTableImpl implements LuaTable {
      * @param index The integer index
      * @param value The value to set
      */
-    public void rawset(int index, Object value) {
+    public void rawset (int index, Object value) {
         rawsetHash(LuaState.toDouble(index), value);
     }
 
@@ -476,7 +476,7 @@ public class LuaTableImpl implements LuaTable {
      * @return The value associated with the key, or null if not present
      * @throws RuntimeException if key is null or NaN
      */
-    public final <T> T rawget(Object key) {
+    public final <T> T rawget (Object key) {
         checkKey(key);
         if (key instanceof Double) {
             BaseLib.luaAssert(!((Double) key).isNaN(), "table index is NaN");
@@ -505,7 +505,7 @@ public class LuaTableImpl implements LuaTable {
         return index;
     }
 
-    public static void checkKey(Object key) {
+    public static void checkKey (Object key) {
         BaseLib.luaAssert(key != null, "table index is nil");
     }
 
@@ -531,11 +531,11 @@ public class LuaTableImpl implements LuaTable {
         }
     }
 
-    public final Object next(Object key) {
+    public final Object next (Object key) {
         return nextHash(key);
     }
 
-    public final int len() {
+    public final int len () {
         int high = 2 * keys.length;
         int low = 0;
         while (low < high) {
@@ -553,13 +553,13 @@ public class LuaTableImpl implements LuaTable {
         return low;
     }
 
-    public Iterator<Object> keys() {
+    public Iterator<Object> keys () {
         return IteratorUtils.filteredIterator(IteratorUtils.arrayIterator(keys), Objects::nonNull);
     }
 
 
 
-    public static int luaHashcode(Object a) {
+    public static int luaHashcode (Object a) {
         if (a instanceof Double ad) {
             long l = Double.doubleToLongBits(ad.doubleValue()) & 0x7fffffffffffffffL;
             return (int) (l ^ (l >>> 32));
@@ -603,11 +603,11 @@ public class LuaTableImpl implements LuaTable {
         }
     }
 
-    public LuaTable getMetatable() {
+    public LuaTable getMetatable () {
         return metatable;
     }
 
-    public void setMetatable(LuaTable metatable) {
+    public void setMetatable (LuaTable metatable) {
         this.metatable = metatable;
         boolean weakKeys = false, weakValues = false;
         if (metatable != null) {
