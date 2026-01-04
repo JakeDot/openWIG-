@@ -25,6 +25,8 @@ Release 1.1.0 / 4386a025b88aac759e1e67cb27bcc50692d61d9a, Base Package se.krka.k
 */
 package cgeo.geocaching.wherigo.kahlua.stdlib;
 
+import androidx.annotation.NonNull;
+
 import cgeo.geocaching.wherigo.kahlua.vm.JavaFunction;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaCallFrame;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
@@ -32,15 +34,15 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
 public enum TableLib implements JavaFunction {
-    CONCAT("concat"),
-    INSERT("insert"),
-    REMOVE("remove"),
-    MAXN("maxn");
+    CONCAT,
+    INSERT,
+    REMOVE,
+    MAXN;
 
     private final String name;
 
-    TableLib(String name) {
-        this.name = name;
+    TableLib() {
+        this.name = name().toLowerCase();
     }
 
     public static void register(LuaState state) {
@@ -52,6 +54,7 @@ public enum TableLib implements JavaFunction {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "table." + name;

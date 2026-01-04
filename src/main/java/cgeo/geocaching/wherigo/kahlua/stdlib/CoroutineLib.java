@@ -25,6 +25,8 @@ Release 1.1.0 / 4386a025b88aac759e1e67cb27bcc50692d61d9a, Base Package se.krka.k
 */
 package cgeo.geocaching.wherigo.kahlua.stdlib;
 
+import androidx.annotation.NonNull;
+
 import cgeo.geocaching.wherigo.kahlua.vm.JavaFunction;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaCallFrame;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaClosure;
@@ -34,18 +36,19 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaThread;
 
 public enum CoroutineLib implements JavaFunction {
-    CREATE("create"),
-    RESUME("resume"),
-    YIELD("yield"),
-    STATUS("status"),
-    RUNNING("running");
+    CREATE,
+    RESUME,
+    YIELD,
+    STATUS,
+    RUNNING;
 
     private final String name;
 
-    CoroutineLib(String name) {
-        this.name = name;
+    CoroutineLib() {
+        this.name = name().toLowerCase();
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "coroutine." + name;

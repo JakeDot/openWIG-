@@ -25,6 +25,8 @@ Release 1.1.0 / 4386a025b88aac759e1e67cb27bcc50692d61d9a, Base Package se.krka.k
 */
 package cgeo.geocaching.wherigo.kahlua.stdlib;
 
+import androidx.annotation.NonNull;
+
 import java.util.Locale;
 
 import cgeo.geocaching.wherigo.kahlua.vm.JavaFunction;
@@ -34,16 +36,16 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
 public enum StringLib implements JavaFunction {
-    SUB("sub"),
-    CHAR("char"),
-    BYTE("byte"),
-    LOWER("lower"),
-    UPPER("upper"),
-    REVERSE("reverse"),
-    FORMAT("format"),
-    FIND("find"),
-    MATCH("match"),
-    GSUB("gsub");
+    SUB,
+    CHAR,
+    BYTE,
+    LOWER,
+    UPPER,
+    REVERSE,
+    FORMAT,
+    FIND,
+    MATCH,
+    GSUB;
 
     private static final boolean[] SPECIALS = new boolean[256];
     static {
@@ -65,8 +67,8 @@ public enum StringLib implements JavaFunction {
 
     private final String name;
 
-    StringLib(String name) {
-        this.name = name;
+    StringLib() {
+        this.name = name().toLowerCase();
     }
 
     public static void register(LuaState state) {
@@ -80,6 +82,7 @@ public enum StringLib implements JavaFunction {
         state.setClassMetatable(STRING_CLASS, string);
     }
 
+    @NonNull
     @Override
     public String toString() {
         return name;
