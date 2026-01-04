@@ -43,25 +43,25 @@ import java.util.Locale;
 import java.util.function.Function;
 
 public enum BaseLib implements JavaFunction {
-    PCALL("pcall"),
-    PRINT("print"),
-    SELECT("select"),
-    TYPE("type"),
-    TOSTRING("tostring"),
-    TONUMBER("tonumber"),
-    GETMETATABLE("getmetatable"),
-    SETMETATABLE("setmetatable"),
-    ERROR("error"),
-    UNPACK("unpack"),
-    NEXT("next"),
-    SETFENV("setfenv"),
-    GETFENV("getfenv"),
-    RAWEQUAL("rawequal"),
-    RAWSET("rawset"),
-    RAWGET("rawget"),
-    COLLECTGARBAGE("collectgarbage"),
-    DEBUGSTACKTRACE("debugstacktrace"),
-    BYTECODELOADER("bytecodeloader");
+    PCALL,
+    PRINT,
+    SELECT,
+    TYPE,
+    TOSTRING,
+    TONUMBER,
+    GETMETATABLE,
+    SETMETATABLE,
+    ERROR,
+    UNPACK,
+    NEXT,
+    SETFENV,
+    GETFENV,
+    RAWEQUAL,
+    RAWSET,
+    RAWGET,
+    COLLECTGARBAGE,
+    DEBUGSTACKTRACE,
+    BYTECODELOADER;
 
     private static final Runtime RUNTIME = Runtime.getRuntime();
     public static final String MODE_KEY = "__mode";
@@ -78,8 +78,8 @@ public enum BaseLib implements JavaFunction {
 
     private final String name;
 
-    BaseLib(String name) {
-        this.name = name;
+    BaseLib() {
+        this.name = name().toLowerCase();
     }
 
     public static void register(LuaState state) {
@@ -385,7 +385,7 @@ public enum BaseLib implements JavaFunction {
             return "null";
         }
         final StringBuilder sb = new StringBuilder("]");
-        final Iterator it = table.keys().iterator();
+        final Iterator it = table.keys();
         while (it.hasNext()) {
             Object key = it.next();
             sb.append(key).append("=");

@@ -40,9 +40,9 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
 public enum OsLib implements JavaFunction {
-    DATE("date"),
-    DIFFTIME("difftime"),
-    TIME("time");
+    DATE,
+    DIFFTIME,
+    TIME;
 
     private static final String TABLE_FORMAT = "*t";
     private static final String DEFAULT_FORMAT = "%c";
@@ -84,8 +84,8 @@ public enum OsLib implements JavaFunction {
         "July", "August", "September", "October", "November", "December"
     };
 
-    OsLib(String name) {
-        this.name = name;
+    OsLib() {
+        this.name = name().toLowerCase();
     }
 
     public static void register(LuaState state) {
@@ -254,18 +254,18 @@ public enum OsLib implements JavaFunction {
         int year = (int)LuaState.fromDouble(time.rawget(YEAR));
         int month = (int)LuaState.fromDouble(time.rawget(MONTH));
         int day = (int)LuaState.fromDouble(time.rawget(DAY));
-        
+
         Object hour = time.rawget(HOUR);
         Object minute = time.rawget(MIN);
         Object seconds = time.rawget(SEC);
         Object milliseconds = time.rawget(MILLISECOND);
         //Object isDst = time.rawget(ISDST);
-        
+
         int hourVal = hour != null ? (int)LuaState.fromDouble(hour) : 0;
         int minuteVal = minute != null ? (int)LuaState.fromDouble(minute) : 0;
         int secondVal = seconds != null ? (int)LuaState.fromDouble(seconds) : 0;
         int milliVal = milliseconds != null ? (int)LuaState.fromDouble(milliseconds) : 0;
-        
+
         LocalDateTime ldt = LocalDateTime.of(year, month, day, hourVal, minuteVal, secondVal, milliVal * 1_000_000);
         ZonedDateTime zdt = ZonedDateTime.of(ldt, tzone);
         // TODO: daylight savings support(is it possible?)
@@ -277,11 +277,11 @@ public enum OsLib implements JavaFunction {
         // Java DayOfWeek: Monday=1, Tuesday=2, ..., Sunday=7
         // Old Calendar: Sunday=1, Monday=2, ..., Saturday=7
         int dayOfWeek = startOfYear.getDayOfWeek().getValue();
-        
+
         // Convert java.time dayOfWeek to old Calendar dayOfWeek for formula compatibility
         // Java: Mon=1, Tue=2, ..., Sun=7 -> Calendar: Sun=1, Mon=2, ..., Sat=7
         int oldCalendarDayOfWeek = (dayOfWeek % 7) + 1; // Mon(1)->2, Tue(2)->3, ..., Sun(7)->1
-        
+
         // Apply original logic with old Calendar day values
         if (weekStartsSunday && oldCalendarDayOfWeek != 1) { // 1 = Sunday in old Calendar
             int targetDayOfMonth = (7 - oldCalendarDayOfWeek) + 1;
@@ -290,7 +290,7 @@ public enum OsLib implements JavaFunction {
             int targetDayOfMonth = (7 - oldCalendarDayOfWeek + 1) + 1;
             startOfYear = startOfYear.withDayOfMonth(targetDayOfMonth);
         }
-        
+
         long diff = ChronoUnit.MILLIS.between(startOfYear, dt);
         int w = (int)(diff / MILLIS_PER_WEEK);
 

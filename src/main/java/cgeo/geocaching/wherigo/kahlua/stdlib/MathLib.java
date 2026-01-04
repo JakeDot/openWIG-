@@ -25,6 +25,8 @@ Release 1.1.0 / 4386a025b88aac759e1e67cb27bcc50692d61d9a, Base Package se.krka.k
 */
 package cgeo.geocaching.wherigo.kahlua.stdlib;
 
+import androidx.annotation.NonNull;
+
 import java.util.Random;
 
 import cgeo.geocaching.wherigo.kahlua.vm.JavaFunction;
@@ -34,37 +36,37 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
 public enum MathLib implements JavaFunction {
-    ABS("abs"),
-    ACOS("acos"),
-    ASIN("asin"),
-    ATAN("atan"),
-    ATAN2("atan2"),
-    CEIL("ceil"),
-    COS("cos"),
-    COSH("cosh"),
-    DEG("deg"),
-    EXP("exp"),
-    FLOOR("floor"),
-    FMOD("fmod"),
-    FREXP("frexp"),
-    LDEXP("ldexp"),
-    LOG("log"),
-    LOG10("log10"),
-    MODF("modf"),
-    POW("pow"),
-    RAD("rad"),
-    RANDOM("random"),
-    RANDOMSEED("randomseed"),
-    SIN("sin"),
-    SINH("sinh"),
-    SQRT("sqrt"),
-    TAN("tan"),
-    TANH("tanh");
+    ABS,
+    ACOS,
+    ASIN,
+    ATAN,
+    ATAN2,
+    CEIL,
+    COS,
+    COSH,
+    DEG,
+    EXP,
+    FLOOR,
+    FMOD,
+    FREXP,
+    LDEXP,
+    LOG,
+    LOG10,
+    MODF,
+    POW,
+    RAD,
+    RANDOM,
+    RANDOMSEED,
+    SIN,
+    SINH,
+    SQRT,
+    TAN,
+    TANH;
 
     private final String name;
 
-    MathLib(String name) {
-        this.name = name;
+    MathLib() {
+        this.name = name().toLowerCase();
     }
 
     public static void register(LuaState state) {
@@ -79,6 +81,7 @@ public enum MathLib implements JavaFunction {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "math." + name;
@@ -117,7 +120,7 @@ public enum MathLib implements JavaFunction {
     }
 
     private static double getDoubleArg(LuaCallFrame callFrame, int argc, String funcname) {
-        return ((Double)BaseLib.getArg(callFrame, argc, BaseLib.TYPE_NUMBER, funcname)).doubleValue();
+        return (Double) BaseLib.getArg(callFrame, argc, BaseLib.TYPE_NUMBER, funcname);
     }
 
     // Generic math functions
