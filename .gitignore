@@ -4,6 +4,10 @@
 # Ignore Gradle build output directory
 build
 
+# Ignore gradle wrapper
+gradle
+gradlew
+
 # developer specific settings and credentials
 /local.properties
 
