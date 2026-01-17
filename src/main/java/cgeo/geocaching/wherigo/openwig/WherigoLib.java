@@ -335,11 +335,15 @@ public enum WherigoLib implements JavaFunction {
 
     private int showscreen (LuaCallFrame callFrame, int nArguments) {
         int screenValue = (int)LuaState.fromDouble(callFrame.get(0));
+        UI.Screen[] screens = UI.Screen.values();
         UI.Screen screen = null;
-        if (screenValue >= 0 && screenValue < UI.Screen.values().length) {
-            screen = UI.Screen.values()[screenValue];
+        if (screenValue >= 0 && screenValue < screens.length) {
+            screen = screens[screenValue];
         } else {
-            Engine.log("ERROR: Invalid screen value: " + screenValue + ". Valid range is 0-" + (UI.Screen.values().length - 1), Engine.LOG_ERROR);
+            Engine.log("ERROR: Invalid screen value: " + screenValue + ". Valid range is 0-" + (screens.length - 1), Engine.LOG_ERROR);
+        }
+        if (screen == null) {
+            return 0;
         }
         EventTable et = null;
         if (nArguments > 1) {
@@ -347,9 +351,6 @@ public enum WherigoLib implements JavaFunction {
             if (o instanceof EventTable e) et = e;
         }
         Engine.log("CALL: ShowScreen("+screenValue+") " + (et == null ? "" : et.name), Engine.LOG_CALL);
-        if (screen == null) {
-            return 0;
-        }
         Engine.ui.showScreen(screen, et);
         return 0;
     }
