@@ -128,12 +128,12 @@ public enum WherigoLib implements JavaFunction {
         wig.rawset("INVALID_ZONEPOINT", null);
 
         // screen constants
-        wig.rawset("MAINSCREEN", new Double(UI.MAINSCREEN));
-        wig.rawset("DETAILSCREEN", new Double(UI.DETAILSCREEN));
-        wig.rawset("ITEMSCREEN", new Double(UI.ITEMSCREEN));
-        wig.rawset("INVENTORYSCREEN", new Double(UI.INVENTORYSCREEN));
-        wig.rawset("LOCATIONSCREEN", new Double(UI.LOCATIONSCREEN));
-        wig.rawset("TASKSCREEN", new Double(UI.TASKSCREEN));
+        wig.rawset("MAINSCREEN", new Double(UI.Screen.MAINSCREEN.getValue()));
+        wig.rawset("DETAILSCREEN", new Double(UI.Screen.DETAILSCREEN.getValue()));
+        wig.rawset("ITEMSCREEN", new Double(UI.Screen.ITEMSCREEN.getValue()));
+        wig.rawset("INVENTORYSCREEN", new Double(UI.Screen.INVENTORYSCREEN.getValue()));
+        wig.rawset("LOCATIONSCREEN", new Double(UI.Screen.LOCATIONSCREEN.getValue()));
+        wig.rawset("TASKSCREEN", new Double(UI.Screen.TASKSCREEN.getValue()));
 
         LuaTable pack = (LuaTable)environment.rawget("package");
         LuaTable loaded = (LuaTable)pack.rawget("loaded");
@@ -334,14 +334,23 @@ public enum WherigoLib implements JavaFunction {
     }
 
     private int showscreen (LuaCallFrame callFrame, int nArguments) {
-        int screen = (int)LuaState.fromDouble(callFrame.get(0));
+        int screenValue = (int)LuaState.fromDouble(callFrame.get(0));
+        UI.Screen screen = null;
+        for (UI.Screen s : UI.Screen.values()) {
+            if (s.getValue() == screenValue) {
+                screen = s;
+                break;
+            }
+        }
         EventTable et = null;
         if (nArguments > 1) {
             Object o = callFrame.get(1);
             if (o instanceof EventTable e) et = e;
         }
-        Engine.log("CALL: ShowScreen("+screen+") " + (et == null ? "" : et.name), Engine.LOG_CALL);
-        Engine.ui.showScreen(screen, et);
+        Engine.log("CALL: ShowScreen("+screenValue+") " + (et == null ? "" : et.name), Engine.LOG_CALL);
+        if (screen != null) {
+            Engine.ui.showScreen(screen, et);
+        }
         return 0;
     }
 

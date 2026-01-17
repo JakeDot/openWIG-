@@ -155,7 +155,7 @@ public class EngineTest {
                                         String button1, String button2, 
                                         cgeo.geocaching.wherigo.kahlua.vm.LuaClosure callback) {}
         @Override public void pushInput(EventTable input) {}
-        @Override public void showScreen(int screenId, EventTable details) {}
+        @Override public void showScreen(UI.Screen screenId, EventTable details) {}
         @Override public void playSound(byte[] data, String mime) {}
         @Override public void blockForSaving() {}
         @Override public void unblock() {}
