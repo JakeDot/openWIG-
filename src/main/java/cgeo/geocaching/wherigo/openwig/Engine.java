@@ -342,8 +342,8 @@ public class Engine implements Runnable {
         String button1 = null, button2 = null;
         LuaTable buttons = (LuaTable)message.rawget("Buttons");
         if (buttons != null) {
-            button1 = (String)buttons.rawget(new Double(1));
-            button2 = (String)buttons.rawget(new Double(2));
+            button1 = (String)buttons.rawget(Double.valueOf(1));
+            button2 = (String)buttons.rawget(Double.valueOf(2));
         }
         LuaClosure callback = (LuaClosure)message.rawget("Callback");
         currentEngine.uiInstance.pushDialog(texts, media, button1, button2, callback);

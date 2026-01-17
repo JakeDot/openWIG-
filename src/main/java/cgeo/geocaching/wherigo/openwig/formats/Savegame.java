@@ -188,7 +188,7 @@ public class Savegame {
     private static final byte LUATABLE_END  = 0x11;
 
     public void addJavafunc (JavaFunction javafunc) {
-        Integer id = new Integer(currentJavafunc++);
+        Integer id = Integer.valueOf(currentJavafunc++);
         idToJavafuncMap.put(id, javafunc);
         javafuncToIdMap.put(javafunc, id);
     }
@@ -200,7 +200,7 @@ public class Savegame {
     }
 
     private JavaFunction findJavafuncObject (int id) {
-        JavaFunction jf = idToJavafuncMap.get(new Integer(id));
+        JavaFunction jf = idToJavafuncMap.get(Integer.valueOf(id));
         return jf;
     }
 
@@ -216,7 +216,7 @@ public class Savegame {
              if (debug) debug("reference "+i.intValue()+" ("+obj.toString()+")");
             out.writeInt(i.intValue());
         } else {
-            i = new Integer(currentId++);
+            i = Integer.valueOf(currentId++);
             objectStore.put(obj, i);
             if (debug) debug("(ref"+i.intValue()+")");
             if (obj instanceof Serializable) {
@@ -316,7 +316,7 @@ public class Savegame {
     }
 
     private void restCache (Object o) {
-        Integer i = new Integer(currentId++);
+        Integer i = Integer.valueOf(currentId++);
         objectStore.put(i, o);
         if (debug) debug("(ref"+i.intValue()+")");
     }
@@ -358,7 +358,7 @@ public class Savegame {
                 }
                 return s;
             case LUA_REFERENCE:
-                Integer what = new Integer(in.readInt());
+                Integer what = Integer.valueOf(in.readInt());
                 if (debug) debug("reference "+what.intValue());
                 Object result = objectStore.get(what);
                 if (result == null) {
