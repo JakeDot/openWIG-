@@ -385,7 +385,7 @@ public enum BaseLib implements JavaFunction {
             return "null";
         }
         final StringBuilder sb = new StringBuilder("]");
-        final Iterator it = table.keys();
+        final Iterator<Object> it = table.keys();
         while (it.hasNext()) {
             Object key = it.next();
             sb.append(key).append("=");
