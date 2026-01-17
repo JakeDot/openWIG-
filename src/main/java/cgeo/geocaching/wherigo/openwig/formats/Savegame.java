@@ -5,7 +5,7 @@
 package cgeo.geocaching.wherigo.openwig.formats;
 
 import java.io.*;
-import java.util.Hashtable;
+import java.util.HashMap;
 
 import cgeo.geocaching.wherigo.kahlua.stdlib.BaseLib;
 import cgeo.geocaching.wherigo.kahlua.vm.JavaFunction;
@@ -110,8 +110,8 @@ public class Savegame {
     }
 
     protected void resetObjectStore () {
-        objectStore = new Hashtable<>(256);
-        // XXX why did i choose to use LuaTable over Hashtable?
+        objectStore = new HashMap<>(256);
+        // XXX why did i choose to use LuaTable over HashMap?
         currentId = 0;
         level = 0;
     }
@@ -148,11 +148,11 @@ public class Savegame {
         }
     }
 
-    private Hashtable<Object,Object> objectStore;
+    private HashMap<Object,Object> objectStore;
     private int currentId;
 
-    private Hashtable<Integer, JavaFunction> idToJavafuncMap = new Hashtable<>(128);
-    private Hashtable<JavaFunction, Integer> javafuncToIdMap = new Hashtable<>(128);
+    private HashMap<Integer, JavaFunction> idToJavafuncMap = new HashMap<>(128);
+    private HashMap<JavaFunction, Integer> javafuncToIdMap = new HashMap<>(128);
     private int currentJavafunc = 0;
 
     public void buildJavafuncMap (LuaTable environment) {
