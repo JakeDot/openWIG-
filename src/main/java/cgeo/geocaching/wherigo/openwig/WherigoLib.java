@@ -81,7 +81,7 @@ public enum WherigoLib implements JavaFunction {
         env.put("CartFilename", "cartridge.gwc");
         env.put("PathSep", "/"); // no. you may NOT do file i/o on this device.
         env.put("Version", "2.11-compatible(r"+Engine.VERSION+")");
-        env.put("Downloaded", new Double(0));
+        env.put("Downloaded", Double.valueOf(0));
     }
 
     private final Class klass = assignClass();
@@ -129,12 +129,12 @@ public enum WherigoLib implements JavaFunction {
         wig.rawset("INVALID_ZONEPOINT", null);
 
         // screen constants
-        wig.rawset("MAINSCREEN", new Double(UI.Screen.MAINSCREEN.getValue()));
-        wig.rawset("DETAILSCREEN", new Double(UI.Screen.DETAILSCREEN.getValue()));
-        wig.rawset("ITEMSCREEN", new Double(UI.Screen.ITEMSCREEN.getValue()));
-        wig.rawset("INVENTORYSCREEN", new Double(UI.Screen.INVENTORYSCREEN.getValue()));
-        wig.rawset("LOCATIONSCREEN", new Double(UI.Screen.LOCATIONSCREEN.getValue()));
-        wig.rawset("TASKSCREEN", new Double(UI.Screen.TASKSCREEN.getValue()));
+        wig.rawset("MAINSCREEN", Double.valueOf(UI.Screen.MAINSCREEN.getValue()));
+        wig.rawset("DETAILSCREEN", Double.valueOf(UI.Screen.DETAILSCREEN.getValue()));
+        wig.rawset("ITEMSCREEN", Double.valueOf(UI.Screen.ITEMSCREEN.getValue()));
+        wig.rawset("INVENTORYSCREEN", Double.valueOf(UI.Screen.INVENTORYSCREEN.getValue()));
+        wig.rawset("LOCATIONSCREEN", Double.valueOf(UI.Screen.LOCATIONSCREEN.getValue()));
+        wig.rawset("TASKSCREEN", Double.valueOf(UI.Screen.TASKSCREEN.getValue()));
 
         LuaTable pack = (LuaTable)environment.rawget("package");
         LuaTable loaded = (LuaTable)pack.rawget("loaded");
@@ -311,7 +311,7 @@ public enum WherigoLib implements JavaFunction {
         String[] texts = new String[n];
         Media[] media = new Media[n];
         for (int i = 1; i <= n; i++) {
-            LuaTable item = (LuaTable)lt.rawget(new Double(i));
+            LuaTable item = (LuaTable)lt.rawget(Double.valueOf(i));
             texts[i-1] = Engine.removeHtml((String)item.rawget("Text"));
             media[i-1] = (Media)item.rawget("Media");
         }

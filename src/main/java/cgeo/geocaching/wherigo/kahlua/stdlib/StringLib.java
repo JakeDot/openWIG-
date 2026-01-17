@@ -723,7 +723,7 @@ public enum StringLib implements JavaFunction {
         int offset = ii - 1;
         for (int i = 0; i < nReturns; i++) {
             char c = s.charAt(offset + i);
-            callFrame.set(i, new Double((double) c));
+            callFrame.set(i, Double.valueOf((double) c));
         }
         return nReturns;
     }
@@ -805,7 +805,7 @@ public enum StringLib implements JavaFunction {
             Object[] caps = new String[level];
             for (int i = 0; i < level; i++) {
                 if (capture[i].len == CAP_POSITION) {
-                    caps[i] = new Double(src_init.length() - capture[i].init.length() + 1);
+                    caps[i] = Double.valueOf(src_init.length() - capture[i].init.length() + 1);
                 } else {
                     caps[i] = capture[i].init.getString().substring(0, capture[i].len);
                 }
@@ -914,7 +914,7 @@ public enum StringLib implements JavaFunction {
             if (l == CAP_UNFINISHED) {
                 throw new IllegalStateException("unfinished capture");
             } else if (l == CAP_POSITION) {
-                Double res = new Double(ms.src_init.length() - ms.capture[i].init.length() + 1);
+                Double res = Double.valueOf(ms.src_init.length() - ms.capture[i].init.length() + 1);
                 ms.callFrame.push(res);
                 return res;
             } else {
@@ -991,7 +991,7 @@ public enum StringLib implements JavaFunction {
                 ms.level = 0;
                 if ( ( res = match ( ms, s1, p ) ) != null ) {
                     if ( find ) {
-                        return callFrame.push(new Double(s.length () - s1.length () + 1), new Double(s.length () - res.length ())) +
+                        return callFrame.push(Double.valueOf(s.length () - s1.length () + 1), Double.valueOf(s.length () - res.length ())) +
                         pushCaptures( ms, null, null );
                     } else {
                         return pushCaptures( ms, s1, res );
@@ -1419,7 +1419,7 @@ public enum StringLib implements JavaFunction {
                 break;
             }
         }
-        return cf.push(b.append(src.getString()).toString(), new Double(n));
+        return cf.push(b.append(src.getString()).toString(), Double.valueOf(n));
     }
 
     private static void addValue(MatchState ms, Object repl, StringBuffer b, StringPointer src, StringPointer e) {
