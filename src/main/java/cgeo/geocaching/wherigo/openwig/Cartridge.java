@@ -80,19 +80,16 @@ public class Cartridge extends EventTable {
     }
 
     public void walk (ZonePoint zp) {
-        for (int i = 0; i < zones.size(); i++) {
-            Zone z = zones.get(i);
+        for (Zone z : zones) {
             z.walk(zp);
         }
     }
 
     public void tick () {
-        for (int i = 0; i < zones.size(); i++) {
-            Zone z = zones.get(i);
+        for (Zone z : zones) {
             z.tick();
         }
-        for (int i = 0; i < timers.size(); i++) {
-            Timer t = timers.get(i);
+        for (Timer t : timers) {
             t.updateRemaining();
         }
 
@@ -100,8 +97,7 @@ public class Cartridge extends EventTable {
 
     public int visibleZones () {
         int count = 0;
-        for (int i = 0; i < zones.size(); i++) {
-            Zone z = zones.get(i);
+        for (Zone z : zones) {
             if (z.isVisible()) count++;
         }
         return count;
@@ -109,8 +105,7 @@ public class Cartridge extends EventTable {
 
     public int visibleThings () {
         int count = 0;
-        for (int i = 0; i < zones.size(); i++) {
-            Zone z = zones.get(i);
+        for (Zone z : zones) {
             count += z.visibleThings();
         }
         return count;
@@ -118,8 +113,7 @@ public class Cartridge extends EventTable {
 
     public LuaTable currentThings () {
         LuaTable ret = new LuaTableImpl();
-        for (int i = 0; i < zones.size(); i++) {
-            Zone z = zones.get(i);
+        for (Zone z : zones) {
             z.collectThings(ret);
         }
         return ret;
@@ -127,8 +121,7 @@ public class Cartridge extends EventTable {
 
     public int visibleUniversalActions () {
         int count = 0;
-        for (int i = 0; i < universalActions.size(); i++) {
-            Action a = universalActions.get(i);
+        for (Action a : universalActions) {
             if (a.isEnabled() && a.getActor().visibleToPlayer()) count++;
         }
         return count;
@@ -136,8 +129,7 @@ public class Cartridge extends EventTable {
 
     public int visibleTasks () {
         int count = 0;
-        for (int i = 0; i < tasks.size(); i++) {
-            Task a = tasks.get(i);
+        for (Task a : tasks) {
             if (a.isVisible()) count++;
         }
         return count;

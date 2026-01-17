@@ -57,8 +57,7 @@ public class Action extends EventTable {
     public void associateWithTargets () {
         if (!hasParameter()) return;
         if (isReciprocal()) {
-            for (int j = 0; j < targets.size(); j++) {
-                Thing t = targets.get(j);
+            for (Thing t : targets) {
                 if (!t.actions.contains(this))
                     t.actions.add(this);
             }
@@ -72,8 +71,7 @@ public class Action extends EventTable {
     public void dissociateFromTargets () {
         if (!hasParameter()) return;
         if (isReciprocal()) {
-            for (int j = 0; j < targets.size(); j++) {
-                Thing t = targets.get(j);
+            for (Thing t : targets) {
                 t.actions.remove(this);
             }
         }

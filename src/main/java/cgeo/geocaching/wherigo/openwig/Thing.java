@@ -59,8 +59,7 @@ public class Thing extends Container {
     protected void setItem (String key, Object value) {
         if ("Commands".equals(key)) {
             // clear out existing actions
-            for (int i = 0; i < actions.size(); i++) {
-                Action a = actions.get(i);
+            for (Action a : actions) {
                 a.dissociateFromTargets();
             }
             actions.clear();
@@ -82,8 +81,7 @@ public class Thing extends Container {
 
     public int visibleActions() {
         int count = 0;
-        for (int i = 0; i < actions.size(); i++) {
-            Action c = actions.get(i);
+        for (Action c : actions) {
             if (!c.isEnabled()) continue;
             if (c.getActor() == this || c.getActor().visibleToPlayer()) count++;
         }
