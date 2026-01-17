@@ -34,7 +34,7 @@ public class LuaThread {
 
     public String stackTrace = "";
 
-    public Vector liveUpvalues;
+    public Vector<UpValue> liveUpvalues;
 
     public static final int MAX_STACK_SIZE = 1000;
     public static final int INITIAL_STACK_SIZE = 10;
@@ -58,7 +58,7 @@ public class LuaThread {
 
         objectStack = new Object[INITIAL_STACK_SIZE];
         callFrameStack = new LuaCallFrame[INITIAL_CALL_FRAME_STACK_SIZE];
-        liveUpvalues = new Vector();
+        liveUpvalues = new Vector<>();
     }
 
     public final LuaCallFrame pushNewCallFrame(LuaClosure closure,
@@ -169,7 +169,7 @@ public class LuaThread {
 
         int loopIndex = liveUpvalues.size();
         while (--loopIndex >= 0) {
-            UpValue uv = (UpValue) liveUpvalues.elementAt(loopIndex);
+            UpValue uv = liveUpvalues.elementAt(loopIndex);
             if (uv.index < closeIndex) {
                 return;
             }
@@ -183,7 +183,7 @@ public class LuaThread {
         // TODO: use binary search instead?
         int loopIndex = liveUpvalues.size();
         while (--loopIndex >= 0) {
-            UpValue uv = (UpValue) liveUpvalues.elementAt(loopIndex);
+            UpValue uv = liveUpvalues.elementAt(loopIndex);
             if (uv.index == scanIndex) {
                 return uv;
             }
