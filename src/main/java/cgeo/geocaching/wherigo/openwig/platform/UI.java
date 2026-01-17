@@ -21,12 +21,18 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaClosure;
  */
 public interface UI {
     // showScreen codes
-    public static final int MAINSCREEN = 0;
-    public static final int DETAILSCREEN = 1;
-    public static final int INVENTORYSCREEN = 2;
-    public static final int ITEMSCREEN = 3;
-    public static final int LOCATIONSCREEN = 4;
-    public static final int TASKSCREEN = 5;
+    enum Screen {
+        MAINSCREEN,
+        DETAILSCREEN,
+        INVENTORYSCREEN,
+        ITEMSCREEN,
+        LOCATIONSCREEN,
+        TASKSCREEN;
+
+        public int getValue() {
+            return ordinal();
+        }
+    }
 
     /** Forces screen update for items that might have been changed.
      * Called after every Lua event that might have changed data
@@ -121,7 +127,7 @@ public interface UI {
      * @param screenId the screen to be shown
      * @param details if screenId is DETAILSCREEN, details of this object will be displayed
      */
-    public void showScreen (int screenId, EventTable details);
+    public void showScreen (Screen screenId, EventTable details);
 
     /** Plays a sound asynchronously
      * <p>

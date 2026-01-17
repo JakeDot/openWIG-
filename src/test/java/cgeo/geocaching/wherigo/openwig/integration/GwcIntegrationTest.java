@@ -609,7 +609,7 @@ public class GwcIntegrationTest {
         }
         
         @Override
-        public void showScreen(int screenId, EventTable details) {
+        public void showScreen(UI.Screen screenId, EventTable details) {
             // No-op for testing
         }
         
