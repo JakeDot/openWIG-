@@ -7,7 +7,7 @@ package cgeo.geocaching.wherigo.openwig;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 
-import java.util.Vector;
+import java.util.ArrayList;
 
 /**
  * Represents a command or action that can be executed in a Wherigo game.
@@ -36,7 +36,7 @@ public class Action extends EventTable {
     private boolean enabled;
 
     private Thing actor = null;
-    private Vector<Thing> targets = new Vector<>();
+    private ArrayList<Thing> targets = new ArrayList<>();
     private boolean universal;
 
     public String text;
@@ -58,14 +58,14 @@ public class Action extends EventTable {
         if (!hasParameter()) return;
         if (isReciprocal()) {
             for (int j = 0; j < targets.size(); j++) {
-                Thing t = (Thing)targets.elementAt(j);
+                Thing t = targets.get(j);
                 if (!t.actions.contains(this))
-                    t.actions.addElement(this);
+                    t.actions.add(this);
             }
         }
         Engine currentEngine = Engine.getCurrentInstance();
         if (isUniversal() && currentEngine != null && !currentEngine.cartridge.universalActions.contains(this)) {
-            currentEngine.cartridge.universalActions.addElement(this);
+            currentEngine.cartridge.universalActions.add(this);
         }
     }
 
@@ -73,8 +73,8 @@ public class Action extends EventTable {
         if (!hasParameter()) return;
         if (isReciprocal()) {
             for (int j = 0; j < targets.size(); j++) {
-                Thing t = (Thing)targets.elementAt(j);
-                t.actions.removeElement(this);
+                Thing t = targets.get(j);
+                t.actions.remove(this);
             }
         }
         if (isUniversal()) {
@@ -113,7 +113,7 @@ public class Action extends EventTable {
             LuaTable lt = (LuaTable)value;
             Object i = null;
             while ((i = lt.next(i)) != null) {
-                targets.addElement(lt.rawget(i));
+                targets.add(lt.rawget(i));
             }
             associateWithTargets();
         } else if ("MakeReciprocal".equals(key)) {

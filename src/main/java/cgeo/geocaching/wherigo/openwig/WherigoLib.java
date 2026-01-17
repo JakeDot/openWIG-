@@ -10,8 +10,7 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 import cgeo.geocaching.wherigo.openwig.platform.UI;
-import java.util.Enumeration;
-import java.util.Hashtable;
+import java.util.HashMap;
 import cgeo.geocaching.wherigo.kahlua.stdlib.BaseLib;
 
 /**
@@ -67,7 +66,7 @@ public enum WherigoLib implements JavaFunction {
         this.name = name;
     }
 
-    public static final Hashtable<String, Object> env = new Hashtable<>(); /* Wherigo's Env table */
+    public static final HashMap<String, Object> env = new HashMap<>(); /* Wherigo's Env table */
     public static final String DEVICE_ID = "DeviceID";
     public static final String PLATFORM = "Platform";
     private static final UI.Screen[] SCREEN_VALUES = UI.Screen.values();
@@ -141,9 +140,7 @@ public enum WherigoLib implements JavaFunction {
         loaded.rawset("Wherigo", wig);
 
         LuaTable envtable = new LuaTableImpl(); /* Wherigo's Env table */
-        Enumeration<String> e = env.keys();
-        while (e.hasMoreElements()) {
-            String key = e.nextElement();
+        for (String key : env.keySet()) {
             envtable.rawset(key, env.get(key));
         }
         envtable.rawset("Device", engine.gwcfile.device);

@@ -24,7 +24,7 @@ Release 1.1.0 / 4386a025b88aac759e1e67cb27bcc50692d61d9a, Base Package se.krka.k
 */
 package cgeo.geocaching.wherigo.kahlua.vm;
 
-import java.util.Vector;
+import java.util.ArrayList;
 import cgeo.geocaching.wherigo.kahlua.stdlib.BaseLib;
 
 public class LuaThread {
@@ -34,7 +34,7 @@ public class LuaThread {
 
     public String stackTrace = "";
 
-    public Vector<UpValue> liveUpvalues;
+    public ArrayList<UpValue> liveUpvalues;
 
     public static final int MAX_STACK_SIZE = 1000;
     public static final int INITIAL_STACK_SIZE = 10;
@@ -58,7 +58,7 @@ public class LuaThread {
 
         objectStack = new Object[INITIAL_STACK_SIZE];
         callFrameStack = new LuaCallFrame[INITIAL_CALL_FRAME_STACK_SIZE];
-        liveUpvalues = new Vector<>();
+        liveUpvalues = new ArrayList<>();
     }
 
     public final LuaCallFrame pushNewCallFrame(LuaClosure closure,
@@ -169,13 +169,13 @@ public class LuaThread {
 
         int loopIndex = liveUpvalues.size();
         while (--loopIndex >= 0) {
-            UpValue uv = liveUpvalues.elementAt(loopIndex);
+            UpValue uv = liveUpvalues.get(loopIndex);
             if (uv.index < closeIndex) {
                 return;
             }
             uv.value = objectStack[uv.index];
             uv.thread = null;
-            liveUpvalues.removeElementAt(loopIndex);
+            liveUpvalues.remove(loopIndex);
         }
     }
 
@@ -183,7 +183,7 @@ public class LuaThread {
         // TODO: use binary search instead?
         int loopIndex = liveUpvalues.size();
         while (--loopIndex >= 0) {
-            UpValue uv = liveUpvalues.elementAt(loopIndex);
+            UpValue uv = liveUpvalues.get(loopIndex);
             if (uv.index == scanIndex) {
                 return uv;
             }
@@ -195,7 +195,7 @@ public class LuaThread {
         uv.thread = this;
         uv.index = scanIndex;
 
-        liveUpvalues.insertElementAt(uv, loopIndex + 1);
+        liveUpvalues.add(loopIndex + 1, uv);
         return uv;
     }
 
