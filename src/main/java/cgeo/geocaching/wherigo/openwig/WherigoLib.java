@@ -70,6 +70,7 @@ public enum WherigoLib implements JavaFunction {
     public static final Hashtable env = new Hashtable(); /* Wherigo's Env table */
     public static final String DEVICE_ID = "DeviceID";
     public static final String PLATFORM = "Platform";
+    private static final UI.Screen[] SCREEN_VALUES = UI.Screen.values();
     static {
         env.put("Device", "undefined");
         env.put("DeviceID", "undefined");
@@ -335,12 +336,11 @@ public enum WherigoLib implements JavaFunction {
 
     private int showscreen (LuaCallFrame callFrame, int nArguments) {
         int screenValue = (int)LuaState.fromDouble(callFrame.get(0));
-        UI.Screen[] screens = UI.Screen.values();
         UI.Screen screen = null;
-        if (screenValue >= 0 && screenValue < screens.length) {
-            screen = screens[screenValue];
+        if (screenValue >= 0 && screenValue < SCREEN_VALUES.length) {
+            screen = SCREEN_VALUES[screenValue];
         } else {
-            Engine.log("ERROR: Invalid screen value: " + screenValue + ". Valid range is 0-" + (screens.length - 1), Engine.LOG_ERROR);
+            Engine.log("ERROR: Invalid screen value: " + screenValue + ". Valid range is 0-" + (SCREEN_VALUES.length - 1), Engine.LOG_ERROR);
         }
         if (screen == null) {
             return 0;
