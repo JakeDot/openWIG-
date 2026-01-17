@@ -60,12 +60,7 @@ public enum WherigoLib implements JavaFunction {
     MADE("made"),
     GETVALUE("GetValue");
 
-    private final String name;
-
-    WherigoLib(String name) {
-        this.name = name;
-    }
-
+    // Static fields
     public static final HashMap<String, Object> env = new HashMap<>(); /* Wherigo's Env table */
     public static final String DEVICE_ID = "DeviceID";
     public static final String PLATFORM = "Platform";
@@ -83,7 +78,13 @@ public enum WherigoLib implements JavaFunction {
         env.put("Downloaded", Double.valueOf(0));
     }
 
+    // Instance fields
+    private final String name;
     private final Class klass = assignClass();
+
+    WherigoLib(String name) {
+        this.name = name;
+    }
 
     private Class<?> assignClass () {
         // because i'm too lazy to type out the break;s in a switch
