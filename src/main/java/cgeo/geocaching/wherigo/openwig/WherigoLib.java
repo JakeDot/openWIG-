@@ -336,11 +336,10 @@ public enum WherigoLib implements JavaFunction {
     private int showscreen (LuaCallFrame callFrame, int nArguments) {
         int screenValue = (int)LuaState.fromDouble(callFrame.get(0));
         UI.Screen screen = null;
-        for (UI.Screen s : UI.Screen.values()) {
-            if (s.getValue() == screenValue) {
-                screen = s;
-                break;
-            }
+        if (screenValue >= 0 && screenValue < UI.Screen.values().length) {
+            screen = UI.Screen.values()[screenValue];
+        } else {
+            Engine.log("ERROR: Invalid screen value: " + screenValue, Engine.LOG_ERROR);
         }
         EventTable et = null;
         if (nArguments > 1) {
