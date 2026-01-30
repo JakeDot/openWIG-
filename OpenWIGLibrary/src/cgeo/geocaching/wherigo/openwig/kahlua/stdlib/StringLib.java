@@ -29,18 +29,28 @@ import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTableImpl;
 
 public final class StringLib implements JavaFunction {
 
-    private static final int SUB = 0;
-    private static final int CHAR = 1;
-    private static final int BYTE = 2;
-    private static final int LOWER = 3;
-    private static final int UPPER = 4;
-    private static final int REVERSE = 5;
-    private static final int FORMAT = 6;
-    private static final int FIND = 7;
-    private static final int MATCH = 8;
-    private static final int GSUB = 9;
+    private enum Function {
+        SUB("sub"),
+        CHAR("char"),
+        BYTE("byte"),
+        LOWER("lower"),
+        UPPER("upper"),
+        REVERSE("reverse"),
+        FORMAT("format"),
+        FIND("find"),
+        MATCH("match"),
+        GSUB("gsub");
 
-    private static final int NUM_FUNCTIONS = 10;
+        private final String name;
+
+        Function(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
 
     private static final boolean[] SPECIALS = new boolean[256];
     static {
@@ -55,53 +65,43 @@ public final class StringLib implements JavaFunction {
     private static final int CAP_UNFINISHED = (-1);
     private static final int CAP_POSITION = (-2);
 
-    private static final String[] names;
+    private final Function function;
     private static StringLib[] functions;  
 
     // NOTE: String.class won't work in J2ME - so this is used as a workaround
     public static final Class STRING_CLASS = "".getClass();
-    
-    static {
-        names = new String[NUM_FUNCTIONS];
-        names[SUB] = "sub";
-        names[CHAR] = "char";
-        names[BYTE] = "byte";
-        names[LOWER] = "lower";
-        names[UPPER] = "upper";
-        names[REVERSE] = "reverse";
-        names[FORMAT] = "format";
-        names[FIND] = "find";
-        names[MATCH] = "match";
-        names[GSUB] = "gsub";
 
-        functions = new StringLib[NUM_FUNCTIONS];
-        for (int i = 0; i < NUM_FUNCTIONS; i++) {
-            functions[i] = new StringLib(i);
-        }
-    }
-
-    private int methodId;       
-    public StringLib(int index) {
-        this.methodId = index;
+    public StringLib(Function function) {
+        this.function = function;
     }
 
     public static void register(LuaState state) {
+        initFunctions();
         LuaTable string = new LuaTableImpl();
         state.getEnvironment().rawset("string", string);
-        for (int i = 0; i < NUM_FUNCTIONS; i++) {
-            string.rawset(names[i], functions[i]);
+        for (Function f : Function.values()) {
+            string.rawset(f.getName(), functions[f.ordinal()]);
         }
 
         string.rawset("__index", string);
         state.setClassMetatable(STRING_CLASS, string);
     }
 
+    private static synchronized void initFunctions() {
+        if (functions == null) {
+            functions = new StringLib[Function.values().length];
+            for (Function f : Function.values()) {
+                functions[f.ordinal()] = new StringLib(f);
+            }
+        }
+    }
+
     public String toString() {
-        return names[methodId];
+        return function.getName();
     }
 
     public int call(LuaCallFrame callFrame, int nArguments)  {
-        switch (methodId) {
+        switch (function) {
         case SUB: return sub(callFrame, nArguments);
         case CHAR: return stringChar(callFrame, nArguments);
         case BYTE: return stringByte(callFrame, nArguments);
@@ -124,7 +124,7 @@ public final class StringLib implements JavaFunction {
     }
     
     private int format(LuaCallFrame callFrame, int nArguments) {
-        String f = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, names[FORMAT]);
+        String f = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, "format");
 
         int len = f.length();
         int argc = 2;
@@ -656,7 +656,7 @@ public final class StringLib implements JavaFunction {
     }
 
     private String getStringArg(LuaCallFrame callFrame, int argc) {
-        return getStringArg(callFrame, argc, names[FORMAT]);
+        return getStringArg(callFrame, argc, "format");
     }
     
     private String getStringArg(LuaCallFrame callFrame, int argc, String funcname) {
@@ -664,7 +664,7 @@ public final class StringLib implements JavaFunction {
     }
     
     private Double getDoubleArg(LuaCallFrame callFrame, int argc) {
-        return getDoubleArg(callFrame, argc, names[FORMAT]);
+        return getDoubleArg(callFrame, argc, "format");
     }
 
     private Double getDoubleArg(LuaCallFrame callFrame, int argc, String funcname) {
@@ -673,7 +673,7 @@ public final class StringLib implements JavaFunction {
 
     private int lower(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-        String s = getStringArg(callFrame,1,names[LOWER]);
+        String s = getStringArg(callFrame,1,"lower");
         
         callFrame.push(s.toLowerCase());
         return 1;
@@ -681,7 +681,7 @@ public final class StringLib implements JavaFunction {
 
     private int upper(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-        String s = getStringArg(callFrame,1,names[UPPER]);
+        String s = getStringArg(callFrame,1,"upper");
 
         callFrame.push(s.toUpperCase());
         return 1;
@@ -689,7 +689,7 @@ public final class StringLib implements JavaFunction {
 
     private int reverse(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-        String s = getStringArg(callFrame, 1, names[REVERSE]);
+        String s = getStringArg(callFrame, 1, "reverse");
         s = new StringBuffer(s).reverse().toString();
         callFrame.push(s);
         return 1;
@@ -697,14 +697,14 @@ public final class StringLib implements JavaFunction {
 
     private int stringByte(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-        String s = getStringArg(callFrame, 1, names[BYTE]);
+        String s = getStringArg(callFrame, 1, "byte");
 
         Double di = null;
         Double dj = null;
         if (nArguments >= 2) {
-            di = getDoubleArg(callFrame, 2, names[BYTE]);
+            di = getDoubleArg(callFrame, 2, "byte");
             if (nArguments >= 3) {
-                dj = getDoubleArg(callFrame, 3, names[BYTE]);
+                dj = getDoubleArg(callFrame, 3, "byte");
             }
         }
         double di2 = 1;
@@ -747,18 +747,18 @@ public final class StringLib implements JavaFunction {
     private int stringChar(LuaCallFrame callFrame, int nArguments) {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < nArguments; i++) {
-            int num = getDoubleArg(callFrame, i + 1, names[CHAR]).intValue();
+            int num = getDoubleArg(callFrame, i + 1, "char").intValue();
             sb.append((char) num);
         }
         return callFrame.push(sb.toString());
     }
 
     private int sub(LuaCallFrame callFrame, int nArguments) {
-        String s = getStringArg(callFrame, 1, names[SUB]);
-        double start = getDoubleArg(callFrame, 2, names[SUB]).doubleValue();
+        String s = getStringArg(callFrame, 1, "sub");
+        double start = getDoubleArg(callFrame, 2, "sub").doubleValue();
         double end = -1;
         if (nArguments >= 3) {
-            end = getDoubleArg(callFrame, 3, names[SUB]).doubleValue();
+            end = getDoubleArg(callFrame, 3, "sub").doubleValue();
         }
         String res;
         int istart = (int) start;
@@ -961,7 +961,7 @@ public final class StringLib implements JavaFunction {
     }
 
     private static int findAux (LuaCallFrame callFrame, boolean find) {
-        String f = find ? names[FIND] : names[MATCH];
+        String f = find ? "find" : "match";
         String source = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, f);
         String pattern = (String) BaseLib.getArg(callFrame, 2, BaseLib.TYPE_STRING, f);
         Double i = ((Double)(BaseLib.getOptArg(callFrame, 3, BaseLib.TYPE_NUMBER)));
@@ -1380,9 +1380,9 @@ public final class StringLib implements JavaFunction {
     }
 
     private static int gsub(LuaCallFrame cf, int nargs) {
-        String srcTemp = (String) BaseLib.getArg(cf, 1, BaseLib.TYPE_STRING, names[GSUB]);
-        String pTemp = (String) BaseLib.getArg(cf, 2, BaseLib.TYPE_STRING, names[GSUB]);
-        Object repl = BaseLib.getArg(cf, 3, null, names[GSUB]);
+        String srcTemp = (String) BaseLib.getArg(cf, 1, BaseLib.TYPE_STRING, "gsub");
+        String pTemp = (String) BaseLib.getArg(cf, 2, BaseLib.TYPE_STRING, "gsub");
+        Object repl = BaseLib.getArg(cf, 3, null, "gsub");
         {
             String tmp = BaseLib.rawTostring(repl);
             if (tmp != null) {

@@ -33,33 +33,46 @@ import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTableImpl;
 
 public class OsLib implements JavaFunction {
-    private static final int DATE = 0;
-    private static final int DIFFTIME = 1;
-    private static final int TIME = 2;
 
-    private static final int NUM_FUNCS = 3;
-    
-    private static String[] funcnames;
-    private static OsLib[] funcs;
+    private enum Function {
+        DATE("date"),
+        DIFFTIME("difftime"),
+        TIME("time");
 
-    static {
-        funcnames = new String[NUM_FUNCS];
-        funcnames[DATE] = "date";
-        funcnames[DIFFTIME] = "difftime";
-        funcnames[TIME] = "time";
+        private final String name;
 
-        funcs = new OsLib[NUM_FUNCS];
-        for (int i = 0; i < NUM_FUNCS; i++) {
-            funcs[i] = new OsLib(i);
+        Function(String name) {
+            this.name = name;
         }
+
+        public String getName() {
+            return name;
+        }
+    }
+    
+    private final Function function;
+    private static OsLib[] functions;
+
+    private OsLib(Function function) {
+        this.function = function;
     }
 
     public static void register(LuaState state) {
+        initFunctions();
         LuaTable os = new LuaTableImpl();
         state.getEnvironment().rawset("os", os);
 
-        for (int i = 0; i < NUM_FUNCS; i++) {
-            os.rawset(funcnames[i], funcs[i]);
+        for (Function f : Function.values()) {
+            os.rawset(f.getName(), functions[f.ordinal()]);
+        }
+    }
+
+    private static synchronized void initFunctions() {
+        if (functions == null) {
+            functions = new OsLib[Function.values().length];
+            for (Function f : Function.values()) {
+                functions[f.ordinal()] = new OsLib(f);
+            }
         }
     }
 
@@ -86,15 +99,9 @@ public class OsLib implements JavaFunction {
     public static final double TIME_DIVIDEND_INVERTED = 1.0 / TIME_DIVIDEND; // number to divide by for converting from milliseconds.
     private static final int MILLIS_PER_DAY = TIME_DIVIDEND * 60 * 60 * 24;
     private static final int MILLIS_PER_WEEK = MILLIS_PER_DAY * 7;
-    
-    
-    private int methodId;
-    private OsLib(int methodId) {
-        this.methodId = methodId;
-    }
 
     public int call(LuaCallFrame cf, int nargs) {
-        switch(methodId) {
+        switch(function) {
         case DATE: return date(cf, nargs);
         case DIFFTIME: return difftime(cf, nargs);
         case TIME: return time(cf, nargs);

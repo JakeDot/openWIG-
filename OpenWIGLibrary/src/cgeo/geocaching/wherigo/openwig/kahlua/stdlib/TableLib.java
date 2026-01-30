@@ -30,57 +30,55 @@ import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTableImpl;
 
 public final class TableLib implements JavaFunction {
 
-    private static final int CONCAT = 0;
-    private static final int INSERT = 1;
-    private static final int REMOVE = 2;
-    private static final int MAXN = 3;
-    private static final int NUM_FUNCTIONS = 4;
+    private enum Function {
+        CONCAT("concat"),
+        INSERT("insert"),
+        REMOVE("remove"),
+        MAXN("maxn");
 
-    private static final String[] names;
+        private final String name;
+
+        Function(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
+    private final Function function;
     private static TableLib[] functions;
 
-    static {
-        names = new String[NUM_FUNCTIONS];
-        names[CONCAT] = "concat";
-        names[INSERT] = "insert";
-        names[REMOVE] = "remove";
-        names[MAXN] = "maxn";
-    }
-    
-    private int index;
-
-    public TableLib (int index) {
-        this.index = index;
+    public TableLib(Function function) {
+        this.function = function;
     }
 
-    public static void register (LuaState state) {
+    public static void register(LuaState state) {
         initFunctions();
         LuaTable table = new LuaTableImpl();
         state.getEnvironment().rawset("table", table);
 
-        for (int i = 0; i < NUM_FUNCTIONS; i++) {
-            table.rawset(names[i], functions[i]);
+        for (Function f : Function.values()) {
+            table.rawset(f.getName(), functions[f.ordinal()]);
         }
     }
 
-    private static synchronized void initFunctions () {
+    private static synchronized void initFunctions() {
         if (functions == null) {
-            functions = new TableLib[NUM_FUNCTIONS];
-            for (int i = 0; i < NUM_FUNCTIONS; i++) {
-                functions[i] = new TableLib(i);
+            functions = new TableLib[Function.values().length];
+            for (Function f : Function.values()) {
+                functions[f.ordinal()] = new TableLib(f);
             }
         }
     }
 
-    public String toString () {
-        if (index < names.length) {
-            return "table." + names[index];
-        }
-        return super.toString();
+    public String toString() {
+        return "table." + function.getName();
     }
 
-    public int call (LuaCallFrame callFrame, int nArguments) {
-        switch (index) {
+    public int call(LuaCallFrame callFrame, int nArguments) {
+        switch (function) {
             case CONCAT:
                 return concat(callFrame, nArguments);
             case INSERT:

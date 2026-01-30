@@ -31,61 +31,63 @@ import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaThread;
 
 public class CoroutineLib implements JavaFunction {
 
-    private static final int CREATE = 0;
-    private static final int RESUME = 1;
-    private static final int YIELD = 2;
-    private static final int STATUS = 3;
-    private static final int RUNNING = 4;
+    private enum Function {
+        CREATE("create"),
+        RESUME("resume"),
+        YIELD("yield"),
+        STATUS("status"),
+        RUNNING("running");
 
-    private static final int NUM_FUNCTIONS = 5;
-    
-    
-    private static final String[] names;
-    
-    // NOTE: LuaThread.class won't work in J2ME - so this is used as a workaround
-    private static final Class LUA_THREAD_CLASS = new LuaThread(null, null).getClass();
-    
-    static {
-        names = new String[NUM_FUNCTIONS];
-        names[CREATE] = "create";
-        names[RESUME] = "resume";
-        names[YIELD] = "yield";
-        names[STATUS] = "status";
-        names[RUNNING] = "running";
-    }
+        private final String name;
 
-    private int index;
-    private static CoroutineLib[] functions;    
-    static {
-        functions = new CoroutineLib[NUM_FUNCTIONS];
-        for (int i = 0; i < NUM_FUNCTIONS; i++) {
-            functions[i] = new CoroutineLib(i);
+        Function(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
         }
     }
     
-    public String toString() {
-        return "coroutine." + names[index];
+    // NOTE: LuaThread.class won't work in J2ME - so this is used as a workaround
+    private static final Class LUA_THREAD_CLASS = new LuaThread(null, null).getClass();
+
+    private final Function function;
+    private static CoroutineLib[] functions;
+    
+    public CoroutineLib(Function function) {
+        this.function = function;
     }
     
-    public CoroutineLib(int index) {
-        this.index = index;
+    public String toString() {
+        return "coroutine." + function.getName();
     }
 
     public static void register(LuaState state) {
+        initFunctions();
         LuaTable coroutine = new LuaTableImpl();
         state.getEnvironment().rawset("coroutine", coroutine);
-        for (int i = 0; i < NUM_FUNCTIONS; i++) {
-            coroutine.rawset(names[i], functions[i]);
+        for (Function f : Function.values()) {
+            coroutine.rawset(f.getName(), functions[f.ordinal()]);
         }
         
         coroutine.rawset("__index", coroutine);
         state.setClassMetatable(LUA_THREAD_CLASS, coroutine);
     }
+
+    private static synchronized void initFunctions() {
+        if (functions == null) {
+            functions = new CoroutineLib[Function.values().length];
+            for (Function f : Function.values()) {
+                functions[f.ordinal()] = new CoroutineLib(f);
+            }
+        }
+    }
     
     public int call(LuaCallFrame callFrame, int nArguments) {
-        switch (index) {
+        switch (function) {
         case CREATE: return create(callFrame, nArguments);
-        case YIELD: return yield(callFrame, nArguments);
+        case YIELD: return CoroutineLib.yield(callFrame, nArguments);
         case RESUME: return resume(callFrame, nArguments);
         case STATUS: return status(callFrame, nArguments);
         case RUNNING: return running(callFrame, nArguments);

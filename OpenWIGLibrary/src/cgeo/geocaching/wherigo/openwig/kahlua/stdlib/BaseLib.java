@@ -31,30 +31,39 @@ import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaThread;
 
 public final class BaseLib implements JavaFunction {
 
+    private enum Function {
+        PCALL("pcall"),
+        PRINT("print"),
+        SELECT("select"),
+        TYPE("type"),
+        TOSTRING("tostring"),
+        TONUMBER("tonumber"),
+        GETMETATABLE("getmetatable"),
+        SETMETATABLE("setmetatable"),
+        ERROR("error"),
+        UNPACK("unpack"),
+        NEXT("next"),
+        SETFENV("setfenv"),
+        GETFENV("getfenv"),
+        RAWEQUAL("rawequal"),
+        RAWSET("rawset"),
+        RAWGET("rawget"),
+        COLLECTGARBAGE("collectgarbage"),
+        DEBUGSTACKTRACE("debugstacktrace"),
+        BYTECODELOADER("bytecodeloader");
+
+        private final String name;
+
+        Function(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
     private static final Runtime RUNTIME = Runtime.getRuntime();
-    private static final int PCALL = 0;
-    private static final int PRINT = 1;
-    private static final int SELECT = 2;
-    private static final int TYPE = 3;
-    private static final int TOSTRING = 4;
-    private static final int TONUMBER = 5;
-    private static final int GETMETATABLE = 6;
-    private static final int SETMETATABLE = 7;
-    private static final int ERROR = 8;
-    private static final int UNPACK = 9;
-    private static final int NEXT = 10;
-    private static final int SETFENV = 11;
-    private static final int GETFENV = 12;
-    private static final int RAWEQUAL = 13;
-    private static final int RAWSET = 14;
-    private static final int RAWGET = 15;
-    private static final int COLLECTGARBAGE = 16;
-    private static final int DEBUGSTACKTRACE = 17;
-    private static final int BYTECODELOADER = 18;
-
-    private static final int NUM_FUNCTIONS = 19;
-
-    private static final String[] names;
     public static final Object MODE_KEY = "__mode";
     private static final Object DOUBLE_ONE = new Double(1.0);
     
@@ -67,60 +76,37 @@ public final class BaseLib implements JavaFunction {
     public static final String TYPE_THREAD = "thread";
     public static final String TYPE_USERDATA = "userdata";
 
-    static {
-        names = new String[NUM_FUNCTIONS];
-        names[PCALL] = "pcall";
-        names[PRINT] = "print";
-        names[SELECT] = "select";
-        names[TYPE] = "type";
-        names[TOSTRING] = "tostring";
-        names[TONUMBER] = "tonumber";
-        names[GETMETATABLE] = "getmetatable";
-        names[SETMETATABLE] = "setmetatable";
-        names[ERROR] = "error";
-        names[UNPACK] = "unpack";
-        names[NEXT] = "next";
-        names[SETFENV] = "setfenv";
-        names[GETFENV] = "getfenv";
-        names[RAWEQUAL] = "rawequal";
-        names[RAWSET] = "rawset";
-        names[RAWGET] = "rawget";
-        names[COLLECTGARBAGE] = "collectgarbage";
-        names[DEBUGSTACKTRACE] = "debugstacktrace";
-        names[BYTECODELOADER] = "bytecodeloader";
-    }
-
-    private int index;
+    private final Function function;
     private static BaseLib[] functions;
 
-    public BaseLib(int index) {
-        this.index = index;
+    public BaseLib(Function function) {
+        this.function = function;
     }
 
     public static void register(LuaState state) {
         initFunctions();
 
-        for (int i = 0; i < NUM_FUNCTIONS; i++) {
-            state.getEnvironment().rawset(names[i], functions[i]);
+        for (Function f : Function.values()) {
+            state.getEnvironment().rawset(f.getName(), functions[f.ordinal()]);
         }
     }
 
     private static synchronized void initFunctions() {
         if (functions == null) {
-            functions = new BaseLib[NUM_FUNCTIONS];
-            for (int i = 0; i < NUM_FUNCTIONS; i++) {
-                functions[i] = new BaseLib(i);
+            functions = new BaseLib[Function.values().length];
+            for (Function f : Function.values()) {
+                functions[f.ordinal()] = new BaseLib(f);
             }
         }
     }
 
     public String toString() {
-        return names[index];
+        return function.getName();
     }
 
 
     public int call(LuaCallFrame callFrame, int nArguments) {
-        switch (index) {
+        switch (function) {
         case PCALL: return pcall(callFrame, nArguments);
         case PRINT: return print(callFrame, nArguments);
         case SELECT: return select(callFrame, nArguments);
