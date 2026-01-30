@@ -101,7 +101,7 @@ public class ZonePoint implements LuaTable, Serializable {
         return distance(z.latitude, z.longitude, latitude, longitude);
     }
 
-    public static final Hashtable conversions = new Hashtable(6);
+    public static final Hashtable<String, Double> conversions = new Hashtable<>(6);
     static {
         conversions.put("feet", new Double(0.3048));
         conversions.put("ft", new Double(0.3048));

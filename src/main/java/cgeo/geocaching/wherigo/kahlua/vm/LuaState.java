@@ -1239,7 +1239,7 @@ public class LuaState {
         throw new IllegalStateException("loop in settable");
     }
 
-    public void setClassMetatable(Class clazz, LuaTable metatable) {
+    public void setClassMetatable(Class<?> clazz, LuaTable metatable) {
         classMetatables.rawset(clazz, metatable);
     }
 

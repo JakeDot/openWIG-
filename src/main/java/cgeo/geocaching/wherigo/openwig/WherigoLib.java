@@ -67,7 +67,7 @@ public enum WherigoLib implements JavaFunction {
         this.name = name;
     }
 
-    public static final Hashtable env = new Hashtable(); /* Wherigo's Env table */
+    public static final Hashtable<String, Object> env = new Hashtable<>(); /* Wherigo's Env table */
     public static final String DEVICE_ID = "DeviceID";
     public static final String PLATFORM = "Platform";
     static {
@@ -83,7 +83,7 @@ public enum WherigoLib implements JavaFunction {
         env.put("Downloaded", new Double(0));
     }
 
-    private final Class klass = assignClass();
+    private final Class<?> klass = assignClass();
 
     private Class<?> assignClass () {
         // because i'm too lazy to type out the break;s in a switch
@@ -140,9 +140,9 @@ public enum WherigoLib implements JavaFunction {
         loaded.rawset("Wherigo", wig);
 
         LuaTable envtable = new LuaTableImpl(); /* Wherigo's Env table */
-        Enumeration e = env.keys();
+        Enumeration<String> e = env.keys();
         while (e.hasMoreElements()) {
-            String key = (String)e.nextElement();
+            String key = e.nextElement();
             envtable.rawset(key, env.get(key));
         }
         envtable.rawset("Device", engine.gwcfile.device);

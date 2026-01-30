@@ -151,8 +151,8 @@ public class Savegame {
     private Hashtable<Object,Object> objectStore;
     private int currentId;
 
-    private Hashtable idToJavafuncMap = new Hashtable(128);
-    private Hashtable javafuncToIdMap = new Hashtable(128);
+    private Hashtable<Integer, JavaFunction> idToJavafuncMap = new Hashtable<>(128);
+    private Hashtable<JavaFunction, Integer> javafuncToIdMap = new Hashtable<>(128);
     private int currentJavafunc = 0;
 
     public void buildJavafuncMap (LuaTable environment) {
@@ -343,7 +343,7 @@ public class Savegame {
                 Serializable s = null;
                 try {
                     if (debug) debug("object of type "+cls+"...\n");
-                    Class c = classForName(cls);
+                    Class<?> c = classForName(cls);
                     if (Serializable.class.isAssignableFrom(c)) {
                         s = (Serializable)c.newInstance();
                     }

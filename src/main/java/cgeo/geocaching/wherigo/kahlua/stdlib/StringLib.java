@@ -61,7 +61,7 @@ public enum StringLib implements JavaFunction {
     private static final int CAP_POSITION = ( -2 );
 
     // NOTE: String.class won't work in J2ME - so this is used as a workaround
-    public static final Class STRING_CLASS = "".getClass();
+    public static final Class<?> STRING_CLASS = "".getClass();
 
     private static final char[] digits = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
