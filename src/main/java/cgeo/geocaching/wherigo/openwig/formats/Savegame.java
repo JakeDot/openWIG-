@@ -194,13 +194,13 @@ public class Savegame {
     }
 
     private int findJavafuncId (JavaFunction javafunc) {
-        Integer id = (Integer)javafuncToIdMap.get(javafunc);
+        Integer id = javafuncToIdMap.get(javafunc);
         if (id != null) return id.intValue();
         else throw new IllegalStateException("javafunc not found in map!");
     }
 
     private JavaFunction findJavafuncObject (int id) {
-        JavaFunction jf = (JavaFunction)idToJavafuncMap.get(new Integer(id));
+        JavaFunction jf = idToJavafuncMap.get(new Integer(id));
         return jf;
     }
 
