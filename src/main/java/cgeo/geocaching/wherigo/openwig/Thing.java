@@ -33,7 +33,7 @@ public class Thing extends Container {
 
     protected String luaTostring () { return character ? "a ZCharacter instance" : "a ZItem instance"; }
 
-    public Vector actions = new Vector();
+    public Vector<Action> actions = new Vector<>();
 
     public Thing () {
         // for serialization
@@ -60,7 +60,7 @@ public class Thing extends Container {
         if ("Commands".equals(key)) {
             // clear out existing actions
             for (int i = 0; i < actions.size(); i++) {
-                Action a = (Action)actions.elementAt(i);
+                Action a = actions.elementAt(i);
                 a.dissociateFromTargets();
             }
             actions.removeAllElements();
@@ -83,7 +83,7 @@ public class Thing extends Container {
     public int visibleActions() {
         int count = 0;
         for (int i = 0; i < actions.size(); i++) {
-            Action c = (Action)actions.elementAt(i);
+            Action c = actions.elementAt(i);
             if (!c.isEnabled()) continue;
             if (c.getActor() == this || c.getActor().visibleToPlayer()) count++;
         }

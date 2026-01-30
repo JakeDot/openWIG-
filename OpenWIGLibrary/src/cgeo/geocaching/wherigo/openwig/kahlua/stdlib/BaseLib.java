@@ -1,10 +1,10 @@
 /*
-Copyright (c) 2007 - 2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+Copyright (c) 2007-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
@@ -18,16 +18,29 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+--
+--
+File initially copied to c:geo from https://github.com/cgeo/openWIG in April 2025.
+Release 1.1.0 / 4386a025b88aac759e1e67cb27bcc50692d61d9a, Base Package se.krka.kahlua.stdlib
 */
-package cgeo.geocaching.wherigo.openwig.kahlua.stdlib;
+package cgeo.geocaching.wherigo.kahlua.stdlib;
 
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.JavaFunction;
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaCallFrame;
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaClosure;
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaException;
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaState;
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTable;
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaThread;
+import androidx.annotation.NonNull;
+
+import cgeo.geocaching.wherigo.kahlua.vm.JavaFunction;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaCallFrame;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaClosure;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaException;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaThread;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.util.Iterator;
+import java.util.Locale;
+import java.util.function.Function;
 
 public enum BaseLib implements JavaFunction {
     PCALL,
@@ -50,89 +63,82 @@ public enum BaseLib implements JavaFunction {
     DEBUGSTACKTRACE,
     BYTECODELOADER;
 
-    public enum Type {
-        NIL("nil"),
-        STRING("string"),
-        NUMBER("number"),
-        BOOLEAN("boolean"),
-        FUNCTION("function"),
-        TABLE("table"),
-        THREAD("thread"),
-        USERDATA("userdata");
-
-        private final String name;
-
-        Type(String name) {
-            this.name = name;
-        }
-
-        public String toString() {
-            return name;
-        }
-    }
-
     private static final Runtime RUNTIME = Runtime.getRuntime();
-    public static final Object MODE_KEY = "__mode";
-    private static final Object DOUBLE_ONE = new Double(1.0);
+    public static final String MODE_KEY = "__mode";
+    private static final Double DOUBLE_ONE = 1.0;
+
+    public static final String TYPE_NIL = "nil";
+    public static final String TYPE_STRING = "string";
+    public static final String TYPE_NUMBER = "number";
+    public static final String TYPE_BOOLEAN = "boolean";
+    public static final String TYPE_FUNCTION = "function";
+    public static final String TYPE_TABLE = "table";
+    public static final String TYPE_THREAD = "thread";
+    public static final String TYPE_USERDATA = "userdata";
+
+    private final String name;
+
+    BaseLib() {
+        this.name = name().toLowerCase();
+    }
 
     public static void register(LuaState state) {
-        for (BaseLib f : values()) {
-            state.getEnvironment().rawset(f.name().toLowerCase(), f);
+        for (BaseLib function : BaseLib.values()) {
+            state.getEnvironment().rawset(function.name, function);
         }
     }
 
+    @NonNull
+    @Override
     public String toString() {
-        return name().toLowerCase();
+        return name;
     }
 
 
+    @Override
     public int call(LuaCallFrame callFrame, int nArguments) {
-        switch (this) {
-        case PCALL: return pcall(callFrame, nArguments);
-        case PRINT: return print(callFrame, nArguments);
-        case SELECT: return select(callFrame, nArguments);
-        case TYPE: return type(callFrame, nArguments);
-        case TOSTRING: return tostring(callFrame, nArguments);
-        case TONUMBER: return tonumber(callFrame, nArguments);
-        case GETMETATABLE: return getmetatable(callFrame, nArguments);
-        case SETMETATABLE: return setmetatable(callFrame, nArguments);
-        case ERROR: return error(callFrame, nArguments);
-        case UNPACK: return unpack(callFrame, nArguments);
-        case NEXT: return next(callFrame, nArguments);
-        case SETFENV: return setfenv(callFrame, nArguments);
-        case GETFENV: return getfenv(callFrame, nArguments);
-        case RAWEQUAL: return rawequal(callFrame, nArguments);
-        case RAWSET: return rawset(callFrame, nArguments);
-        case RAWGET: return rawget(callFrame, nArguments);
-        case COLLECTGARBAGE: return collectgarbage(callFrame, nArguments);
-        case DEBUGSTACKTRACE: return debugstacktrace(callFrame, nArguments);
-        case BYTECODELOADER: return bytecodeloader(callFrame, nArguments);
-        default:
-            // Should never happen
-            // throw new Error("Illegal function object");
-            return 0;
-        }
+        return switch (this) {
+            case PCALL -> pcall(callFrame, nArguments);
+            case PRINT -> print(callFrame, nArguments);
+            case SELECT -> select(callFrame, nArguments);
+            case TYPE -> type(callFrame, nArguments);
+            case TOSTRING -> tostring(callFrame, nArguments);
+            case TONUMBER -> tonumber(callFrame, nArguments);
+            case GETMETATABLE -> getmetatable(callFrame, nArguments);
+            case SETMETATABLE -> setmetatable(callFrame, nArguments);
+            case ERROR -> error(callFrame, nArguments);
+            case UNPACK -> unpack(callFrame, nArguments);
+            case NEXT -> next(callFrame, nArguments);
+            case SETFENV -> setfenv(callFrame, nArguments);
+            case GETFENV -> getfenv(callFrame, nArguments);
+            case RAWEQUAL -> rawequal(callFrame, nArguments);
+            case RAWSET -> rawset(callFrame, nArguments);
+            case RAWGET -> rawget(callFrame, nArguments);
+            case COLLECTGARBAGE -> collectgarbage(callFrame, nArguments);
+            case DEBUGSTACKTRACE -> debugstacktrace(callFrame, nArguments);
+            case BYTECODELOADER -> bytecodeloader(callFrame, nArguments);
+        };
     }
-    
+
     private int debugstacktrace(LuaCallFrame callFrame, int nArguments) {
-        LuaThread thread = (LuaThread) getOptArg(callFrame, 1, BaseLib.Type.THREAD.toString());
+        LuaThread thread = (LuaThread) getOptArg(callFrame, 1, BaseLib.TYPE_THREAD);
         if (thread == null) {
             thread = callFrame.thread;
         }
-        Double levelDouble = (Double) getOptArg(callFrame, 2, BaseLib.Type.NUMBER.toString());
+        Double levelDouble = (Double) getOptArg(callFrame, 2, BaseLib.TYPE_NUMBER);
         int level = 0;
         if (levelDouble != null) {
             level = levelDouble.intValue();
         }
-        Double countDouble = (Double) getOptArg(callFrame, 3, BaseLib.Type.NUMBER.toString());
+        Double countDouble = (Double) getOptArg(callFrame, 3, BaseLib.TYPE_NUMBER);
         int count = Integer.MAX_VALUE;
         if (countDouble != null) {
-            count = countDouble.intValue(); 
+            count = countDouble.intValue();
         }
-        Double haltAtDouble = (Double) getOptArg(callFrame, 4, BaseLib.Type.NUMBER.toString());
+        Double haltAtDouble = (Double) getOptArg(callFrame, 4, BaseLib.TYPE_NUMBER);
         int haltAt = 0;
         if (haltAtDouble != null) {
-            haltAt = haltAtDouble.intValue(); 
+            haltAt = haltAtDouble.intValue();
         }
         return callFrame.push(thread.getCurrentStackTrace(level, count, haltAt));
     }
@@ -178,9 +184,9 @@ public enum BaseLib implements JavaFunction {
 
         LuaTable newEnv = (LuaTable) callFrame.get(1);
         luaAssert(newEnv != null, "expected a table");
-        
+
         LuaClosure closure = null;
-        
+
         Object o = callFrame.get(0);
         if (o instanceof LuaClosure) {
             closure = (LuaClosure) o;
@@ -221,7 +227,7 @@ public enum BaseLib implements JavaFunction {
             Double d = rawTonumber(o);
             luaAssert(d != null, "Expected number");
             int level = d.intValue();
-            luaAssert(level >= 0, "level must be non - negative");
+            luaAssert(level >= 0, "level must be non-negative");
             LuaCallFrame callFrame2 = callFrame.thread.getParent(level);
             res = callFrame2.getEnvironment();
         }
@@ -296,7 +302,7 @@ public enum BaseLib implements JavaFunction {
 
     private int error(LuaCallFrame callFrame, int nArguments) {
         if (nArguments >= 1) {
-            String stacktrace = (String) getOptArg(callFrame, 2, BaseLib.Type.STRING.toString());
+            String stacktrace = (String) getOptArg(callFrame, 2, BaseLib.TYPE_STRING);
             if (stacktrace == null) {
                 stacktrace = "";
             }
@@ -314,7 +320,7 @@ public enum BaseLib implements JavaFunction {
         LuaState state = callFrame.thread.state;
         LuaTable env = state.getEnvironment();
         Object toStringFun = state.tableGet(env, "tostring");
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < nArguments; i++) {
             if (i > 0) {
                 sb.append("\t");
@@ -337,9 +343,9 @@ public enum BaseLib implements JavaFunction {
                 return 1;
             }
         }
-        Double dIndexDouble = rawTonumber(arg1);
-        double dIndex = LuaState.fromDouble(dIndexDouble);
-        int index = (int) dIndex;
+        Double d_indexDouble = rawTonumber(arg1);
+        double d_index = LuaState.fromDouble(d_indexDouble);
+        int index = (int) d_index;
         if (index >= 1 && index <= (nArguments - 1)) {
             int nResults = nArguments - index;
             return nResults;
@@ -354,7 +360,7 @@ public enum BaseLib implements JavaFunction {
     }
 
     public static void fail(String msg) {
-        throw new RuntimeException(msg);
+        throw new IllegalStateException(msg);
     }
 
     public static String numberToString(Double num) {
@@ -374,12 +380,46 @@ public enum BaseLib implements JavaFunction {
         return num.toString();
     }
 
+    public static String luaTableToString(LuaTable table, Function<Object, String> valueMapper) {
+        if (table == null) {
+            return "null";
+        }
+        final StringBuilder sb = new StringBuilder("]");
+        final Iterator<Object> it = table.keys();
+        while (it.hasNext()) {
+            Object key = it.next();
+            sb.append(key).append("=");
+            Object value = table.rawget(key);
+            if (value == null) {
+                sb.append("nil");
+            } else if (value.getClass().isPrimitive() ||
+                    value instanceof Number ||
+                    value instanceof String ||
+                    value instanceof Character ||
+                    value instanceof Boolean ||
+                    value instanceof Instant ||
+                    value instanceof LocalDateTime ||
+                    value instanceof ZonedDateTime) {
+                sb.append(value);
+            } else if (valueMapper != null) {
+                final String valueString = valueMapper.apply(value);
+                sb.append(valueString != null ? valueString : value.getClass().getName());
+            } else {
+                sb.append(value.getClass().getName());
+            }
+            if (it.hasNext()) {
+                sb.append(",");
+            }
+        }
+        return sb.append("]").toString();
+     }
+
     /**
-     * 
+     *
      * @param callFrame
      * @param n
      * @param type must be "string" or "number" or one of the other built in types. Note that this parameter must be interned!
-     * It's not valid to call it with new String("number").  Use null if you don't care which type or expect 
+     * It's not valid to call it with new String("number").  Use null if you don't care which type or expect
      * more than one type for this argument.
      * @param function name of the function that calls this. Only for pretty exceptions.
      * @return variable with index n on the stack, returned as type "type".
@@ -388,21 +428,21 @@ public enum BaseLib implements JavaFunction {
                 String function) {
         Object o = callFrame.get(n - 1);
         if (o == null) {
-            throw new RuntimeException("bad argument #" + n + "to '" + function +
+            throw new IllegalStateException("bad argument #" + n + "to '" + function +
                 "' (" + type + " expected, got no value)");
         }
         // type coercion
-        if (type == Type.STRING.toString()) {
+        if (type == TYPE_STRING) {
             String res = rawTostring(o);
             if (res != null) {
                 return res;
             }
-        } else if (type == Type.NUMBER.toString()) {
+        } else if (type == TYPE_NUMBER) {
             Double d = rawTonumber(o);
             if (d != null) {
                 return d;
             }
-            throw new RuntimeException("bad argument #" + n + " to '" + function +
+            throw new IllegalStateException("bad argument #" + n + " to '" + function +
             "' (number expected, got string)");
         }
         if (type != null) {
@@ -422,15 +462,15 @@ public enum BaseLib implements JavaFunction {
         if (n - 1 >= callFrame.getTop()) {
             return null;
         }
-        
-        Object o = callFrame.get(n - 1);
+
+        Object o = callFrame.get(n-1);
         if (o == null) {
             return null;
         }
         // type coercion
-        if (type == Type.STRING.toString()) {
+        if (type == TYPE_STRING) {
             return rawTostring(o);
-        } else if (type == Type.NUMBER.toString()) {
+        } else if (type == TYPE_NUMBER) {
             return rawTonumber(o);
         }
         // no type checking, this is optional after all
@@ -463,7 +503,7 @@ public enum BaseLib implements JavaFunction {
         final Object oldMeta = state.getmetatable(o, raw);
 
         if (!raw && oldMeta != null && state.tableGet(oldMeta, "__metatable") != null) {
-            throw new RuntimeException("Can not set metatable of protected object");
+            throw new IllegalStateException("Can not set metatable of protected object");
         }
 
         state.setmetatable(o, newMeta);
@@ -478,27 +518,27 @@ public enum BaseLib implements JavaFunction {
 
     public static String type(Object o) {
         if (o == null) {
-            return Type.NIL.toString();
+            return TYPE_NIL;
         }
         if (o instanceof String) {
-            return Type.STRING.toString();
+            return TYPE_STRING;
         }
         if (o instanceof Double) {
-            return Type.NUMBER.toString();
+            return TYPE_NUMBER;
         }
         if (o instanceof Boolean) {
-            return Type.BOOLEAN.toString();
+            return TYPE_BOOLEAN;
         }
         if (o instanceof JavaFunction || o instanceof LuaClosure) {
-            return Type.FUNCTION.toString();
+            return TYPE_FUNCTION;
         }
         if (o instanceof LuaTable) {
-            return Type.TABLE.toString();
+            return TYPE_TABLE;
         }
         if (o instanceof LuaThread) {
-            return Type.THREAD.toString();
+            return TYPE_THREAD;
         }
-        return Type.USERDATA.toString();
+        return TYPE_USERDATA;
     }
 
     private static int tostring(LuaCallFrame callFrame, int nArguments) {
@@ -511,7 +551,7 @@ public enum BaseLib implements JavaFunction {
 
     public static String tostring(Object o, LuaState state) {
         if (o == null) {
-            return Type.NIL.toString();
+            return TYPE_NIL;
         }
         if (o instanceof String) {
             return (String) o;
@@ -539,7 +579,7 @@ public enum BaseLib implements JavaFunction {
         if (o instanceof LuaTable) {
             return "table 0x" + System.identityHashCode(o);
         }
-        throw new RuntimeException("no __tostring found on object");
+        throw new IllegalStateException("no __tostring found on object");
     }
 
     private static int tonumber(LuaCallFrame callFrame, int nArguments) {
@@ -560,7 +600,7 @@ public enum BaseLib implements JavaFunction {
         double dradix = LuaState.fromDouble(radixDouble);
         int radix = (int) dradix;
         if (radix != dradix) {
-            throw new RuntimeException("base is not an integer");
+            throw new IllegalStateException("base is not an integer");
         }
         Object res = tonumber(s, radix);
         callFrame.push(res);
@@ -573,7 +613,7 @@ public enum BaseLib implements JavaFunction {
 
     public static Double tonumber(String s, int radix)  {
         if (radix < 2 || radix > 36) {
-            throw new RuntimeException("base out of range");
+            throw new IllegalStateException("base out of range");
         }
 
         try {
@@ -583,7 +623,7 @@ public enum BaseLib implements JavaFunction {
                 return LuaState.toDouble(Integer.parseInt(s, radix));
             }
         } catch (NumberFormatException e) {
-            s = s.toLowerCase();
+            s = s.toLowerCase(Locale.getDefault());
             if (s.endsWith("nan")) {
                 return LuaState.toDouble(Double.NaN);
             }
@@ -617,7 +657,7 @@ public enum BaseLib implements JavaFunction {
             callFrame.set(2, toKiloBytes(totalMemory));
             return 3;
         }
-        throw new RuntimeException("invalid option: " + option);
+        throw new IllegalStateException("invalid option: " + option);
     }
 
     private static Double toKiloBytes(long freeMemory) {
@@ -649,7 +689,7 @@ public enum BaseLib implements JavaFunction {
 
         LuaTable packageTable = (LuaTable) callFrame.getEnvironment().rawget("package");
         String classpath = (String) packageTable.rawget("classpath");
-        
+
         int index = 0;
         while (index < classpath.length()) {
             int nextIndex = classpath.indexOf(";", index);
@@ -657,7 +697,7 @@ public enum BaseLib implements JavaFunction {
             if (nextIndex == -1) {
                 nextIndex = classpath.length();
             }
-            
+
             String path = classpath.substring(index, nextIndex);
             if (path.length() > 0) {
                 if (!path.endsWith("/")) {
@@ -673,5 +713,5 @@ public enum BaseLib implements JavaFunction {
         return callFrame.push("Could not find the bytecode for '" + modname + "' in classpath");
     }
 
-    
+
 }

@@ -58,7 +58,7 @@ public class Action extends EventTable {
         if (!hasParameter()) return;
         if (isReciprocal()) {
             for (int j = 0; j < targets.size(); j++) {
-                Thing t = (Thing)targets.elementAt(j);
+                Thing t = targets.elementAt(j);
                 if (!t.actions.contains(this))
                     t.actions.addElement(this);
             }
@@ -73,7 +73,7 @@ public class Action extends EventTable {
         if (!hasParameter()) return;
         if (isReciprocal()) {
             for (int j = 0; j < targets.size(); j++) {
-                Thing t = (Thing)targets.elementAt(j);
+                Thing t = targets.elementAt(j);
                 t.actions.removeElement(this);
             }
         }
@@ -151,7 +151,7 @@ public class Action extends EventTable {
         return targets.contains(t) || isUniversal();
     }
 
-    public Vector getTargets () {
+    public Vector<Thing> getTargets () {
         return targets;
     }
 

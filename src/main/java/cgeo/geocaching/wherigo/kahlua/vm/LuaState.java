@@ -491,7 +491,7 @@ public class LuaState {
                                     nStrings++;
                                 }
                                 if (nStrings > 0) {
-                                    StringBuffer concatBuffer = new StringBuffer();
+                                    StringBuilder concatBuffer = new StringBuilder();
 
                                     int firstString = last - nStrings + 1;
                                     while (firstString <= last) {
@@ -1239,7 +1239,7 @@ public class LuaState {
         throw new IllegalStateException("loop in settable");
     }
 
-    public void setClassMetatable(Class clazz, LuaTable metatable) {
+    public void setClassMetatable(Class<?> clazz, LuaTable metatable) {
         classMetatables.rawset(clazz, metatable);
     }
 

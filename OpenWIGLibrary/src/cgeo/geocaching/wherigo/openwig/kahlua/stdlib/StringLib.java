@@ -1,10 +1,10 @@
 /*
-Copyright (c) 2007 - 2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+Copyright (c) 2007-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
@@ -18,32 +18,34 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
- */
-package cgeo.geocaching.wherigo.openwig.kahlua.stdlib;
+--
+--
+File initially copied to c:geo from https://github.com/cgeo/openWIG in April 2025.
+Release 1.1.0 / 4386a025b88aac759e1e67cb27bcc50692d61d9a, Base Package se.krka.kahlua.stdlib
+*/
+package cgeo.geocaching.wherigo.kahlua.stdlib;
 
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.JavaFunction;
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaCallFrame;
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaState;
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTable;
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTableImpl;
+import androidx.annotation.NonNull;
+
+import java.util.Locale;
+
+import cgeo.geocaching.wherigo.kahlua.vm.JavaFunction;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaCallFrame;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
 
 public enum StringLib implements JavaFunction {
-    SUB("sub"),
-    CHAR("char"),
-    BYTE("byte"),
-    LOWER("lower"),
-    UPPER("upper"),
-    REVERSE("reverse"),
-    FORMAT("format"),
-    FIND("find"),
-    MATCH("match"),
-    GSUB("gsub");
-
-    private final String name;
-
-    StringLib(String name) {
-        this.name = name;
-    }
+    SUB,
+    CHAR,
+    BYTE,
+    LOWER,
+    UPPER,
+    REVERSE,
+    FORMAT,
+    FIND,
+    MATCH,
+    GSUB;
 
     private static final boolean[] SPECIALS = new boolean[256];
     static {
@@ -52,59 +54,71 @@ public enum StringLib implements JavaFunction {
             SPECIALS[(int) s.charAt(i)] = true;
         }
     }
-    
+
     private static final int LUA_MAXCAPTURES = 32;
     private static final char L_ESC = '%';
-    private static final int CAP_UNFINISHED = (-1);
-    private static final int CAP_POSITION = (-2);
+    private static final int CAP_UNFINISHED = ( -1 );
+    private static final int CAP_POSITION = ( -2 );
 
     // NOTE: String.class won't work in J2ME - so this is used as a workaround
-    public static final Class STRING_CLASS = "".getClass();
+    public static final Class<?> STRING_CLASS = "".getClass();
+
+    private static final char[] digits = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
+    private final String name;
+
+    StringLib() {
+        this.name = name().toLowerCase();
+    }
 
     public static void register(LuaState state) {
         LuaTable string = new LuaTableImpl();
         state.getEnvironment().rawset("string", string);
-        for (StringLib f : values()) {
-            string.rawset(f.name, f);
+        for (StringLib function : StringLib.values()) {
+            string.rawset(function.name, function);
         }
 
         string.rawset("__index", string);
         state.setClassMetatable(STRING_CLASS, string);
     }
 
+    @NonNull
+    @Override
     public String toString() {
         return name;
     }
 
-    public int call(LuaCallFrame callFrame, int nArguments)  {
-        switch (this) {
-        case SUB: return sub(callFrame, nArguments);
-        case CHAR: return stringChar(callFrame, nArguments);
-        case BYTE: return stringByte(callFrame, nArguments);
-        case LOWER: return lower(callFrame, nArguments);
-        case UPPER: return upper(callFrame, nArguments);
-        case REVERSE: return reverse(callFrame, nArguments);
-        case FORMAT: return format(callFrame, nArguments);
-        case FIND: return findAux(callFrame, true);
-        case MATCH: return findAux(callFrame, false);
-        case GSUB: return gsub(callFrame, nArguments);
-        default: return 0; // Should never happen.
-        }
+    @Override
+    public int call(LuaCallFrame callFrame, int nArguments) {
+        return switch (this) {
+            case SUB -> sub(callFrame, nArguments);
+            case CHAR -> stringChar(callFrame, nArguments);
+            case BYTE -> stringByte(callFrame, nArguments);
+            case LOWER -> lower(callFrame, nArguments);
+            case UPPER -> upper(callFrame, nArguments);
+            case REVERSE -> reverse(callFrame, nArguments);
+            case FORMAT -> format(callFrame);
+            case FIND -> findAux(callFrame, true);
+            case MATCH -> findAux(callFrame, false);
+            case GSUB -> gsub(callFrame);
+        };
     }
 
-    private long unsigned(long v) {
+    static long unsigned(long vv) {
+        long v = vv;
         if (v < 0L) {
             v += (1L << 32);
         }
         return v;
     }
-    
-    private int format(LuaCallFrame callFrame, int nArguments) {
-        String f = (String) BaseLib.getArg(callFrame, 1, BaseLib.Type.STRING.toString(), "format");
+
+    @SuppressWarnings({"PMD.NPathComplexity", "PMD.ExcessiveMethodLength"})
+    static int format(LuaCallFrame callFrame) {
+        String f = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, FORMAT.name);
 
         int len = f.length();
         int argc = 2;
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < len; i++) {
             char c = f.charAt(i);
             if (c == '%') {
@@ -153,7 +167,7 @@ public enum StringLib implements JavaFunction {
                         BaseLib.luaAssert(i < len, "incomplete option to 'format'");
                         c = f.charAt(i);
                     }
-                    
+
                     // Detect precision
                     int precision = 0;
                     boolean hasPrecision = false;
@@ -170,16 +184,16 @@ public enum StringLib implements JavaFunction {
                             c = f.charAt(i);
                         }
                     }
-                    
+
                     if (leftJustify) {
                         zeroPadding = false;
                     }
-                    
+
                     // This will be overriden to space for the appropiate specifiers
 
                     // Pass 1: set up various variables needed for each specifier
                     // This simplifies the second pass by being able to combine several specifiers.
-                    
+
                     int base = 10;
                     boolean upperCase = false;
                     int defaultPrecision = 6; // This is the default for all float numerics
@@ -190,7 +204,7 @@ public enum StringLib implements JavaFunction {
                         zeroPadding = false;
                         break;
                     // change base
-                    case 'o': 
+                    case 'o':
                         base = 8;
                         defaultPrecision = 1;
                         basePrepend = "0";
@@ -234,10 +248,10 @@ public enum StringLib implements JavaFunction {
                         width = 0;
                         break;
                     default:
-                        throw new RuntimeException("invalid option '%" + c +
+                        throw new IllegalStateException("invalid option '%" + c +
                         "' to 'format'");
                     }
-                    
+
                     // Set precision
                     if (!hasPrecision) {
                         precision = defaultPrecision;
@@ -253,7 +267,7 @@ public enum StringLib implements JavaFunction {
                     if (!leftJustify) {
                         extend(result, width, padCharacter);
                     }
-                    
+
                     // Detect specifier and compute result
                     switch (c) {
                     case 'c':
@@ -277,13 +291,11 @@ public enum StringLib implements JavaFunction {
                                 if (precision <= digits) {
                                     result.append(basePrepend);
                                 }
-                            } else if (base == 16) {
-                                if (vLong != 0) {
-                                    result.append(basePrepend);
-                                }
+                            } else if (base == 16 && vLong != 0) {
+                                result.append(basePrepend);
                             }
                         }
-                        
+
                         if (vLong != 0 || precision > 0) {
                             stringBufferAppend(result, vLong, base, false, precision);
                         }
@@ -311,7 +323,7 @@ public enum StringLib implements JavaFunction {
                     case 'f': {
                         Double v = getDoubleArg(callFrame, argc);
                         boolean isNaN = v.isInfinite() || v.isNaN();
-                        
+
                         double vDouble = v.doubleValue();
                         if (MathLib.isNegative(vDouble)) {
                             if (!isNaN) {
@@ -341,7 +353,7 @@ public enum StringLib implements JavaFunction {
                         if (precision <= 0) {
                             precision = 1;
                         }
-                        
+
                         // first round to correct significant digits (precision),
                         // then check which formatting to be used.
                         Double v = getDoubleArg(callFrame, argc);
@@ -367,9 +379,9 @@ public enum StringLib implements JavaFunction {
                              *     |v| >= 10^(-4)
                              * AND
                              *     |v| < 10^(precision)
-                             *     
+                             *
                              * otherwise, choose %e
-                             */ 
+                             */
                             if (x == 0 || (x >= 1e-4 && x < MathLib.ipow(10, precision))) {
                                 int iPartSize;
                                 if (x == 0) {
@@ -385,7 +397,7 @@ public enum StringLib implements JavaFunction {
                                     }
                                 }
                                 // format with %f, with precision significant numbers
-                                appendSignificantNumber(result, x, precision - iPartSize, repr);                                
+                                appendSignificantNumber(result, x, precision - iPartSize, repr);
                             } else {
                                 // format with %e, with precision significant numbers, i.e. precision -1 digits
                                 // but skip trailing zeros unless repr
@@ -419,7 +431,7 @@ public enum StringLib implements JavaFunction {
                         result.append('"');
                         break;
                     default:
-                        throw new RuntimeException("Internal error");
+                        throw new IllegalStateException("Internal error");
                     }
                     if (leftJustify) {
                         int currentResultLength = result.length();
@@ -456,21 +468,21 @@ public enum StringLib implements JavaFunction {
         return 1;
     }
 
-    private void append(StringBuffer buffer, String s, int start, int end) {
+    static void append(StringBuilder buffer, String s, int start, int end) {
         for (int i = start; i < end; i++) {
             buffer.append(s.charAt(i));
         }
     }
 
-    private void extend(StringBuffer buffer, int extraWidth, char padCharacter) {
-        int preLength = buffer.length();        
+    static void extend(StringBuilder buffer, int extraWidth, char padCharacter) {
+        int preLength = buffer.length();
         buffer.setLength(preLength + extraWidth);
         for (int i = extraWidth - 1; i >= 0; i--) {
             buffer.setCharAt(preLength + i, padCharacter);
         }
     }
 
-    private void stringBufferUpperCase(StringBuffer buffer, int start) {
+    static void stringBufferUpperCase(StringBuilder buffer, int start) {
         int length = buffer.length();
         for (int i = start; i < length; i++) {
             char c = buffer.charAt(i);
@@ -479,19 +491,19 @@ public enum StringLib implements JavaFunction {
             }
         }
     }
-    
-    private static final char[] digits = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
     /**
      * Precondition: value >= 0
-     * Precondition: 2 <= base <= 16 
+     * Precondition: 2 <= base <= 16
      * @param sb the stringbuffer to append to
-     * @param value the value to append
+     * @param pValue the value to append
      * @param base the base to use when formatting (typically 8, 10 or 16)
-     * @param minDigits 
-     * @param zeroIsEmpty if the value is 0, should the zero be printed or not?
+     * @param mminDigits min digits
      */
-    private static void stringBufferAppend(StringBuffer sb, double value, int base, boolean printZero, int minDigits) {
+    private static void stringBufferAppend(StringBuilder sb, double pValue, int base, boolean printZero, int mminDigits) {
+        double value = pValue;
         int startPos = sb.length();
+        int minDigits = mminDigits;
         while (value > 0 || minDigits > 0) {
             double newValue = Math.floor(value / base);
             sb.append(digits[(int) (value - (newValue * base))]);
@@ -503,8 +515,8 @@ public enum StringLib implements JavaFunction {
             sb.append('0');
         } else {
             // Note that the digits are in reverse order now, so we need to correct it.
-            // We can't use StringBuffer.reverse because that reverses the entire string
-            
+            // We can't use StringBuilder.reverse because that reverses the entire string
+
             int swapCount = (1 + endPos - startPos) / 2;
             for (int i = swapCount - 1; i >= 0; i--) {
                 int leftPos = startPos + i;
@@ -516,47 +528,40 @@ public enum StringLib implements JavaFunction {
             }
         }
     }
-    
+
     /**
      * Only works with non-negative numbers
-     * @param buffer
-     * @param number
-     * @param precision
-     * @param requirePeriod
      */
-    private void appendPrecisionNumber(StringBuffer buffer, double number, int precision, boolean requirePeriod) {
-        number = MathLib.roundToPrecision(number, precision);
+    static void appendPrecisionNumber(StringBuilder buffer, double pNumber, int precision, boolean requirePeriod) {
+        double number = MathLib.roundToPrecision(pNumber, precision);
         double iPart = Math.floor(number);
         double fPart = number - iPart;
-        
+
         for (int i = 0; i < precision; i++) {
             fPart *= 10.0;
         }
         fPart = MathLib.round(iPart + fPart) - iPart;
-            
+
         stringBufferAppend(buffer, iPart, 10, true, 0);
-        
+
         if (requirePeriod || precision > 0) {
             buffer.append('.');
         }
-        
+
         stringBufferAppend(buffer, fPart, 10, false, precision);
     }
 
     /**
      * Only works with non-negative numbers
-     * @param buffer
-     * @param number
-     * @param significantDecimals
-     * @param includeTrailingZeros
      */
-    private void appendSignificantNumber(StringBuffer buffer, double number, int significantDecimals, boolean includeTrailingZeros) {
+    static void appendSignificantNumber(StringBuilder buffer, double number, int pSignificantDecimals, boolean includeTrailingZeros) {
+        int significantDecimals = pSignificantDecimals;
         double iPart = Math.floor(number);
-        
+
         stringBufferAppend(buffer, iPart, 10, true, 0);
-        
+
         double fPart = MathLib.roundToSignificantNumbers(number - iPart, significantDecimals);
-        
+
         boolean hasNotStarted = iPart == 0 && fPart != 0;
         int zeroPaddingBefore = 0;
         int scanLength = significantDecimals;
@@ -577,7 +582,7 @@ public enum StringLib implements JavaFunction {
                 significantDecimals--;
             }
         }
-        
+
         buffer.append('.');
         int periodPos = buffer.length();
         extend(buffer, zeroPaddingBefore, '0');
@@ -590,15 +595,16 @@ public enum StringLib implements JavaFunction {
             int padRightSize = significantDecimals - len - zeroPaddingBefore;
             extend(buffer, padRightSize, '0');
         }
-        
+
         if (!includeTrailingZeros && periodPos == buffer.length()) {
             buffer.delete(periodPos - 1, buffer.length());
         }
     }
 
-    private void appendScientificNumber(StringBuffer buffer, double x, int precision, boolean repr, boolean useSignificantNumbers) {
+    static void appendScientificNumber(StringBuilder buffer, double xx, int precision, boolean repr, boolean useSignificantNumbers) {
         int exponent = 0;
-        
+        double x = xx;
+
         // Run two passes to handle cases such as %.2e with the value 95.
         for (int i = 0; i < 2; i++) {
             if (x >= 1.0) {
@@ -631,56 +637,57 @@ public enum StringLib implements JavaFunction {
         stringBufferAppend(buffer, absExponent, 10, true, 2);
     }
 
-    private String getStringArg(LuaCallFrame callFrame, int argc) {
-        return getStringArg(callFrame, argc, "format");
-    }
-    
-    private String getStringArg(LuaCallFrame callFrame, int argc, String funcname) {
-        return (String) BaseLib.getArg(callFrame, argc, BaseLib.Type.STRING.toString(), funcname);
-    }
-    
-    private Double getDoubleArg(LuaCallFrame callFrame, int argc) {
-        return getDoubleArg(callFrame, argc, "format");
+    static String getStringArg(LuaCallFrame callFrame, int argc) {
+        return getStringArg(callFrame, argc, FORMAT.name);
     }
 
-    private Double getDoubleArg(LuaCallFrame callFrame, int argc, String funcname) {
-        return (Double) BaseLib.getArg(callFrame, argc, BaseLib.Type.NUMBER.toString(), funcname);
+    static String getStringArg(LuaCallFrame callFrame, int argc, String funcname) {
+        return (String) BaseLib.getArg(callFrame, argc, BaseLib.TYPE_STRING, funcname);
     }
 
-    private int lower(LuaCallFrame callFrame, int nArguments) {
+    static Double getDoubleArg(LuaCallFrame callFrame, int argc) {
+        return getDoubleArg(callFrame, argc, FORMAT.name);
+    }
+
+    static Double getDoubleArg(LuaCallFrame callFrame, int argc, String funcname) {
+        return (Double)BaseLib.getArg(callFrame, argc, BaseLib.TYPE_NUMBER, funcname);
+    }
+
+    static int lower(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-        String s = getStringArg(callFrame,1,"lower");
-        
-        callFrame.push(s.toLowerCase());
+        String s = getStringArg(callFrame,1,LOWER.name);
+
+        callFrame.push(s.toLowerCase(Locale.getDefault()));
         return 1;
     }
 
-    private int upper(LuaCallFrame callFrame, int nArguments) {
+    static int upper(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-        String s = getStringArg(callFrame,1,"upper");
+        String s = getStringArg(callFrame,1,UPPER.name);
 
-        callFrame.push(s.toUpperCase());
+        callFrame.push(s.toUpperCase(Locale.getDefault()));
         return 1;
     }
 
-    private int reverse(LuaCallFrame callFrame, int nArguments) {
+    static int reverse(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-        String s = getStringArg(callFrame, 1, "reverse");
-        s = new StringBuffer(s).reverse().toString();
+        String s = getStringArg(callFrame, 1, REVERSE.name);
+        s = new StringBuilder(s).reverse().toString();
         callFrame.push(s);
         return 1;
     }
 
-    private int stringByte(LuaCallFrame callFrame, int nArguments) {
+    @SuppressWarnings({"PMD.NPathComplexity", "PMD.ExcessiveMethodLength"})
+    static int stringByte(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
-        String s = getStringArg(callFrame, 1, "byte");
+        String s = getStringArg(callFrame, 1, BYTE.name);
 
         Double di = null;
         Double dj = null;
         if (nArguments >= 2) {
-            di = getDoubleArg(callFrame, 2, "byte");
+            di = getDoubleArg(callFrame, 2, BYTE.name);
             if (nArguments >= 3) {
-                dj = getDoubleArg(callFrame, 3, "byte");
+                dj = getDoubleArg(callFrame, 3, BYTE.name);
             }
         }
         double di2 = 1;
@@ -692,7 +699,8 @@ public enum StringLib implements JavaFunction {
             dj2 = LuaState.fromDouble(dj);
         }
 
-        int ii = (int) di2, ij = (int) dj2;
+        int ii = (int) di2;
+        int ij = (int) dj2;
 
         int len = s.length();
         if (ii < 0) {
@@ -715,26 +723,26 @@ public enum StringLib implements JavaFunction {
         int offset = ii - 1;
         for (int i = 0; i < nReturns; i++) {
             char c = s.charAt(offset + i);
-            callFrame.set(i, new Double((double) c));                   
+            callFrame.set(i, new Double((double) c));
         }
         return nReturns;
     }
 
-    private int stringChar(LuaCallFrame callFrame, int nArguments) {
-        StringBuffer sb = new StringBuffer();
+    static int stringChar(LuaCallFrame callFrame, int nArguments) {
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < nArguments; i++) {
-            int num = getDoubleArg(callFrame, i + 1, "char").intValue();
+            int num = getDoubleArg(callFrame, i + 1, CHAR.name).intValue();
             sb.append((char) num);
         }
         return callFrame.push(sb.toString());
     }
 
-    private int sub(LuaCallFrame callFrame, int nArguments) {
-        String s = getStringArg(callFrame, 1, "sub");
-        double start = getDoubleArg(callFrame, 2, "sub").doubleValue();
+    static int sub(LuaCallFrame callFrame, int nArguments) {
+        String s = getStringArg(callFrame, 1, SUB.name);
+        double start = getDoubleArg(callFrame, 2, SUB.name).doubleValue();
         double end = -1;
         if (nArguments >= 3) {
-            end = getDoubleArg(callFrame, 3, "sub").doubleValue();
+            end = getDoubleArg(callFrame, 3, SUB.name).doubleValue();
         }
         String res;
         int istart = (int) start;
@@ -768,13 +776,7 @@ public enum StringLib implements JavaFunction {
 
     public static class MatchState {
 
-        public MatchState () {
-            capture = new Capture[ LUA_MAXCAPTURES ];
-            for (int i = 0; i < LUA_MAXCAPTURES; i ++) {
-                capture[i] = new Capture ();
-            }
-        }
-        public StringPointer srcInit;  /* init of source string */
+        public StringPointer src_init;  /* init of source string */
 
         public int endIndex; /* end (`\0') of source string */
 
@@ -789,6 +791,13 @@ public enum StringLib implements JavaFunction {
             public int len;
         }
 
+        public MatchState () {
+            capture = new Capture[ LUA_MAXCAPTURES ];
+            for ( int i = 0; i < LUA_MAXCAPTURES; i ++ ) {
+                capture[i] = new Capture ();
+            }
+        }
+
         public Object[] getCaptures() {
             if (level <= 0) {
                 return null;
@@ -796,7 +805,7 @@ public enum StringLib implements JavaFunction {
             Object[] caps = new String[level];
             for (int i = 0; i < level; i++) {
                 if (capture[i].len == CAP_POSITION) {
-                    caps[i] = new Double(srcInit.length() - capture[i].init.length() + 1);
+                    caps[i] = new Double(src_init.length() - capture[i].init.length() + 1);
                 } else {
                     caps[i] = capture[i].init.getString().substring(0, capture[i].len);
                 }
@@ -820,7 +829,7 @@ public enum StringLib implements JavaFunction {
         }
 
         public StringPointer getClone() {
-            StringPointer newSP = new StringPointer(this.getOriginalString(), this.getIndex());
+            StringPointer newSP = new StringPointer( this.getOriginalString(), this.getIndex() );
             return newSP;
         }
 
@@ -828,7 +837,7 @@ public enum StringLib implements JavaFunction {
             return index;
         }
 
-        public void setIndex (int ind) {
+        public void setIndex ( int ind ) {
             index = ind;
         }
 
@@ -845,7 +854,7 @@ public enum StringLib implements JavaFunction {
         }
 
         public String getString(int i) {
-            return string.substring (index + i, string.length ());
+            return string.substring ( index + i, string.length () );
         }
 
         public char getChar() {
@@ -853,75 +862,75 @@ public enum StringLib implements JavaFunction {
         }
 
         public char getChar(int strIndex) {
-            if (index + strIndex >= string.length ())
+            if ( index + strIndex >= string.length () )
                 return '\0';
             else
-                return string.charAt (index + strIndex);
+                return string.charAt ( index + strIndex );
         }
 
         public int length() {
             return string.length () - index;
         }
 
-        public int postIncrStringI (int num) {
+        public int postIncrStringI ( int num ) {
             int oldIndex = index;
             index += num;
             return oldIndex;
         }
 
-        public int preIncrStringI (int num) {
+        public int preIncrStringI ( int num ) {
             index += num;
             return index;
         }
 
-        public char postIncrString (int num) {
+        public char postIncrString ( int num ) {
             char c = getChar();
             index += num;
             return c;
         }
 
-        public char preIncrString (int num) {
+        public char preIncrString ( int num ) {
             index += num;
             return getChar();
         }
 
         public int compareTo(StringPointer cmp, int len) {
-            return this.string.substring(this.index,this.index + len).compareTo(
-                    cmp.string.substring(cmp.index, cmp.index + len));
+            return this.string.substring(this.index,this.index+len).compareTo(
+                    cmp.string.substring(cmp.index, cmp.index+len));
         }
     }
 
-    private static Object pushOneCapture (MatchState ms, int i, StringPointer s, StringPointer e) {
+    private static Object pushOnecapture(MatchState ms, int i, StringPointer s, StringPointer e ) {
         if (i >= ms.level) {
-            if (i == 0) { // ms->level == 0, too
+            if ( i == 0 ) { // ms->level == 0, too
                 String res = s.string.substring(s.index, e.index);
                 ms.callFrame.push(res);
                 return res;
             } else {
-                throw new RuntimeException("invalid capture index");
+                throw new IllegalStateException("invalid capture index");
             }
         } else {
             int l = ms.capture[i].len;
             if (l == CAP_UNFINISHED) {
-                throw new RuntimeException("unfinished capture");
+                throw new IllegalStateException("unfinished capture");
             } else if (l == CAP_POSITION) {
-                Double res = new Double(ms.srcInit.length() - ms.capture[i].init.length() + 1);
+                Double res = new Double(ms.src_init.length() - ms.capture[i].init.length() + 1);
                 ms.callFrame.push(res);
                 return res;
             } else {
                 int index = ms.capture[i].init.index;
-                String res = ms.capture[i].init.string.substring(index, index + l);
+                String res = ms.capture[i].init.string.substring(index, index+l);
                 ms.callFrame.push(res);
                 return res;
             }
         }
     }
 
-    private static int pushCaptures (MatchState ms, StringPointer s, StringPointer e) {
-        int nlevels = (ms.level == 0 && s != null) ? 1 : ms.level;
+    private static int pushCaptures(MatchState ms, StringPointer s, StringPointer e ) {
+        int nlevels = ( ms.level == 0 && s != null ) ? 1 : ms.level;
         BaseLib.luaAssert(nlevels <= LUA_MAXCAPTURES, "too many captures");
         for (int i = 0; i < nlevels; i++) {
-            pushOneCapture (ms, i, s, e);
+            pushOnecapture(ms, i, s, e);
         }
         return nlevels;  // number of strings pushed
     }
@@ -936,28 +945,29 @@ public enum StringLib implements JavaFunction {
         return true;
     }
 
-    private static int findAux (LuaCallFrame callFrame, boolean find) {
-        String f = find ? "find" : "match";
-        String source = (String) BaseLib.getArg(callFrame, 1, BaseLib.Type.STRING.toString(), f);
-        String pattern = (String) BaseLib.getArg(callFrame, 2, BaseLib.Type.STRING.toString(), f);
-        Double i = ((Double)(BaseLib.getOptArg(callFrame, 3, BaseLib.Type.NUMBER.toString())));
-        boolean plain = LuaState.boolEval(BaseLib.getOptArg(callFrame, 4, BaseLib.Type.BOOLEAN.toString()));
+    @SuppressWarnings({"PMD.NPathComplexity", "PMD.ExcessiveMethodLength"})
+    private static int findAux (LuaCallFrame callFrame, boolean find ) {
+        String f = find ? FIND.name : MATCH.name;
+        String source = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, f);
+        String pattern = (String) BaseLib.getArg(callFrame, 2, BaseLib.TYPE_STRING, f);
+        Double i = ((Double)(BaseLib.getOptArg(callFrame, 3, BaseLib.TYPE_NUMBER)));
+        boolean plain = LuaState.boolEval(BaseLib.getOptArg(callFrame, 4, BaseLib.TYPE_BOOLEAN));
         int init = (i == null ? 0 : i.intValue() - 1);
 
-        if (init < 0) {
+        if ( init < 0 ) {
             // negative numbers count back from the end of the string.
             init += source.length();
-            if (init < 0) {
+            if ( init < 0 ) {
                 init = 0; // if we are still negative, just start at the beginning.
             }
-        } else if (init > source.length()) {
+        } else if ( init > source.length() ) {
             init = source.length();
         }
 
-        if (find && (plain || noSpecialChars(pattern))) { // explicit plain request or no special characters?
+        if ( find && ( plain || noSpecialChars(pattern) ) ) { // explicit plain request or no special characters?
             // do a plain search
             int pos = source.indexOf(pattern, init);
-            if (pos > -1) {
+            if ( pos > -1 ) {
                 return callFrame.push(LuaState.toDouble(pos + 1), LuaState.toDouble(pos + pattern.length()));
             }
         } else {
@@ -966,82 +976,81 @@ public enum StringLib implements JavaFunction {
 
             MatchState ms = new MatchState ();
             boolean anchor = false;
-            if (p.getChar () == '^') {
+            if ( p.getChar () == '^' ) {
                 anchor = true;
-                p.postIncrString (1);
+                p.postIncrString ( 1 );
             }
             StringPointer s1 = s.getClone();
-            s1.postIncrString (init);
+            s1.postIncrString ( init );
 
             ms.callFrame = callFrame;
-            ms.srcInit = s.getClone();
+            ms.src_init = s.getClone();
             ms.endIndex = s.getString().length();
             do {
                 StringPointer res;
                 ms.level = 0;
-                if ((res = match (ms, s1, p)) != null) {
-                    if (find) {
+                if ( ( res = match ( ms, s1, p ) ) != null ) {
+                    if ( find ) {
                         return callFrame.push(new Double(s.length () - s1.length () + 1), new Double(s.length () - res.length ())) +
-                        pushCaptures (ms, null, null);
+                        pushCaptures( ms, null, null );
                     } else {
-                        return pushCaptures (ms, s1, res);
+                        return pushCaptures( ms, s1, res );
                     }
                 }
 
-            } while (s1.postIncrStringI (1) < ms.endIndex && !anchor);
+            } while ( s1.postIncrStringI ( 1 ) < ms.endIndex && !anchor );
         }
         return callFrame.pushNil();  // not found
     }
 
-    private static StringPointer startCapture (MatchState ms, StringPointer s, StringPointer p, int what) {
+    private static StringPointer startCapture ( MatchState ms, StringPointer s, StringPointer p, int what ) {
         StringPointer res;
         int level = ms.level;
         BaseLib.luaAssert(level < LUA_MAXCAPTURES, "too many captures");
 
         ms.capture[level].init = s.getClone();
-        ms.capture[level].init.setIndex (s.getIndex ());
+        ms.capture[level].init.setIndex ( s.getIndex () );
         ms.capture[level].len = what;
         ms.level = level + 1;
-        if ((res = match (ms, s, p)) == null) /* match failed? */ {
+        if ( ( res = match ( ms, s, p ) ) == null ) /* match failed? */ {
             ms.level --;  /* undo capture */
         }
         return res;
     }
 
-    private static int captureToClose (MatchState ms) {
+    private static int captureToClose ( MatchState ms ) {
         int level = ms.level;
-        for (level --; level >= 0; level --) {
-            if (ms.capture[level].len == CAP_UNFINISHED) {
+        for ( level --; level >= 0; level -- ) {
+            if ( ms.capture[level].len == CAP_UNFINISHED ) {
                 return level;
             }
         }
-        throw new RuntimeException("invalid pattern capture");
+        throw new IllegalStateException("invalid pattern capture");
     }
 
-    private static StringPointer endCapture (MatchState ms, StringPointer s, StringPointer p) {
-        int l = captureToClose (ms);
+    private static StringPointer endCapture ( MatchState ms, StringPointer s, StringPointer p ) {
+        int l = captureToClose ( ms );
         StringPointer res;
         ms.capture[l].len = ms.capture[l].init.length () - s.length ();  /* close capture */
-        if ((res = match (ms, s, p)) == null) /* match failed? */ {
+        if ( ( res = match ( ms, s, p ) ) == null ) /* match failed? */ {
             ms.capture[l].len = CAP_UNFINISHED;  /* undo capture */
         }
         return res;
     }
 
-    private static int checkCapture (MatchState ms, int l) {
-        l -= '1'; // convert chars 1 - 9 to actual ints 1 - 9
+    private static int checkCapture ( MatchState ms, int ll ) {
+        int l = ll - '1'; // convert chars 1-9 to actual ints 1-9
         BaseLib.luaAssert(l < 0 || l >= ms.level || ms.capture[l].len == CAP_UNFINISHED,
         "invalid capture index");
         return l;
     }
 
-    private static StringPointer matchCapture (MatchState ms, StringPointer s, int l) {
-        int len;
-        l = checkCapture (ms, l);
-        len = ms.capture[l].len;
-        if ((ms.endIndex - s.length ()) >= len && ms.capture[l].init.compareTo(s, len) == 0) {
+    private static StringPointer matchCapture ( MatchState ms, StringPointer s, int ll ) {
+        int l = checkCapture ( ms, ll );
+        int len = ms.capture[l].len;
+        if ( ( ms.endIndex - s.length () ) >= len && ms.capture[l].init.compareTo(s, len) == 0 ) {
             StringPointer sp = s.getClone();
-            sp.postIncrString (len);
+            sp.postIncrString ( len );
             return sp;
         }
         else {
@@ -1049,26 +1058,26 @@ public enum StringLib implements JavaFunction {
         }
     }
 
-    private static StringPointer matchBalance (MatchState ms, StringPointer ss, StringPointer p) {
+    private static StringPointer matchBalance ( MatchState ms, StringPointer ss, StringPointer p ) {
 
-        BaseLib.luaAssert(!(p.getChar () == 0 || p.getChar (1) == 0), "unbalanced pattern");
+        BaseLib.luaAssert(!(p.getChar () == 0 || p.getChar ( 1 ) == 0), "unbalanced pattern");
 
         StringPointer s = ss.getClone();
-        if (s.getChar () != p.getChar ()) {
+        if ( s.getChar () != p.getChar () ) {
             return null;
         } else {
             int b = p.getChar ();
-            int e = p.getChar (1);
+            int e = p.getChar ( 1 );
             int cont = 1;
 
-            while (s.preIncrStringI (1) < ms.endIndex) {
-                if (s.getChar () == e) {
-                    if (-- cont == 0) {
+            while ( s.preIncrStringI ( 1 ) < ms.endIndex ) {
+                if ( s.getChar () == e ) {
+                    if (  -- cont == 0 ) {
                         StringPointer sp = s.getClone();
-                        sp.postIncrString (1);
+                        sp.postIncrString ( 1 );
                         return sp;
                     }
-                } else if (s.getChar () == b) {
+                } else if ( s.getChar () == b ) {
                     cont ++;
                 }
             }
@@ -1076,28 +1085,28 @@ public enum StringLib implements JavaFunction {
         return null;  /* string ends out of balance */
     }
 
-    private static StringPointer classEnd (MatchState ms, StringPointer pp) {
+    private static StringPointer classEnd ( StringPointer pp ) {
         StringPointer p = pp.getClone();
-        switch (p.postIncrString (1)) {
+        switch ( p.postIncrString ( 1 ) ) {
         case L_ESC: {
             BaseLib.luaAssert(p.getChar () != '\0', "malformed pattern (ends with '%')");
-            p.postIncrString (1);
+            p.postIncrString ( 1 );
             return p;
         }
         case '[': {
-            if (p.getChar () == '^') {
-                p.postIncrString (1);
+            if ( p.getChar () == '^' ) {
+                p.postIncrString ( 1 );
             }
-            do { // look for a `]' 
+            do { // look for a `]'
                 BaseLib.luaAssert(p.getChar () != '\0', "malformed pattern (missing ']')");
 
-                if (p.postIncrString (1) == L_ESC && p.getChar () != '\0') {
-                    p.postIncrString (1);  // skip escapes (e.g. `%]')
+                if ( p.postIncrString ( 1 ) == L_ESC && p.getChar () != '\0' ) {
+                    p.postIncrString ( 1 );  // skip escapes (e.g. `%]')
                 }
 
-            } while (p.getChar () != ']');
+            } while ( p.getChar () != ']' );
 
-            p.postIncrString (1);
+            p.postIncrString ( 1 );
             return p;
         }
         default: {
@@ -1106,33 +1115,33 @@ public enum StringLib implements JavaFunction {
         }
     }
 
-    private static boolean singleMatch (char c, StringPointer p, StringPointer ep) {
-        switch (p.getChar ()) {
+    private static boolean singleMatch ( char c, StringPointer p, StringPointer ep ) {
+        switch ( p.getChar () ) {
         case '.':
             return true;  // matches any char
         case L_ESC:
-            return matchClass (p.getChar (1), c);
+            return matchClass ( p.getChar ( 1 ), c );
         case '[': {
             StringPointer sp = ep.getClone();
-            sp.postIncrString (-1);
-            return matchBracketClass (c, p, sp);
+            sp.postIncrString ( -1 );
+            return matchBracketClass ( c, p, sp );
         }
         default:
-            return (p.getChar () == c);
+            return ( p.getChar () == c );
         }
     }
 
-    private static StringPointer minExpand (MatchState ms, StringPointer ss, StringPointer p, StringPointer ep) {
+    private static StringPointer minExpand ( MatchState ms, StringPointer ss, StringPointer p, StringPointer ep ) {
         StringPointer sp = ep.getClone();
         StringPointer s = ss.getClone();
 
-        sp.postIncrString (1);
+        sp.postIncrString ( 1 );
         while (true) {
-            StringPointer res = match (ms, s, sp);
-            if (res != null) {
+            StringPointer res = match ( ms, s, sp );
+            if ( res != null ) {
                 return res;
-            } else if (s.getIndex () < ms.endIndex && singleMatch (s.getChar (), p, ep)) {
-                s.postIncrString (1);  // try with one more repetition 
+            } else if ( s.getIndex () < ms.endIndex && singleMatch ( s.getChar (), p, ep ) ) {
+                s.postIncrString ( 1 );  // try with one more repetition
             } else {
                 return null;
             }
@@ -1144,7 +1153,7 @@ public enum StringLib implements JavaFunction {
         while (s.getIndex () + i < ms.endIndex && singleMatch(s.getChar(i), p, ep)) {
             i ++;
         }
-        // keeps trying to match with the maximum repetitions 
+        // keeps trying to match with the maximum repetitions
         while (i >= 0) {
             StringPointer sp1 = s.getClone();
             sp1.postIncrString(i);
@@ -1204,7 +1213,7 @@ public enum StringLib implements JavaFunction {
                     return startCapture(ms, s, p1, CAP_UNFINISHED);
                 }
             }
-            case ')': { // end capture 
+            case ')': { // end capture
                 StringPointer p1 = p.getClone();
                 p1.postIncrString(1);
                 return endCapture(ms, s, p1);
@@ -1220,14 +1229,14 @@ public enum StringLib implements JavaFunction {
                     }
                     p.postIncrString(4);
                     isContinue = true;
-                    continue; // else return match(ms, s, p + 4);
+                    continue; // else return match(ms, s, p+4);
                 }
                 case 'f': { // frontier?
                     p.postIncrString (2);
                     BaseLib.luaAssert(p.getChar() == '[' , "missing '[' after '%%f' in pattern");
 
-                    StringPointer ep = classEnd(ms, p);  // points to what is next
-                    char previous = (s.getIndex() == ms.srcInit.getIndex()) ? '\0' : s.getChar(-1);
+                    StringPointer ep = classEnd(p);  // points to what is next
+                    char previous = (s.getIndex() == ms.src_init.getIndex()) ? '\0' : s.getChar(-1);
 
                     StringPointer ep1 = ep.getClone();
                     ep1.postIncrString(-1);
@@ -1246,9 +1255,9 @@ public enum StringLib implements JavaFunction {
                         }
                         p.postIncrString(2);
                         isContinue = true;
-                        continue; // else return match(ms, s, p + 2) 
+                        continue; // else return match(ms, s, p+2)
                     }
-                    isDefault = true; // case default 
+                    isDefault = true; // case default
                 }
                 }
                 break;
@@ -1258,29 +1267,25 @@ public enum StringLib implements JavaFunction {
             }
             case '$': {
                 if (p.getChar(1) == '\0') { // is the `$' the last char in pattern?
-                    return (s.getIndex() == ms.endIndex) ? s : null;  // check end of string 
-                } else {
-                    isDefault = true;
+                    return (s.getIndex() == ms.endIndex) ? s : null;  // check end of string
                 }
-                break;
             }
             default: { // it is a pattern item
                 isDefault = true;
-                break;
             }
             }
 
             if (isDefault) { // it is a pattern item
                 isDefault = false;
-                StringPointer ep = classEnd(ms, p);  // points to what is next
+                StringPointer ep = classEnd(p);  // points to what is next
                 boolean m = (s.getIndex () < ms.endIndex && singleMatch(s.getChar(), p, ep));
                 switch (ep.getChar()) {
                 case '?':  { // optional
                     StringPointer res;
                     StringPointer s1 = s.getClone();
-                    s1.postIncrString (1);
+                    s1.postIncrString ( 1 );
                     StringPointer ep1 = ep.getClone();
-                    ep1.postIncrString (1);
+                    ep1.postIncrString ( 1 );
 
                     if (m && ((res = match(ms, s1, ep1)) != null)) {
                         return res;
@@ -1288,9 +1293,9 @@ public enum StringLib implements JavaFunction {
                     p = ep;
                     p.postIncrString(1);
                     isContinue = true;
-                    continue; // else return match(ms, s, ep + 1);
+                    continue; // else return match(ms, s, ep+1);
                 }
-                case '*': { // 0 or more repetitions 
+                case '*': { // 0 or more repetitions
                     return maxExpand(ms, s, p, ep);
                 }
                 case '+': { // 1 or more repetitions
@@ -1298,7 +1303,7 @@ public enum StringLib implements JavaFunction {
                     s1.postIncrString(1);
                     return (m ? maxExpand(ms, s1, p, ep) : null);
                 }
-                case '-': { // 0 or more repetitions (minimum) 
+                case '-': { // 0 or more repetitions (minimum)
                     return minExpand(ms, s, p, ep);
                 }
                 default: {
@@ -1309,7 +1314,7 @@ public enum StringLib implements JavaFunction {
 
                     p = ep;
                     isContinue = true;
-                    continue; // else return match(ms, s + 1, ep);
+                    continue; // else return match(ms, s+1, ep);
                 }
                 }
             }
@@ -1337,37 +1342,38 @@ public enum StringLib implements JavaFunction {
     }
 
     private static boolean isPunct(char c) {
-        return (c >= 0x21 && c <= 0x2F) || 
-        (c >= 0x3a && c <= 0x40) || 
-        (c >= 0x5B && c <= 0x60) || 
-        (c >= 0x7B && c <= 0x7E);
+        return ( c >= 0x21 && c <= 0x2F ) ||
+        ( c >= 0x3a && c <= 0x40 ) ||
+        ( c >= 0x5B && c <= 0x60 ) ||
+        ( c >= 0x7B && c <= 0x7E );
     }
 
     private static boolean isSpace(char c) {
-        return (c >= 0x09 && c <= 0x0D) || c == 0x20 ;
+        return ( c >= 0x09 && c <= 0x0D ) || c == 0x20 ;
     }
 
     private static boolean isControl(char c) {
-        return (c >= 0x00 && c <= 0x1f) || c == 0x7f;
+        return ( c >= 0x00 && c <= 0x1f ) || c == 0x7f;
     }
 
     private static boolean isHex(char c) {
-        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+        return ( c >= '0' && c <= '9' ) || ( c >= 'a' && c <= 'f' ) || ( c >= 'A' && c <= 'F' );
     }
 
-    private static int gsub(LuaCallFrame cf, int nargs) {
-        String srcTemp = (String) BaseLib.getArg(cf, 1, BaseLib.Type.STRING.toString(), "gsub");
-        String pTemp = (String) BaseLib.getArg(cf, 2, BaseLib.Type.STRING.toString(), "gsub");
-        Object repl = BaseLib.getArg(cf, 3, null, "gsub");
+    @SuppressWarnings({"PMD.NPathComplexity", "PMD.ExcessiveMethodLength"})
+    private static int gsub(LuaCallFrame cf) {
+        String srcTemp = (String)BaseLib.getArg(cf, 1, BaseLib.TYPE_STRING, GSUB.name);
+        String pTemp = (String)BaseLib.getArg(cf, 2, BaseLib.TYPE_STRING, GSUB.name);
+        Object repl = BaseLib.getArg(cf, 3, null, GSUB.name);
         {
             String tmp = BaseLib.rawTostring(repl);
             if (tmp != null) {
                 repl = tmp;
             }
-        }           
-        Double num = (Double) BaseLib.getOptArg(cf, 4, BaseLib.Type.NUMBER.toString());
+        }
+        Double num = (Double)BaseLib.getOptArg(cf, 4, BaseLib.TYPE_NUMBER);
         // if i isn't supplied, we want to substitute all occurrences of the pattern
-        int maxSubstitutions = (num == null) ? Integer.MAX_VALUE : num.intValue(); 
+        int maxSubstitutions = (num == null) ? Integer.MAX_VALUE : num.intValue();
 
         StringPointer pattern = new StringPointer (pTemp);
         StringPointer src = new StringPointer (srcTemp);
@@ -1375,23 +1381,23 @@ public enum StringLib implements JavaFunction {
         boolean anchor = false;
         if (pattern.getChar() == '^') {
             anchor = true;
-            pattern.postIncrString (1);
+            pattern.postIncrString ( 1 );
         }
 
         String replType = BaseLib.type(repl);
-        if (!(replType == BaseLib.Type.FUNCTION.toString() ||
-                        replType == BaseLib.Type.STRING.toString() || 
-                        replType == BaseLib.Type.TABLE.toString())) {
-            BaseLib.fail(("string / function / table expected, got "+replType));
+        if (!(replType == BaseLib.TYPE_FUNCTION ||
+                        replType == BaseLib.TYPE_STRING ||
+                        replType == BaseLib.TYPE_TABLE)) {
+            BaseLib.fail(("string/function/table expected, got "+replType));
         }
 
         MatchState ms = new MatchState ();
         ms.callFrame = cf;
-        ms.srcInit = src.getClone();
+        ms.src_init = src.getClone();
         ms.endIndex = src.length();
 
         int n = 0;
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
         StringPointer e = null;
         while (n < maxSubstitutions) {
             ms.level = 0;
@@ -1402,7 +1408,7 @@ public enum StringLib implements JavaFunction {
             }
 
             if (e != null && e.getIndex() > src.getIndex()) { // non empty match?
-                src.setIndex (e.getIndex());  // skip it 
+                src.setIndex (e.getIndex());  // skip it
             } else if (src.getIndex() < ms.endIndex) {
                 b.append(src.postIncrString(1));
             } else {
@@ -1416,9 +1422,9 @@ public enum StringLib implements JavaFunction {
         return cf.push(b.append(src.getString()).toString(), new Double(n));
     }
 
-    private static void addValue(MatchState ms, Object repl, StringBuffer b, StringPointer src, StringPointer e) {
+    private static void addValue(MatchState ms, Object repl, StringBuilder b, StringPointer src, StringPointer e) {
         String type = BaseLib.type(repl);
-        if (type == BaseLib.Type.NUMBER.toString() || type == BaseLib.Type.STRING.toString()) {
+        if (type == BaseLib.TYPE_NUMBER || type == BaseLib.TYPE_STRING) {
             b.append(addString (ms, repl, src, e));
         } else {
             String match = src.getString().substring(0, e.getIndex() - src.getIndex());
@@ -1427,10 +1433,10 @@ public enum StringLib implements JavaFunction {
                 match = BaseLib.rawTostring(captures[0]);
             }
             Object res = null;
-            if (type == BaseLib.Type.FUNCTION.toString()) {
+            if (type == BaseLib.TYPE_FUNCTION) {
                 res = ms.callFrame.thread.state.call(repl, match, null, null);
-            } else if (type == BaseLib.Type.TABLE.toString()) {
-                res = ((LuaTable) repl).rawget(match);
+            } else if (type == BaseLib.TYPE_TABLE) {
+                res = ((LuaTable)repl).rawget(match);
             }
             if (res == null) {
                 res = match;
@@ -1442,9 +1448,9 @@ public enum StringLib implements JavaFunction {
     private static String addString(MatchState ms, Object repl, StringPointer s, StringPointer e) {
         String replTemp = BaseLib.tostring(repl, ms.callFrame.thread.state);
         StringPointer replStr = new StringPointer (replTemp);
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < replTemp.length(); i++) {
-            if (replStr.getChar (i) != L_ESC) {
+            if (replStr.getChar ( i ) != L_ESC) {
                 buf.append(replStr.getChar(i));
             } else {
                 i ++;  // skip ESC
@@ -1453,7 +1459,7 @@ public enum StringLib implements JavaFunction {
                 } else if (replStr.getChar(i) == '0') {
                     String str = s.getString ();
                     int len = s.length() - e.length();
-                    if (len > str.length()) {
+                    if (len > str.length() ) {
                         len = str.length();
                     }
                     buf.append(str.substring(0, len));
@@ -1461,15 +1467,15 @@ public enum StringLib implements JavaFunction {
                     int captureIndex = replStr.getChar(i) - '1';
                     Object[] captures = ms.getCaptures();
                     if (captures == null || captureIndex > ms.level) {
-                        throw new RuntimeException("invalid capture index");
+                        throw new IllegalStateException("invalid capture index");
                     }
                     Object o = captures[captureIndex];
                     if(o instanceof Double) {
-                        Double doubleValue = ((Double) o);
-                        if(doubleValue.doubleValue() - doubleValue.intValue() == 0) {
-                            buf.append(String.valueOf(((Double) o).intValue())); 
+                        Double doubleValue = ((Double)o);
+                        if( doubleValue.doubleValue() - doubleValue.intValue() == 0 ) {
+                            buf.append(String.valueOf(((Double)o).intValue()));
                         } else {
-                            buf.append(String.valueOf(((Double) o).doubleValue()));
+                            buf.append(String.valueOf(((Double)o).doubleValue()));
                         }
                     } else {
                         buf.append(o);

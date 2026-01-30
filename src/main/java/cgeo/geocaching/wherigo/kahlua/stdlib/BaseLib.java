@@ -320,7 +320,7 @@ public enum BaseLib implements JavaFunction {
         LuaState state = callFrame.thread.state;
         LuaTable env = state.getEnvironment();
         Object toStringFun = state.tableGet(env, "tostring");
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < nArguments; i++) {
             if (i > 0) {
                 sb.append("\t");
@@ -385,7 +385,7 @@ public enum BaseLib implements JavaFunction {
             return "null";
         }
         final StringBuilder sb = new StringBuilder("]");
-        final Iterator it = table.keys();
+        final Iterator<Object> it = table.keys();
         while (it.hasNext()) {
             Object key = it.next();
             sb.append(key).append("=");

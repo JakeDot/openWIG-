@@ -1,10 +1,10 @@
 /*
-Copyright (c) 2008 - 2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+Copyright (c) 2008-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
@@ -18,47 +18,50 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+--
+File initially copied to c:geo from https://github.com/cgeo/openWIG in April 2025.
+Release 1.1.0 / 4386a025b88aac759e1e67cb27bcc50692d61d9a, Base Package se.krka.kahlua.vm
 */
-package cgeo.geocaching.wherigo.openwig.kahlua.vm;
+package cgeo.geocaching.wherigo.kahlua.vm;
 
-import java.util.Vector;
-
-import cgeo.geocaching.wherigo.openwig.kahlua.stdlib.BaseLib;
+import java.util.ArrayList;
+import java.util.List;
+import cgeo.geocaching.wherigo.kahlua.stdlib.BaseLib;
 
 public class LuaThread {
     public LuaTable environment;
 
     public LuaThread parent;
-    
+
     public String stackTrace = "";
 
-    public Vector liveUpvalues;
+    public List<UpValue> liveUpvalues;
 
     public static final int MAX_STACK_SIZE = 1000;
     public static final int INITIAL_STACK_SIZE = 10;
 
     private static final int MAX_CALL_FRAME_STACK_SIZE = 100;
     private static final int INITIAL_CALL_FRAME_STACK_SIZE = 10;
-    
+
     public Object[] objectStack;
     public int top;
 
     public LuaCallFrame[] callFrameStack;
     public int callFrameTop;
-    
+
     public LuaState state;
 
     public int expectedResults;
-    
+
     public LuaThread(LuaState state, LuaTable environment) {
         this.state = state;
         this.environment = environment;
-        
+
         objectStack = new Object[INITIAL_STACK_SIZE];
         callFrameStack = new LuaCallFrame[INITIAL_CALL_FRAME_STACK_SIZE];
-        liveUpvalues = new Vector();        
+        liveUpvalues = new ArrayList<>();
     }
-    
+
     public final LuaCallFrame pushNewCallFrame(LuaClosure closure,
                                                JavaFunction javaFunction,
                                                int localBase,
@@ -68,7 +71,7 @@ public class LuaThread {
                                                boolean insideCoroutine) {
         setCallFrameStackTop(callFrameTop + 1);
         LuaCallFrame callFrame = currentCallFrame();
-        
+
         callFrame.localBase = localBase;
         callFrame.returnBase = returnBase;
         callFrame.nArguments = nArguments;
@@ -81,14 +84,14 @@ public class LuaThread {
 
     public void popCallFrame() {
         if (isDead()) {
-            throw new RuntimeException("Stack underflow");          
+            throw new IllegalStateException("Stack underflow");
         }
         setCallFrameStackTop(callFrameTop - 1);
     }
-    
+
     private final void ensureCallFrameStackSize(int index) {
         if (index > MAX_CALL_FRAME_STACK_SIZE) {
-            throw new RuntimeException("Stack overflow");           
+            throw new IllegalStateException("Stack overflow");
         }
         int oldSize = callFrameStack.length;
         int newSize = oldSize;
@@ -110,7 +113,7 @@ public class LuaThread {
         }
         callFrameTop = newTop;
     }
-    
+
     private void callFrameStackClear(int startIndex, int endIndex) {
         for (; startIndex <= endIndex; startIndex++) {
             LuaCallFrame callFrame = callFrameStack[startIndex];
@@ -123,7 +126,7 @@ public class LuaThread {
 
     private final void ensureStacksize(int index) {
         if (index > MAX_STACK_SIZE) {
-            throw new RuntimeException("Stack overflow");           
+            throw new IllegalStateException("Stack overflow");
         }
         int oldSize = objectStack.length;
         int newSize = oldSize;
@@ -156,7 +159,7 @@ public class LuaThread {
         for (; startIndex <= endIndex; startIndex++) {
             objectStack[startIndex] = null;
         }
-    }    
+    }
 
     /*
      * End of stack code
@@ -164,10 +167,10 @@ public class LuaThread {
 
     public final void closeUpvalues(int closeIndex) {
         // close all open upvalues
-        
+
         int loopIndex = liveUpvalues.size();
         while (--loopIndex >= 0) {
-            UpValue uv = (UpValue) liveUpvalues.elementAt(loopIndex);
+            UpValue uv = liveUpvalues.elementAt(loopIndex);
             if (uv.index < closeIndex) {
                 return;
             }
@@ -176,12 +179,12 @@ public class LuaThread {
             liveUpvalues.removeElementAt(loopIndex);
         }
     }
-    
+
     public final UpValue findUpvalue(int scanIndex) {
         // TODO: use binary search instead?
         int loopIndex = liveUpvalues.size();
         while (--loopIndex >= 0) {
-            UpValue uv = (UpValue) liveUpvalues.elementAt(loopIndex);
+            UpValue uv = liveUpvalues.elementAt(loopIndex);
             if (uv.index == scanIndex) {
                 return uv;
             }
@@ -192,16 +195,16 @@ public class LuaThread {
         UpValue uv = new UpValue();
         uv.thread = this;
         uv.index = scanIndex;
-        
+
         liveUpvalues.insertElementAt(uv, loopIndex + 1);
-        return uv;              
+        return uv;
     }
 
     public final LuaCallFrame currentCallFrame() {
         if (isDead()) {
             return null;
         }
-        LuaCallFrame callFrame = callFrameStack[callFrameTop - 1]; 
+        LuaCallFrame callFrame = callFrameStack[callFrameTop - 1];
         if (callFrame == null) {
             callFrame = new LuaCallFrame(this);
             callFrameStack[callFrameTop - 1] = callFrame;
@@ -214,12 +217,12 @@ public class LuaThread {
     }
 
     public LuaCallFrame getParent(int level) {
-        BaseLib.luaAssert(level >= 0, "Level must be non - negative");
+        BaseLib.luaAssert(level >= 0, "Level must be non-negative");
         int index = callFrameTop - level - 1;
         BaseLib.luaAssert(index >= 0, "Level too high");
         return callFrameStack[index];
     }
-    
+
     public String getCurrentStackTrace(int level, int count, int haltAt) {
         if (level < 0) {
             level = 0;
@@ -227,7 +230,7 @@ public class LuaThread {
         if (count < 0) {
             count = 0;
         }
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (int i = callFrameTop - 1 - level; i >= haltAt; i--) {
             if (count-- <= 0) {
                 break;
@@ -236,7 +239,7 @@ public class LuaThread {
         }
         return buffer.toString();
     }
-    
+
     public void cleanCallFrames(LuaCallFrame callerFrame) {
         LuaCallFrame frame;
         while (true) {
@@ -244,13 +247,13 @@ public class LuaThread {
             if (frame == null || frame == callerFrame) {
                 break;
             }
-            addStackTrace(frame);               
+            addStackTrace(frame);
             popCallFrame();
         }
     }
 
     public void addStackTrace(LuaCallFrame frame) {
-        stackTrace += getStackTrace(frame); 
+        stackTrace += getStackTrace(frame);
     }
 
     private String getStackTrace(LuaCallFrame frame) {
@@ -280,7 +283,7 @@ public class LuaThread {
         }
         return s;
     }
-    
+
     public String getDebugInfo(int level) {
         String s = "";
         s = s + indent(level) + "Thread: " + this + "\n";
@@ -339,5 +342,5 @@ public class LuaThread {
         return s;
     }
     */
-    
+
 }
