@@ -23,26 +23,30 @@
 package cgeo.geocaching.wherigo.openwig.kahlua.vm;
 
 import java.util.Map;
+import cgeo.geocaching.wherigo.openwig.util.EntryIterator;
 
 public interface LuaTable<K,V> extends Iterable<Map.Entry<K,V>> {
 	default void setMetatable(LuaTable<? extends K, ? extends V> metatable) {
         for (Map.Entry<? extends K, ? extends V> e : metatable) {
-            rawset(e);
+            rawset(e.getKey(), e.getValue());
         }
     }
 	LuaTable<K, V> getMetatable();
 
-	<T extends K> void rawset(T key, V value);
-	<T extends K> V rawget(T key);
+	void rawset(K key, V value);
+	V rawget(K key);
 
-	V next(K key);
 	int len();
 
-    default <T extends K, U extends V> void rawset(Map.Entry<T,U> entry) {
-        rawset((K) entry.getKey(), entry.getValue());
+    default void rawset(Map.Entry<K,V> entry) {
+        rawset(entry.getKey(), entry.getValue());
+    }
+    
+    default K next(K key) {
+        return null;
     }
 
-    default EntryIterator<K,V> iterator() {
+    default java.util.Iterator<Map.Entry<K,V>> iterator() {
         return new EntryIterator<>(this);
     }
 }

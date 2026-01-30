@@ -2,12 +2,14 @@ package cgeo.geocaching.wherigo.openwig.util;
 
 import java.util.Iterator;
 import java.util.Map;
-import cgeo.geocaching.wherigo.openwig.EventTable;
+import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTable;
 
 public class EntryIterator<K,V> implements Iterator<Map.Entry<K,V>> {
 
     private final LuaTable<K,V> table;
-    private Object currentKey = null;
+    private K currentKey = null;
+    private K nextKey = null;
+    private boolean hasNextCached = false;
 
     public EntryIterator(final LuaTable<K,V> table) {
         this.table = table;
@@ -15,20 +17,24 @@ public class EntryIterator<K,V> implements Iterator<Map.Entry<K,V>> {
 
     @Override
     public boolean hasNext() {
-        return (currentKey = table.next(currentKey)) != null;
+        if (!hasNextCached) {
+            nextKey = table.next(currentKey);
+            hasNextCached = true;
+        }
+        return nextKey != null;
     }
 
     @Override
     public Map.Entry<K,V> next() {
-        if (currentKey == null) {
-            currentKey = table.next(null);
+        if (!hasNextCached) {
+            nextKey = table.next(currentKey);
         }
-        if (currentKey == null) {
+        if (nextKey == null) {
             throw new java.util.NoSuchElementException();
         }
-        final Object value = table.rawget(currentKey);
-        final Map.Entry<K,V> entry = new java.util.AbstractMap.SimpleEntry<>(currentKey, value);
-        currentKey = table.next(currentKey);
-        return entry;
+        currentKey = nextKey;
+        hasNextCached = false;
+        final V value = table.rawget(currentKey);
+        return new java.util.AbstractMap.SimpleEntry<>(currentKey, value);
     }
 }
