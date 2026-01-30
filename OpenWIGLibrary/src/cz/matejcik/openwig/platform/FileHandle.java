@@ -12,29 +12,29 @@ import java.io.*;
  * and to read and write game state data.
  */
 public interface FileHandle {
-	/** Opens a DataInputStream for reading */
-	DataInputStream openDataInputStream () throws IOException;
+    /** Opens a DataInputStream for reading */
+    DataInputStream openDataInputStream () throws IOException;
 
-	/** Opens a DataOutputStream for writing */
-	DataOutputStream openDataOutputStream () throws IOException;
+    /** Opens a DataOutputStream for writing */
+    DataOutputStream openDataOutputStream () throws IOException;
 
-	/** Checks whether the underlying file exists */
-	boolean exists () throws IOException;
+    /** Checks whether the underlying file exists */
+    boolean exists () throws IOException;
 
-	/** Creates the underlying file.
-	 * This may fail if the file already exists - caller must ensure
-	 * that the file is not present by calling exists().
-	 */
-	void create () throws IOException;
+    /** Creates the underlying file.
+     * This may fail if the file already exists - caller must ensure
+     * that the file is not present by calling exists().
+     */
+    void create () throws IOException;
 
-	/** Deletes the underlying file.
-	 * This may fail if the file does not exist.
-	 */
-	void delete () throws IOException;
+    /** Deletes the underlying file.
+     * This may fail if the file does not exist.
+     */
+    void delete () throws IOException;
 
-	/** Truncates the underlying file to a given length.
-	 * This will reduce size of the file to a given length.
-	 * @param len desired length of file.
-	 */
-	void truncate (long len) throws IOException;
+    /** Truncates the underlying file to a given length.
+     * This will reduce size of the file to a given length.
+     * @param len desired length of file.
+     */
+    void truncate (long len) throws IOException;
 }

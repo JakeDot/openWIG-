@@ -23,21 +23,21 @@ package se.krka.kahlua.vm;
 
 
 public final class LuaClosure {
-	public LuaPrototype prototype;
-	public LuaTable env;
+    public LuaPrototype prototype;
+    public LuaTable env;
 
-	public UpValue[] upvalues;
-	
-	public LuaClosure(LuaPrototype prototype, LuaTable env) {
-		this.prototype = prototype;
-		this.env = env;
-		upvalues = new UpValue[prototype.numUpvalues];
-	}
-	
-	public String toString() {
-		if (prototype.lines.length > 0) {
-			return "function " + prototype.toString() + ":" + prototype.lines[0];
-		}
-		return "function[" + Integer.toString(hashCode(), 36) + "]";
-	}
+    public UpValue[] upvalues;
+    
+    public LuaClosure(LuaPrototype prototype, LuaTable env) {
+        this.prototype = prototype;
+        this.env = env;
+        upvalues = new UpValue[prototype.numUpvalues];
+    }
+    
+    public String toString() {
+        if (prototype.lines.length > 0) {
+            return "function " + prototype.toString() + ":" + prototype.lines[0];
+        }
+        return "function[" + Integer.toString(hashCode(), 36) + "]";
+    }
 }

@@ -23,27 +23,27 @@ package se.krka.kahlua.vm;
 
 
 public final class UpValue {
-	// For open upvalues
-	public LuaThread thread;
-	public int index;
+    // For open upvalues
+    public LuaThread thread;
+    public int index;
 
-	// For closed upvalues
-	public Object value;
-	
-	
-	public final Object getValue() {
-		if (thread == null) {
-			return value;
-		}
-		return thread.objectStack[index];
-	}
+    // For closed upvalues
+    public Object value;
+    
+    
+    public final Object getValue() {
+        if (thread == null) {
+            return value;
+        }
+        return thread.objectStack[index];
+    }
 
 
-	public final void setValue(Object object) {
-		if (thread == null) {
-			value = object;
-			return;
-		}
-		thread.objectStack[index] = object;
-	}
+    public final void setValue(Object object) {
+        if (thread == null) {
+            value = object;
+            return;
+        }
+        thread.objectStack[index] = object;
+    }
 }

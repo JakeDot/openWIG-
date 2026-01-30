@@ -28,431 +28,431 @@ import se.krka.kahlua.stdlib.BaseLib;
 
 
 public final class LuaTableImpl implements LuaTable {
-	private boolean weakKeys, weakValues;
+    private boolean weakKeys, weakValues;
 
-	// Hash part
-	private Object[] keys;
-	private Object[] values;
-	private int[] next;
-	private int freeIndex;
+    // Hash part
+    private Object[] keys;
+    private Object[] values;
+    private int[] next;
+    private int freeIndex;
 
-	// Hash cache
-	private Object keyIndexCacheKey;
-	private int keyIndexCacheValue = -1;
+    // Hash cache
+    private Object keyIndexCacheKey;
+    private int keyIndexCacheValue = -1;
 
-	private static final int[] log_2 = new int[] {
-		0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
-		6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
-		7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-		7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
-		8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-		8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-		8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
-		8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
-	};
-	
-	private static int luaO_log2 (int x) {
-		int l = -1;
-		while (x >= 256) {
-			l += 8;
-			x >>= 8;
-		}
-		return l + log_2[x];
+    private static final int[] log_2 = new int[] {
+        0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
+        6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
+        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+        7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,
+        8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+        8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+        8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+        8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
+    };
+    
+    private static int luaOLog2 (int x) {
+        int l = -1;
+        while (x >= 256) {
+            l += 8;
+            x >>= 8;
+        }
+        return l + log_2[x];
 
-	}
-	
-	private static int neededBits (int x) {
-		return 1 + luaO_log2(x);
-	}
+    }
+    
+    private static int neededBits (int x) {
+        return 1 + luaOLog2(x);
+    }
 
-	private static int nearestPowerOfTwo(int x) {
-		int p = 1 << luaO_log2(x);
-		return p;
-	}
+    private static int nearestPowerOfTwo(int x) {
+        int p = 1 << luaOLog2(x);
+        return p;
+    }
 
-	public LuaTableImpl() {
-		int capacity = 1;
+    public LuaTableImpl() {
+        int capacity = 1;
 
-		keys = new Object[capacity];
-		values = new Object[capacity];
-		next = new int[capacity];
+        keys = new Object[capacity];
+        values = new Object[capacity];
+        next = new int[capacity];
 
-		freeIndex = capacity;
-	}
+        freeIndex = capacity;
+    }
 
-	private int getMP(Object key) {
-		// assert key != null
-		int capacity = keys.length;
-		return luaHashcode(key) & (capacity - 1);
-	}
+    private int getMP(Object key) {
+        // assert key != null
+        int capacity = keys.length;
+        return luaHashcode(key) & (capacity - 1);
+    }
 
-	private final Object unref(Object o) {
-		if (!canBeWeakObject(o)) {
-			return o;
-		}
+    private final Object unref(Object o) {
+        if (!canBeWeakObject(o)) {
+            return o;
+        }
 
-		// Assertion: o instanceof WeakReference
-		return ((WeakReference) o).get();
-	}
+        // Assertion: o instanceof WeakReference
+        return ((WeakReference) o).get();
+    }
 
-	private final Object ref(Object o) {
-		if (!canBeWeakObject(o)) {
-			return o;
-		}
+    private final Object ref(Object o) {
+        if (!canBeWeakObject(o)) {
+            return o;
+        }
 
-		return new WeakReference(o);
-	}
+        return new WeakReference(o);
+    }
 
-	private boolean canBeWeakObject(Object o) {
-		return !(o == null || o instanceof String
-				|| o instanceof Double || o instanceof Boolean);
-	}
+    private boolean canBeWeakObject(Object o) {
+        return !(o == null || o instanceof String
+                || o instanceof Double || o instanceof Boolean);
+    }
 
-	private final Object __getKey(int index) {
-		Object key = keys[index];
-		if (weakKeys) {
-			return unref(key);
-		}
-		return key;
-	}
+    private final Object getKey(int index) {
+        Object key = keys[index];
+        if (weakKeys) {
+            return unref(key);
+        }
+        return key;
+    }
 
-	private final void __setKey(int index, Object key) {
-		if (weakKeys) {
-			key = ref(key);
-		}
-		keys[index] = key;
-	}
+    private final void setKey(int index, Object key) {
+        if (weakKeys) {
+            key = ref(key);
+        }
+        keys[index] = key;
+    }
 
-	private final Object __getValue(int index) {
-		Object value = values[index];
-		if (weakValues) {
-			return unref(value);
-		}
-		return value;
-	}
+    private final Object getValue(int index) {
+        Object value = values[index];
+        if (weakValues) {
+            return unref(value);
+        }
+        return value;
+    }
 
-	private final void __setValue(int index, Object value) {
-		if (weakValues) {
-			value = ref(value);
-		}
-		values[index] = value;
-	}
+    private final void setValue(int index, Object value) {
+        if (weakValues) {
+            value = ref(value);
+        }
+        values[index] = value;
+    }
 
-	private final int hash_primitiveFindKey(Object key, int index) {
-		Object currentKey = __getKey(index);
+    private final int hashPrimitiveFindKey(Object key, int index) {
+        Object currentKey = getKey(index);
 
-		if (currentKey == null) {
-			return -1;
-		}		
-		/*
-		 * Doubles need special treatment due to how
-		 * java implements equals and hashcode for Double
-		 */
-		if (key instanceof Double) {
-			double dkey = LuaState.fromDouble(key);
-			while (true) {
-				if (currentKey instanceof Double) {
-					double dCurrentKey = LuaState.fromDouble(currentKey);
-					if (dkey == dCurrentKey) {
-						return index;
-					}
-				}
+        if (currentKey == null) {
+            return -1;
+        }       
+        /*
+         * Doubles need special treatment due to how
+         * java implements equals and hashcode for Double
+         */
+        if (key instanceof Double) {
+            double dkey = LuaState.fromDouble(key);
+            while (true) {
+                if (currentKey instanceof Double) {
+                    double dCurrentKey = LuaState.fromDouble(currentKey);
+                    if (dkey == dCurrentKey) {
+                        return index;
+                    }
+                }
 
-				index = next[index];
-				if (index == -1) {
-					return -1;
-				}
-				currentKey = __getKey(index);
-			}
+                index = next[index];
+                if (index == -1) {
+                    return -1;
+                }
+                currentKey = getKey(index);
+            }
 
-		}
+        }
 
-		if (key instanceof String) {
-			while (true) {
-				if (key.equals(currentKey)) {
-					return index;
-				}
-				index = next[index];
-				if (index == -1) {
-					return -1;
-				}
-				currentKey = __getKey(index);
-			}
-		}
+        if (key instanceof String) {
+            while (true) {
+                if (key.equals(currentKey)) {
+                    return index;
+                }
+                index = next[index];
+                if (index == -1) {
+                    return -1;
+                }
+                currentKey = getKey(index);
+            }
+        }
 
-		// Assume equality == identity for all types except for doubles and strings
-		while (true) {
-			if (key == currentKey) {
-				return index;
-			}
-			index = next[index];
-			if (index == -1) {
-				return -1;
-			}
-			currentKey = __getKey(index);
-		}		
-	}
+        // Assume equality == identity for all types except for doubles and strings
+        while (true) {
+            if (key == currentKey) {
+                return index;
+            }
+            index = next[index];
+            if (index == -1) {
+                return -1;
+            }
+            currentKey = getKey(index);
+        }       
+    }
 
-	private final int hash_primitiveNewKey(Object key, int mp) {
-		keyIndexCacheKey = null;
-		keyIndexCacheValue = -1;
+    private final int hashPrimitiveNewKey(Object key, int mp) {
+        keyIndexCacheKey = null;
+        keyIndexCacheValue = -1;
 
-		// assert key not in table
-		// Assert key != null
+        // assert key not in table
+        // Assert key != null
 
-		Object key2 = __getKey(mp);
+        Object key2 = getKey(mp);
 
-		// mainPosition is unoccupied
-		if (key2 == null) {
-			__setKey(mp, key);
-			next[mp] = -1;
+        // mainPosition is unoccupied
+        if (key2 == null) {
+            setKey(mp, key);
+            next[mp] = -1;
 
-			return mp;
-		}
+            return mp;
+        }
 
-		// need to find a free index, either for key, or for the conflicting key
-		// since java checks bounds all the time, using try-catch may be faster than manually
-		// checking
-		try {
-			while (__getKey(--freeIndex) != null);
-		} catch (ArrayIndexOutOfBoundsException e) {
-			hash_rehash(key);
-			return -1;
-		}
+        // need to find a free index, either for key, or for the conflicting key
+        // since java checks bounds all the time, using try-catch may be faster than manually
+        // checking
+        try {
+            while (getKey(--freeIndex) != null);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            hashRehash(key);
+            return -1;
+        }
 
-		int mp2 = getMP(key2);
-		// index is occupied by something with the same main index
-		if (mp2 == mp) {
-			__setKey(freeIndex, key);
-			next[freeIndex] = next[mp];
+        int mp2 = getMP(key2);
+        // index is occupied by something with the same main index
+        if (mp2 == mp) {
+            setKey(freeIndex, key);
+            next[freeIndex] = next[mp];
 
-			next[mp] = freeIndex;
-			return freeIndex;
-		}
+            next[mp] = freeIndex;
+            return freeIndex;
+        }
 
-		// old key is not in its main position
-		// move old key to free index
-		keys[freeIndex] = keys[mp];
-		values[freeIndex] = values[mp];
-		next[freeIndex] = next[mp];
+        // old key is not in its main position
+        // move old key to free index
+        keys[freeIndex] = keys[mp];
+        values[freeIndex] = values[mp];
+        next[freeIndex] = next[mp];
 
-		__setKey(mp, key);
-		// unnecessary to set value - the main set method will do this.
-		// values[mp] = null;
-		next[mp] = -1;
+        setKey(mp, key);
+        // unnecessary to set value - the main set method will do this.
+        // values[mp] = null;
+        next[mp] = -1;
 
-		// fix next link for the moved key
-		int prev = mp2;
-		while (true) {
-			int tmp = next[prev];
-			if (tmp == mp) {
-				next[prev] = freeIndex;
-				break;
-			}
-			prev = tmp;
-		}
+        // fix next link for the moved key
+        int prev = mp2;
+        while (true) {
+            int tmp = next[prev];
+            if (tmp == mp) {
+                next[prev] = freeIndex;
+                break;
+            }
+            prev = tmp;
+        }
 
-		return mp;
-	}
+        return mp;
+    }
 
-	private void hash_rehash(Object newKey) {
-		// NOTE: it's important to avoid GC of weak stuff here, so convert it
-		// to plain before rehashing
-		boolean oldWeakKeys = weakKeys, oldWeakValues = weakValues;
-		updateWeakSettings(false, false);
+    private void hashRehash(Object newKey) {
+        // NOTE: it's important to avoid GC of weak stuff here, so convert it
+        // to plain before rehashing
+        boolean oldWeakKeys = weakKeys, oldWeakValues = weakValues;
+        updateWeakSettings(false, false);
 
-		Object[] oldKeys = keys;
-		Object[] oldValues = values;
-		int hashLength = oldKeys.length;
+        Object[] oldKeys = keys;
+        Object[] oldValues = values;
+        int hashLength = oldKeys.length;
 
-		int usedTotal = 0 + 1; // include the newKey
+        int usedTotal = 0 + 1; // include the newKey
 
-		for (int i = hashLength - 1; i >= 0; --i) {
-			Object key = keys[i];
-			if (key != null && values[i] != null) {
-				usedTotal++;
-			}
-		}
-		
-		int hashCapacity = 2 * nearestPowerOfTwo(usedTotal);
-		if (hashCapacity < 2) {
-			hashCapacity = 2;
-		}
+        for (int i = hashLength - 1; i >= 0; --i) {
+            Object key = keys[i];
+            if (key != null && values[i] != null) {
+                usedTotal++;
+            }
+        }
+        
+        int hashCapacity = 2 * nearestPowerOfTwo(usedTotal);
+        if (hashCapacity < 2) {
+            hashCapacity = 2;
+        }
 
-		keys = new Object[hashCapacity];
-		values = new Object[hashCapacity];
-		next = new int[hashCapacity];
+        keys = new Object[hashCapacity];
+        values = new Object[hashCapacity];
+        next = new int[hashCapacity];
 
-		freeIndex = hashCapacity;
+        freeIndex = hashCapacity;
 
-		for (int i = hashLength - 1; i >= 0; --i) {
-			Object key = oldKeys[i];
-			if (key != null) {
-				Object value = oldValues[i];
-				if (value != null) {
-					rawset(key, value);
-				}
-			}
-		}
-		updateWeakSettings(oldWeakKeys, oldWeakValues);
-	}
+        for (int i = hashLength - 1; i >= 0; --i) {
+            Object key = oldKeys[i];
+            if (key != null) {
+                Object value = oldValues[i];
+                if (value != null) {
+                    rawset(key, value);
+                }
+            }
+        }
+        updateWeakSettings(oldWeakKeys, oldWeakValues);
+    }
 
-	private LuaTable metatable;
+    private LuaTable metatable;
 
-	public final void rawset(Object key, Object value) {
-		checkKey(key);	    	
-		rawsetHash(key, value);
-	}
+    public final void rawset(Object key, Object value) {
+        checkKey(key);          
+        rawsetHash(key, value);
+    }
 
-	private void rawsetHash(Object key, Object value) {
-		int index = getHashIndex(key);
-		if (index < 0) {
-			int mp = getMP(key);
-			index = hash_primitiveNewKey(key, mp);
-			if (index < 0) {
-				rawset(key, value);
-				return;
-			}
-		}
-		__setValue(index, value);
-	}
-	
-	public Object rawget(int index) {
-		return rawgetHash(LuaState.toDouble(index));
-	}
+    private void rawsetHash(Object key, Object value) {
+        int index = getHashIndex(key);
+        if (index < 0) {
+            int mp = getMP(key);
+            index = hashPrimitiveNewKey(key, mp);
+            if (index < 0) {
+                rawset(key, value);
+                return;
+            }
+        }
+        setValue(index, value);
+    }
+    
+    public Object rawget(int index) {
+        return rawgetHash(LuaState.toDouble(index));
+    }
 
-	public void rawset(int index, Object value) {
-		rawsetHash(LuaState.toDouble(index), value);
-	}
-	
-	public final Object rawget(Object key) {
-		checkKey(key);
-		if (key instanceof Double) {
-			BaseLib.luaAssert(!((Double) key).isNaN(), "table index is NaN");
-		}
-		return rawgetHash(key);
-	}
+    public void rawset(int index, Object value) {
+        rawsetHash(LuaState.toDouble(index), value);
+    }
+    
+    public final Object rawget(Object key) {
+        checkKey(key);
+        if (key instanceof Double) {
+            BaseLib.luaAssert(!((Double) key).isNaN(), "table index is NaN");
+        }
+        return rawgetHash(key);
+    }
 
-	private Object rawgetHash(Object key) {
-		int index = getHashIndex(key);
-		if (index >= 0) {
-			return __getValue(index);
-		}
-		return null;
-	}
+    private Object rawgetHash(Object key) {
+        int index = getHashIndex(key);
+        if (index >= 0) {
+            return getValue(index);
+        }
+        return null;
+    }
 
-	private int getHashIndex(Object key) {
-		if (key == keyIndexCacheKey) {
-			return keyIndexCacheValue;
-		}
-		int mp = getMP(key);
-		int index = hash_primitiveFindKey(key, mp);
-		if (!weakKeys) {
-			keyIndexCacheKey = key;
-			keyIndexCacheValue = index;
-		}		
-		return index;
-	}
+    private int getHashIndex(Object key) {
+        if (key == keyIndexCacheKey) {
+            return keyIndexCacheValue;
+        }
+        int mp = getMP(key);
+        int index = hashPrimitiveFindKey(key, mp);
+        if (!weakKeys) {
+            keyIndexCacheKey = key;
+            keyIndexCacheValue = index;
+        }       
+        return index;
+    }
 
-	public static void checkKey(Object key) {
-		BaseLib.luaAssert(key != null, "table index is nil");
-	}
+    public static void checkKey(Object key) {
+        BaseLib.luaAssert(key != null, "table index is nil");
+    }
 
-	private Object nextHash(Object key) {
-		int index = 0;
-		if (key != null) {
-			index = 1 + getHashIndex(key);
-			if (index <= 0) {
-				BaseLib.fail("invalid key to 'next'");
-				return null;
-			}
-		}
+    private Object nextHash(Object key) {
+        int index = 0;
+        if (key != null) {
+            index = 1 + getHashIndex(key);
+            if (index <= 0) {
+                BaseLib.fail("invalid key to 'next'");
+                return null;
+            }
+        }
 
-		while (true) {
-			if (index == keys.length) {
-				return null;
-			}
-			Object next = __getKey(index);
-			if (next != null && __getValue(index) != null) {
-				return next;
-			}
-			index++;
-		}
-	}
+        while (true) {
+            if (index == keys.length) {
+                return null;
+            }
+            Object next = getKey(index);
+            if (next != null && getValue(index) != null) {
+                return next;
+            }
+            index++;
+        }
+    }
 
-	public final Object next(Object key) {
-		return nextHash(key);
-	}
+    public final Object next(Object key) {
+        return nextHash(key);
+    }
 
-	public final int len() {
-		int high = 2 * keys.length;
-		int low = 0;
-		while (low < high) {
-			int middle = (high + low + 1) >> 1;
-			Object value = rawget(middle);
-			if (value == null) {
-				high = middle - 1;
-			} else {
-				low = middle;
-			}
-		}
-		while (rawget(low + 1) != null) {
-			low++;
-		}
-		return low;
-	}
-	
-	public static int luaHashcode(Object a) {
-		if (a instanceof Double) {
-			Double ad = (Double) a;
-			long l = Double.doubleToLongBits(ad.doubleValue()) & 0x7fffffffffffffffL;
-			return (int) (l ^ (l >>> 32));
-		}		
-		if (a instanceof String) {
-			return a.hashCode();
-		}
-		return System.identityHashCode(a);
-	}
+    public final int len() {
+        int high = 2 * keys.length;
+        int low = 0;
+        while (low < high) {
+            int middle = (high + low + 1) >> 1;
+            Object value = rawget(middle);
+            if (value == null) {
+                high = middle - 1;
+            } else {
+                low = middle;
+            }
+        }
+        while (rawget(low + 1) != null) {
+            low++;
+        }
+        return low;
+    }
+    
+    public static int luaHashcode(Object a) {
+        if (a instanceof Double) {
+            Double ad = (Double) a;
+            long l = Double.doubleToLongBits(ad.doubleValue()) & 0x7fffffffffffffffL;
+            return (int) (l ^ (l >>> 32));
+        }       
+        if (a instanceof String) {
+            return a.hashCode();
+        }
+        return System.identityHashCode(a);
+    }
 
-	private void updateWeakSettings(boolean k, boolean v) {
-		keyIndexCacheKey = null;
-		keyIndexCacheValue = -1;
-		if (k != weakKeys) {
-			fixWeakRefs(keys, k);
-			weakKeys = k;
-		}
-		if (v != weakValues) {
-			fixWeakRefs(values, v);
-			weakValues = v;
-		}
-	}
+    private void updateWeakSettings(boolean k, boolean v) {
+        keyIndexCacheKey = null;
+        keyIndexCacheValue = -1;
+        if (k != weakKeys) {
+            fixWeakRefs(keys, k);
+            weakKeys = k;
+        }
+        if (v != weakValues) {
+            fixWeakRefs(values, v);
+            weakValues = v;
+        }
+    }
 
-	private void fixWeakRefs(Object[] entries, boolean weak) {
-		/*
-		 * Assertion: if the entries are already weak,
-		 * the parameter "weak" is false, and vice versa.
-		 * Thus, don't try to fix it to weak if it's already weak.
-		 */
+    private void fixWeakRefs(Object[] entries, boolean weak) {
+        /*
+         * Assertion: if the entries are already weak,
+         * the parameter "weak" is false, and vice versa.
+         * Thus, don't try to fix it to weak if it's already weak.
+         */
 
-		//if (entries == null) return;
+        //if (entries == null) return;
 
-		for (int i = entries.length - 1; i >= 0; i--) {
-			Object o = entries[i];
-			if (weak) {
-				o = ref(o);
-			} else {
-				o = unref(o);
-			}
-			entries[i] = o;
-		}
-	}
+        for (int i = entries.length - 1; i >= 0; i--) {
+            Object o = entries[i];
+            if (weak) {
+                o = ref(o);
+            } else {
+                o = unref(o);
+            }
+            entries[i] = o;
+        }
+    }
 
-	public LuaTable getMetatable() {
-		return metatable;
-	}
+    public LuaTable getMetatable() {
+        return metatable;
+    }
 
-	public void setMetatable(LuaTable metatable) {
-		this.metatable = metatable;
+    public void setMetatable(LuaTable metatable) {
+        this.metatable = metatable;
         boolean weakKeys = false, weakValues = false;
         if (metatable != null) {
             Object modeObj = metatable.rawget(BaseLib.MODE_KEY);
@@ -463,6 +463,6 @@ public final class LuaTableImpl implements LuaTable {
             }
         }
         updateWeakSettings(weakKeys, weakValues);
-	}
+    }
 
 }

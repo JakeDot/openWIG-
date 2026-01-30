@@ -22,21 +22,21 @@ THE SOFTWARE.
 package se.krka.kahlua.vm;
 
 public class LuaException extends RuntimeException {
-	/**
-	 *
-	 */
-	private static final long serialVersionUID = 1L;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
-	public Object errorMessage;
+    public Object errorMessage;
 
-	public LuaException(Object errorMessage) {
-		this.errorMessage = errorMessage;
-	}
+    public LuaException(Object errorMessage) {
+        this.errorMessage = errorMessage;
+    }
 
-	public String getMessage() {
-		if (errorMessage == null) {
-			return "nil";
-		}
-		return errorMessage.toString();
-	}
+    public String getMessage() {
+        if (errorMessage == null) {
+            return "nil";
+        }
+        return errorMessage.toString();
+    }
 }
