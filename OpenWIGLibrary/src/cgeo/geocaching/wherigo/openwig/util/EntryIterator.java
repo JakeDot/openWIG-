@@ -7,9 +7,9 @@ import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTable;
 public class EntryIterator<K,V> implements Iterator<Map.Entry<K,V>> {
 
     private final LuaTable<K,V> table;
-    private K currentKey = null;
-    private K nextKey = null;
-    private boolean hasNextCached = false;
+    private K currentKey;
+    private K nextKey;
+    private boolean hasNextCached;
 
     public EntryIterator(final LuaTable<K,V> table) {
         this.table = table;
