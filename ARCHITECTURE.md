@@ -44,6 +44,7 @@ OpenWIG is a Wherigo game engine library for Android that integrates a Lua VM wi
 The central orchestrator that manages the entire game lifecycle.
 
 **Responsibilities:**
+
 - Initialize and manage the Lua VM (Kahlua)
 - Synchronize player GPS position with game state
 - Execute the game loop and process events
@@ -64,12 +65,14 @@ engine.store()      // Save game state
 Embedded Lua 5.1 VM that executes Wherigo cartridge scripts.
 
 **Core Components:**
+
 - `LuaState`: VM state and execution context
 - `LuaTable`: Lua table implementation with Java generics
 - `LuaCallFrame`: Function call stack management
 - Standard libraries: Base, String, Math, Table, Coroutine
 
 **Key Features:**
+
 - Full Lua 5.1 compatibility
 - Optimized for embedded use
 - Thread-safe for parallel execution
@@ -78,6 +81,7 @@ Embedded Lua 5.1 VM that executes Wherigo cartridge scripts.
 ### 3. Game Object Hierarchy
 
 All game objects inherit from `EventTable`, which provides:
+
 - Lua table semantics
 - Event handling (OnClick, OnEnter, OnExit, etc.)
 - Property management (name, description, visible, etc.)
@@ -96,6 +100,7 @@ EventTable (base class)
 ```
 
 **Key Properties:**
+
 - `name`, `description`: Display text
 - `visible`: Whether shown to player
 - `active`: Whether object is enabled
@@ -106,16 +111,19 @@ EventTable (base class)
 Zones are geographic areas with proximity-based triggers.
 
 **Zone Types:**
+
 - **Point Zone**: Single location with radius
 - **Polygonal Zone**: Defined by boundary points
 
 **Zone States:**
+
 - `INSIDE`: Player is within zone
 - `PROXIMITY`: Player is near zone (distance < proximity range)
 - `DISTANT`: Player is far from zone
 - `NEARBY`: Player is approaching zone
 
 **Events:**
+
 - `OnEnter`: Triggered when player enters zone
 - `OnExit`: Triggered when player leaves zone
 - `OnProximity`: Triggered when player approaches
@@ -125,6 +133,8 @@ Zones are geographic areas with proximity-based triggers.
 Applications must implement these interfaces to integrate OpenWIG.
 
 #### UI Interface
+
+
 ```java
 public interface UI {
     void start();
@@ -143,6 +153,8 @@ public interface UI {
 ```
 
 #### LocationService Interface
+
+
 ```java
 public interface LocationService {
     double getLatitude();
@@ -154,6 +166,8 @@ public interface LocationService {
 ```
 
 #### FileHandle Interface
+
+
 ```java
 public interface FileHandle {
     OutputStream openWrite() throws IOException;
@@ -168,6 +182,7 @@ public interface FileHandle {
 Manages serialization and deserialization of game state.
 
 **Saved Components:**
+
 - Lua VM state (global variables, tables)
 - Game object states (position, visibility, etc.)
 - Player inventory
@@ -176,6 +191,7 @@ Manages serialization and deserialization of game state.
 - Zone states (inside/outside)
 
 **Format:**
+
 - Custom binary format optimized for Wherigo
 - Handles circular references
 - Preserves Lua table structure
@@ -186,6 +202,7 @@ Manages serialization and deserialization of game state.
 Reads compiled Wherigo cartridge files (.gwc).
 
 **Structure:**
+
 - Header with metadata
 - Compiled Lua bytecode
 - Media resources (images, audio)
@@ -196,12 +213,14 @@ Reads compiled Wherigo cartridge files (.gwc).
 OpenWIG supports running multiple cartridges simultaneously on different threads.
 
 **Architecture:**
+
 - Each `Engine` instance is bound to a specific thread
 - Thread-local storage for engine context
 - Automatic engine resolution for static method calls
 - Separate Lua VM per engine instance
 
 **Use Cases:**
+
 - Multi-user scenarios
 - Testing multiple cartridges
 - Background cartridge processing
@@ -324,6 +343,7 @@ public interface LuaTable<K,V> extends Iterable<Map.Entry<K,V>> {
 ```
 
 **Benefits:**
+
 - Type safety at compile time
 - Better IDE support
 - Reduced casting errors
@@ -416,4 +436,4 @@ See [README.md](README.md) for detailed usage examples.
 - [README.md](README.md) - Getting started and usage
 - [LUATABLE_HIERARCHY.md](LUATABLE_HIERARCHY.md) - Detailed class hierarchy
 - [PARALLEL_EXECUTION.md](PARALLEL_EXECUTION.md) - Multi-threaded execution
-- Wherigo Foundation: http://www.wherigo.com
+- [Wherigo Foundation](http://www.wherigo.com)
