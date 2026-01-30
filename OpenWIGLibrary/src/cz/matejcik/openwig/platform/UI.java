@@ -183,4 +183,11 @@ public interface UI {
 	
 	public void uiCancel  (Runnable callback);
 	public void uiWait    (Runnable callback);
+
+	/**
+	 * Issues a command
+	 * <p>
+	 * This function should issue a command (SaveClose, DriveTo, StopSound, Alert).
+	 */
+	public void command(String cmd);
 }
