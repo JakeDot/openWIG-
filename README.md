@@ -16,6 +16,13 @@ Wherigo is a platform for creating and playing location-based games. OpenWIG is 
 - Task and inventory management
 - **NEW:** Parallel cartridge execution - run multiple cartridges simultaneously
 
+## Documentation
+
+- **[README.md](README.md)** (this file) - Quick start guide and usage examples
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Comprehensive architecture overview and system design
+- **[LUATABLE_HIERARCHY.md](LUATABLE_HIERARCHY.md)** - Detailed LuaTable class hierarchy
+- **[PARALLEL_EXECUTION.md](PARALLEL_EXECUTION.md)** - Multi-threaded cartridge execution guide
+
 ## Requirements
 
 - **Minimum SDK:** 26 (Android 8.0 Oreo)
@@ -31,6 +38,8 @@ Wherigo is a platform for creating and playing location-based games. OpenWIG is 
 - `org.apache.commons:commons-collections4:4.5.0`
 
 ## Architecture
+
+For a comprehensive architecture overview, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 OpenWIG consists of several key components:
 
@@ -198,11 +207,35 @@ Comprehensive Javadoc is provided for all public API classes. Key classes to und
 
 ## Building
 
-This is an Android library project using Gradle:
+### Full Android Library Build
+
+This is an Android library project. To build the complete Android library with all features:
 
 ```bash
+# Requires Android SDK installed
 ./gradlew build
 ```
+
+**Note**: The full Android build requires Android SDK to be installed and configured.
+
+### Building OpenWIGLibrary (Java Only)
+
+To compile just the core OpenWIG library without Android dependencies:
+
+```bash
+cd OpenWIGLibrary
+gradle compileJava   # Compile sources
+gradle jar           # Create JAR file
+gradle build         # Full build with checkstyle
+```
+
+This creates a standalone JAR at `OpenWIGLibrary/build/libs/OpenWIGLibrary.jar` that can be used in any Java project.
+
+### Prerequisites
+
+- **Java 17** or higher
+- **Gradle** (or use included gradlew wrapper)
+- **Android SDK** (only for full Android library build)
 
 ## Testing
 
