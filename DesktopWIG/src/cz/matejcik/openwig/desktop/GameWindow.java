@@ -417,4 +417,8 @@ public class GameWindow extends JFrame implements UI {
 		throw new RuntimeException("not implemented");
 		// not implemented because not implemented
 	}
+
+	/** not implemented because of external dependencies for mp3 and ogg playback */
+    public void command (String cmd) {
+    }
 }
