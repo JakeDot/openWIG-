@@ -172,24 +172,25 @@ public class Zone extends Thing {
             currentEngine.player.enterZone(this);
         }
         switch (contain) {
-            case INSIDE:
+            case INSIDE -> {
                 Engine.log("ZONE: inside "+name, Engine.LOG_PROP);
                 Engine.callEvent(this, "OnEnter", null);
-                break;
-            case PROXIMITY:
+            }
+            case PROXIMITY -> {
                 Engine.log("ZONE: proximity "+name, Engine.LOG_PROP);
                 Engine.callEvent(this, "OnProximity", null);
-                break;
-            case DISTANT:
+            }
+            case DISTANT -> {
                 Engine.log("ZONE: distant "+name, Engine.LOG_PROP);
                 Engine.callEvent(this, "OnDistant", null);
-                break;
-            case NOWHERE:
+            }
+            case NOWHERE -> {
                 Engine.log("ZONE: out-of-range "+name, Engine.LOG_PROP);
                 Engine.callEvent(this, "OnNotInRange", null);
-                break;
-            default:
+            }
+            default -> {
                 return;
+            }
         }
         Engine.refreshUI();
     }
@@ -346,13 +347,13 @@ public class Zone extends Thing {
 
     public boolean showThings () {
         if (!active) return false;
-        switch (showObjects) {
-            case S_ALWAYS: return true;
-            case S_ONPROXIMITY: return contain >= PROXIMITY;
-            case S_ONENTER: return contain == INSIDE;
-            case S_NEVER: return false;
-            default: return false;
-        }
+        return switch (showObjects) {
+            case S_ALWAYS -> true;
+            case S_ONPROXIMITY -> contain >= PROXIMITY;
+            case S_ONENTER -> contain == INSIDE;
+            case S_NEVER -> false;
+            default -> false;
+        };
     }
 
     public int visibleThings() {

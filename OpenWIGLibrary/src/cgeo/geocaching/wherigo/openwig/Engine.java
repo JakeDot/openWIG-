@@ -1,12 +1,21 @@
+/*
+ File initially copied to c:geo from https://github.com/cgeo/openWIG in April 2025.
+ Release 1.1.0 / 4386a025b88aac759e1e67cb27bcc50692d61d9a, Base Package cz.matejcik.openwig
+ */
 package cgeo.geocaching.wherigo.openwig;
 
-import java.io.*;
-import java.util.*;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaClosure;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaPrototype;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaState;
+import cgeo.geocaching.wherigo.kahlua.vm.LuaTable;
+import cgeo.geocaching.wherigo.openwig.formats.CartridgeFile;
+import cgeo.geocaching.wherigo.openwig.formats.Savegame;
+import cgeo.geocaching.wherigo.openwig.platform.LocationService;
+import cgeo.geocaching.wherigo.openwig.platform.UI;
 
-import cgeo.geocaching.wherigo.openwig.formats.*;
-import cgeo.geocaching.wherigo.openwig.platform.*;
-import cgeo.geocaching.wherigo.openwig.kahlua.vm.*;
-import cgeo.geocaching.wherigo.openwig.util.BackgroundRunner;
+import java.io.*;
+import java.time.LocalDateTime;
+import java.util.*;
 
 
 /** The OpenWIG Engine
@@ -35,15 +44,29 @@ public class Engine implements Runnable {
 
     public static final String VERSION = "428";
 
-    /** the main instance */
+    /** ThreadLocal storage for engine instances to support parallel cartridge execution */
+    private static final ThreadLocal<Engine> threadLocalInstance = new ThreadLocal<>();
+
+    /** the main instance - deprecated, use instance-based approach for parallel cartridges */
+    @Deprecated
     public static Engine instance;
-    /** Lua state - don't touch this if you don't have to */
+    /** Lua state - deprecated, use instance-based approach for parallel cartridges */
+    @Deprecated
     public static LuaState state;
 
-    /** reference to UI implementation */
+    /** reference to UI implementation - deprecated, use instance-based approach for parallel cartridges */
+    @Deprecated
     public static UI ui;
-    /** reference to LocationService */
+    /** reference to LocationService - deprecated, use instance-based approach for parallel cartridges */
+    @Deprecated
     public static LocationService gps;
+
+    /** Instance-specific Lua state for this engine */
+    public LuaState luaState;
+    /** Instance-specific UI implementation for this engine */
+    public UI uiInstance;
+    /** Instance-specific LocationService for this engine */
+    public LocationService gpsInstance;
 
     /** reference to source file */
     public CartridgeFile gwcfile;
@@ -62,7 +85,7 @@ public class Engine implements Runnable {
 
     private boolean doRestore = false;
     private boolean end = false;
-    
+
     public static final int LOG_PROP = 0;
     public static final int LOG_CALL = 1;
     public static final int LOG_WARN = 2;
@@ -71,21 +94,49 @@ public class Engine implements Runnable {
 
     private Thread thread = null;
 
-    /** creates a new global Engine instance */
+    /**
+     * Gets the Engine instance for the current thread.
+     * This allows multiple engines to run in parallel on different threads.
+     * Falls back to the static instance if no thread-local instance is set.
+     * 
+     * @return the Engine instance for the current thread, or null if none exists
+     */
+    public static Engine getCurrentInstance() {
+        Engine threadEngine = threadLocalInstance.get();
+        return threadEngine != null ? threadEngine : instance;
+    }
+
+    /** creates a new global Engine instance - deprecated, use constructor for parallel cartridges */
+    @Deprecated
     public static Engine newInstance (CartridgeFile cf, OutputStream log, UI ui, LocationService service) throws IOException {
         ui.debugMsg("Creating engine...\n");
         Engine.ui = ui;
         Engine.gps = service;
-        instance = new Engine(cf, log);
+        instance = new Engine(cf, log, ui, service);
         return instance;
     }
 
-    protected Engine (CartridgeFile cf, OutputStream out) throws IOException {
+    /** Creates a new Engine instance for running a cartridge
+     * @param cf CartridgeFile to run
+     * @param out OutputStream for logging (can be null)
+     * @param ui UI implementation for this engine
+     * @param service LocationService implementation for this engine
+     * @throws IOException if cartridge file cannot be read
+     */
+    public Engine (CartridgeFile cf, OutputStream out, UI ui, LocationService service) throws IOException {
         gwcfile = cf;
         savegame = cf.getSavegame();
         if (out != null) log = new PrintStream(out);
+        this.uiInstance = ui;
+        this.gpsInstance = service;
         if(gwcfile != null && gwcfile.device != null)
             WherigoLib.env.put("Device", gwcfile.device);
+    }
+
+    /** Deprecated constructor for backward compatibility */
+    @Deprecated
+    protected Engine (CartridgeFile cf, OutputStream out) throws IOException {
+        this(cf, out, null, null);
     }
 
     protected Engine () {
@@ -107,35 +158,44 @@ public class Engine implements Runnable {
     /** prepares Lua state and some bookkeeping */
     protected void prepareState ()
     throws IOException {
-        ui.debugMsg("Creating state...\n");
-        state = new LuaState(System.out);
+        uiInstance.debugMsg("Creating state...\n");
+        luaState = new LuaState(System.out);
+        
+        // Set ThreadLocal instance for this thread
+        threadLocalInstance.set(this);
+        
+        // Set static references for backward compatibility
+        state = luaState;
+        instance = this;
+        ui = uiInstance;
+        gps = gpsInstance;
 
         /*write("Registering base libs...\n");
-        BaseLib.register(state);
-        MathLib.register(state);
-        StringLib.register(state);
-        CoroutineLib.register(state);
-        OsLib.register(state);*/
+        BaseLib.register(luaState);
+        MathLib.register(luaState);
+        StringLib.register(luaState);
+        CoroutineLib.register(luaState);
+        OsLib.register(luaState);*/
 
-        ui.debugMsg("Building javafunc map...\n");
-        savegame.buildJavafuncMap(state.getEnvironment());
+        uiInstance.debugMsg("Building javafunc map...\n");
+        savegame.buildJavafuncMap(luaState.getEnvironment());
 
-        ui.debugMsg("Loading stdlib...");
-        InputStream stdlib = getClass().getResourceAsStream("/cz / matejcik / openwig / stdlib.lbc");
-        LuaClosure closure = LuaPrototype.loadByteCode(stdlib, state.getEnvironment());
-        ui.debugMsg("calling...\n");
-        state.call(closure, null, null, null);
+        uiInstance.debugMsg("Loading stdlib...");
+        InputStream stdlib = getClass().getResourceAsStream("/openwig/stdlib.lbc");
+        LuaClosure closure = LuaPrototype.loadByteCode(stdlib, luaState.getEnvironment());
+        uiInstance.debugMsg("calling...\n");
+        luaState.call(closure, null, null, null);
         stdlib.close();
         stdlib = null;
 
-        ui.debugMsg("Registering WIG libs...\n");
-        WherigoLib.register(state);
+        uiInstance.debugMsg("Registering WIG libs...\n");
+        WherigoLib.register(this);
 
-        ui.debugMsg("Building event queue...\n");
+        uiInstance.debugMsg("Building event queue...\n");
         eventRunner = new BackgroundRunner(true);
         eventRunner.setQueueListener(new Runnable() {
             public void run () {
-                ui.refresh();
+                uiInstance.refresh();
             }
         });
     }
@@ -143,30 +203,30 @@ public class Engine implements Runnable {
     /** invokes game restore */
     private void restoreGame ()
     throws IOException {
-        ui.debugMsg("Restoring saved state...");
-        cartridge = new Cartridge();
-        savegame.restore(state.getEnvironment());
+        uiInstance.debugMsg("Restoring saved state...");
+        cartridge = new Cartridge(this);
+        savegame.restore(luaState.getEnvironment());
     }
 
     /** invokes creation of clean new game environment */
     private void newGame ()
     throws IOException {
         // starting game normally
-        ui.debugMsg("Loading gwc...");
+        uiInstance.debugMsg("Loading gwc...");
         if (gwcfile == null) throw new IOException("invalid cartridge file");
-                
-        ui.debugMsg("pre - setting properties...");
+
+        uiInstance.debugMsg("pre-setting properties...");
         player.rawset("CompletionCode", gwcfile.code);
         player.rawset("Name", gwcfile.member);
 
-        ui.debugMsg("loading code...");
+        uiInstance.debugMsg("loading code...");
         byte[] lbc = gwcfile.getBytecode();
 
-        ui.debugMsg("parsing...");
-        LuaClosure closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), state.getEnvironment());
+        uiInstance.debugMsg("parsing...");
+        LuaClosure closure = LuaPrototype.loadByteCode(new ByteArrayInputStream(lbc), luaState.getEnvironment());
 
-        ui.debugMsg("calling...\n");
-        state.call(closure, null, null, null);
+        uiInstance.debugMsg("calling...\n");
+        luaState.call(closure, null, null, null);
         lbc = null;
         closure = null;
     }
@@ -176,9 +236,9 @@ public class Engine implements Runnable {
         try {
             while (!end) {
                 try {
-                    if (gps.getLatitude() != player.position.latitude
-                    || gps.getLongitude() != player.position.longitude
-                    || gps.getAltitude() != player.position.altitude) {
+                    if (gpsInstance.getLatitude() != player.position.latitude
+                    || gpsInstance.getLongitude() != player.position.longitude
+                    || gpsInstance.getAltitude() != player.position.altitude) {
                         player.refreshLocation();
                     }
                     cartridge.tick();
@@ -190,11 +250,19 @@ public class Engine implements Runnable {
             }
             if (log != null) log.close();
         } catch (Throwable t) {
-            ui.end();
+            uiInstance.end();
             stacktrace(t);
         } finally {
-            instance = null;
-            state = null;
+            // Clear ThreadLocal for this thread
+            threadLocalInstance.remove();
+            
+            // Clear static references if this is the current instance
+            if (instance == this) {
+                instance = null;
+                state = null;
+                ui = null;
+                gps = null;
+            }
             if (eventRunner != null) eventRunner.kill();
             eventRunner = null;
         }
@@ -211,78 +279,100 @@ public class Engine implements Runnable {
 
             loglevel = LOG_PROP;
 
-            ui.debugMsg("Starting game...\n");
-            ui.start();
+            uiInstance.debugMsg("Starting game...\n");
+            uiInstance.start();
 
             player.refreshLocation();
             cartridge.callEvent(doRestore ? "OnRestore" : "OnStart", null);
-            ui.refresh();
+            uiInstance.refresh();
             eventRunner.unpause();
-            
+
             mainloop();
         } catch (IOException e) {
-            ui.showError("Could not load cartridge: "+e.getMessage());
+            uiInstance.showError("Could not load cartridge: "+e.getMessage());
         } catch (Throwable t) {
             stacktrace(t);
         } finally {
-            ui.end();
+            uiInstance.end();
         }
     }
 
-    /** utility function to dump stack trace and show a semi - meaningful error */
-    public static void stacktrace (Throwable e) {
+    /** utility function to dump stack trace and show a semi-meaningful error */
+    public void stacktrace (Throwable e) {
         e.printStackTrace();
-        String msg;
-        if (state != null) {
-            System.out.println(state.currentThread.stackTrace);
-            msg = e.toString() + "\n\nstack trace: " + state.currentThread.stackTrace;
-        } else {
-            msg = e.toString();
+        final StringBuilder msg = new StringBuilder(e.toString());
+        if (luaState != null) {
+            System.out.println(luaState.currentThread.stackTrace);
+            msg.append("\nstack trace: " + luaState.currentThread.stackTrace);
         }
-        log(msg, LOG_ERROR);
-        ui.showError(msg);
+        for(StackTraceElement ste : e.getStackTrace()) {
+            msg.append("\nat " + ste);
+        }
+        final String msgString = msg.toString();
+        log(msgString, LOG_ERROR);
+        uiInstance.showError(msgString);
+    }
+    
+    /** Deprecated static version for backward compatibility */
+    @Deprecated
+    public static void stacktrace (Throwable e) {
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine != null) {
+            currentEngine.stacktrace(e);
+        } else {
+            e.printStackTrace();
+        }
     }
 
     /** stops Engine */
     public static void kill () {
-        if (instance == null) return;
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
         Timer.kill();
-        instance.end = true;
+        currentEngine.end = true;
     }
 
     /** builds and calls a dialog from a Message table */
     public static void message (LuaTable message) {
-        String[] texts = {removeHtml((String) message.rawget("Text"))};
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
+        String[] texts = {removeHtml((String)message.rawget("Text"))};
         log("CALL: MessageBox - " + texts[0].substring(0, Math.min(100,texts[0].length())), LOG_CALL);
-        Media[] media = {(Media) message.rawget("Media")};
+        Media[] media = {(Media)message.rawget("Media")};
         String button1 = null, button2 = null;
-        LuaTable buttons = (LuaTable) message.rawget("Buttons");
+        LuaTable buttons = (LuaTable)message.rawget("Buttons");
         if (buttons != null) {
-            button1 = (String) buttons.rawget(new Double(1));
-            button2 = (String) buttons.rawget(new Double(2));
+            button1 = (String)buttons.rawget(new Double(1));
+            button2 = (String)buttons.rawget(new Double(2));
         }
-        LuaClosure callback = (LuaClosure) message.rawget("Callback");
-        ui.pushDialog(texts, media, button1, button2, callback);
+        LuaClosure callback = (LuaClosure)message.rawget("Callback");
+        currentEngine.uiInstance.pushDialog(texts, media, button1, button2, callback);
     }
 
     /** builds and calls a dialog from a Dialog table */
     public static void dialog (String[] texts, Media[] media) {
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
         if (texts.length > 0) {
             log("CALL: Dialog - " + texts[0].substring(0, Math.min(100,texts[0].length())), LOG_CALL);
         }
-        ui.pushDialog(texts, media, null, null, null);
+        currentEngine.uiInstance.pushDialog(texts, media, null, null, null);
     }
 
     /** calls input to UI */
     public static void input (EventTable input) {
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
         log("CALL: GetInput - "+input.name, LOG_CALL);
-        ui.pushInput(input);
+        currentEngine.uiInstance.pushInput(input);
     }
 
     /** fires the specified event on the specified object in the event thread */
     public static void callEvent (final EventTable subject, final String name, final Object param) {
         if (!subject.hasEvent(name)) return;
-        instance.eventRunner.perform(new Runnable() {
+        final Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
+        currentEngine.eventRunner.perform(new Runnable() {
             public void run () {
                 subject.callEvent(name, param);
                 // callEvent handles its failures, so no catch here
@@ -292,11 +382,13 @@ public class Engine implements Runnable {
 
     /** invokes a Lua callback in the event thread */
     public static void invokeCallback (final LuaClosure callback, final Object value) {
-        instance.eventRunner.perform(new Runnable() {
+        final Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
+        currentEngine.eventRunner.perform(new Runnable() {
             public void run () {
                 try {
                     Engine.log("BTTN: " + (value == null ? "(cancel)" : value.toString()) + " pressed", LOG_CALL);
-                    Engine.state.call(callback, value, null, null);
+                    currentEngine.luaState.call(callback, value, null, null);
                     Engine.log("BTTN END", LOG_CALL);
                 } catch (Throwable t) {
                     stacktrace(t);
@@ -310,35 +402,38 @@ public class Engine implements Runnable {
     public static byte[] mediaFile (Media media) throws IOException {
         /*String filename = media.jarFilename();
         return media.getClass().getResourceAsStream("/media/"+filename);*/
-        return instance.gwcfile.getFile(media.id);
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) throw new IOException("No engine instance available");
+        return currentEngine.gwcfile.getFile(media.id);
     }
 
     /** tries to log the specified message, if verbosity is higher than its level */
     public static void log (String s, int level) {
-        if (instance == null || instance.log == null) return;
-        if (level < instance.loglevel) return;
-        synchronized (instance.log) {
-        Calendar now = Calendar.getInstance();
-        instance.log.print(now.get(Calendar.HOUR_OF_DAY));
-        instance.log.print(':');
-        instance.log.print(now.get(Calendar.MINUTE));
-        instance.log.print(':');
-        instance.log.print(now.get(Calendar.SECOND));
-        instance.log.print('|');
-        instance.log.print((int)(gps.getLatitude() * 10000 + 0.5) / 10000.0);
-        instance.log.print('|');
-        instance.log.print((int)(gps.getLongitude() * 10000 + 0.5) / 10000.0);
-        instance.log.print('|');
-        instance.log.print(gps.getAltitude());
-        instance.log.print('|');
-        instance.log.print(gps.getPrecision());
-        instance.log.print("|:: ");
-        instance.log.println(s);
-        instance.log.flush();
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null || currentEngine.log == null) return;
+        if (level < currentEngine.loglevel) return;
+        synchronized (currentEngine.log) {
+        LocalDateTime now = LocalDateTime.now();
+        currentEngine.log.print(now.getHour());
+        currentEngine.log.print(':');
+        currentEngine.log.print(now.getMinute());
+        currentEngine.log.print(':');
+        currentEngine.log.print(now.getSecond());
+        currentEngine.log.print('|');
+        currentEngine.log.print((int)(currentEngine.gpsInstance.getLatitude() * 10000 + 0.5) / 10000.0);
+        currentEngine.log.print('|');
+        currentEngine.log.print((int)(currentEngine.gpsInstance.getLongitude() * 10000 + 0.5) / 10000.0);
+        currentEngine.log.print('|');
+        currentEngine.log.print(currentEngine.gpsInstance.getAltitude());
+        currentEngine.log.print('|');
+        currentEngine.log.print(currentEngine.gpsInstance.getPrecision());
+        currentEngine.log.print("|:: ");
+        currentEngine.log.println(s);
+        currentEngine.log.flush();
         }
     }
 
-    private static void replace (String source, String pattern, String replace, StringBuffer builder) {
+    private static void replace (String source, String pattern, String replace, StringBuilder builder) {
         int pos = 0;
         int pl = pattern.length();
         builder.delete(0, builder.length());
@@ -357,7 +452,7 @@ public class Engine implements Runnable {
      */
     public static String removeHtml (String s) {
         if (s == null) return "";
-        StringBuffer sb = new StringBuffer(s.length());
+        StringBuilder sb = new StringBuilder(s.length());
         replace(s, "<BR>", "\n", sb);
         replace(sb.toString(), "&nbsp;", " ", sb);
         replace(sb.toString(), "&lt;", "<", sb);
@@ -365,22 +460,24 @@ public class Engine implements Runnable {
         replace(sb.toString(), "&amp;", "&", sb);
         return sb.toString();
     }
-    
+
     private Runnable refresh = new Runnable() {
         public void run () {
-            synchronized (instance) {
-                ui.refresh();
+            synchronized (Engine.this) {
+                uiInstance.refresh();
                 refreshScheduled = false;
             }
         }
     };
-    private boolean refreshScheduled = false;
+    private volatile boolean refreshScheduled = false;
 
     public static void refreshUI () {
-        synchronized (instance) {
-            if (!instance.refreshScheduled) {
-                instance.refreshScheduled = true;
-                instance.eventRunner.perform(instance.refresh);
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
+        synchronized (currentEngine) {
+            if (!currentEngine.refreshScheduled) {
+                currentEngine.refreshScheduled = true;
+                currentEngine.eventRunner.perform(currentEngine.refresh);
             }
         }
     }
@@ -389,13 +486,13 @@ public class Engine implements Runnable {
         public void run () {
             // perform the actual sync
             try {
-                ui.blockForSaving();
-                savegame.store(state.getEnvironment());
+                uiInstance.blockForSaving();
+                savegame.store(luaState.getEnvironment());
             } catch (IOException e) {
                 log("STOR: save failed: "+e.toString(), LOG_WARN);
-                ui.showError("Sync failed.\n" + e.getMessage());
+                uiInstance.showError("Sync failed.\n" + e.getMessage());
             } finally {
-                ui.unblock();
+                uiInstance.unblock();
             }
         }
     };
@@ -407,6 +504,8 @@ public class Engine implements Runnable {
 
     /** requests save in event thread */
     public static void requestSync () {
-        instance.eventRunner.perform(instance.store);
+        Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) return;
+        currentEngine.eventRunner.perform(currentEngine.store);
     }
 }

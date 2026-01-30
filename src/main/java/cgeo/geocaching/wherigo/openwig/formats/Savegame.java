@@ -289,30 +289,34 @@ public class Savegame {
     public Object restoreValue (DataInputStream in, Object target)
     throws IOException {
         byte type = in.readByte();
-        switch (type) {
-            case LUA_NIL:
+        return switch (type) {
+            case LUA_NIL -> {
                 if (debug) debug("nil");
-                return null;
-            case LUA_DOUBLE:
+                yield null;
+            }
+            case LUA_DOUBLE -> {
                 double d = in.readDouble();
                 if (debug) debug(String.valueOf(d));
-                return LuaState.toDouble(d);
-            case LUA_STRING:
+                yield LuaState.toDouble(d);
+            }
+            case LUA_STRING -> {
                 String s = in.readUTF();
                 if (debug) debug("\"" + s + "\"");
-                return s;
-            case LUA_BOOLEAN:
+                yield s;
+            }
+            case LUA_BOOLEAN -> {
                 boolean b = in.readBoolean();
                 if (debug) debug(String.valueOf(b));
-                return LuaState.toBoolean(b);
-            case LUA_JAVAFUNC:
+                yield LuaState.toBoolean(b);
+            }
+            case LUA_JAVAFUNC -> {
                 int i = in.readInt();
                 JavaFunction jf = findJavafuncObject(i);
                 if (debug) debug("javafunc("+i+")-"+jf);
-                return jf;
-            default:
-                return restoreObject(in, type, target);
-        }
+                yield jf;
+            }
+            default -> restoreObject(in, type, target);
+        };
     }
 
     private void restCache (Object o) {
@@ -323,22 +327,24 @@ public class Savegame {
 
     private Object restoreObject (DataInputStream in, byte type, Object target)
     throws IOException {
-        switch (type) {
-            case LUA_TABLE:
+        return switch (type) {
+            case LUA_TABLE -> {
                 LuaTable lti;
-                if (target instanceof LuaTable)
-                    lti = (LuaTable)target;
+                if (target instanceof LuaTable lt)
+                    lti = lt;
                 else
                     lti = new LuaTableImpl();
                 restCache(lti);
                 if (debug) debug("table:\n");
-                return deserializeLuaTable(in, lti);
-            case LUA_CLOSURE:
+                yield deserializeLuaTable(in, lti);
+            }
+            case LUA_CLOSURE -> {
                 if (debug) debug("closure: ");
                 LuaClosure lc = deserializeLuaClosure(in);
                 if (debug) debug(lc.toString());
-                return lc;
-            case LUA_OBJECT:
+                yield lc;
+            }
+            case LUA_OBJECT -> {
                 String cls = in.readUTF();
                 Serializable s = null;
                 try {
@@ -356,24 +362,27 @@ public class Savegame {
                     restCache(s);
                     s.deserialize(in);
                 }
-                return s;
-            case LUA_REFERENCE:
+                yield s;
+            }
+            case LUA_REFERENCE -> {
                 Integer what = new Integer(in.readInt());
                 if (debug) debug("reference "+what.intValue());
                 Object result = objectStore.get(what);
                 if (result == null) {
                     Engine.log("REST: not found reference "+what.toString()+" in object store", Engine.LOG_WARN);
                     if (debug) debug(" (which happens to be null?)");
-                    return target;
+                    yield target;
                 } else {
                     if (debug) debug(" : "+result.toString());
                 }
-                return result;
-            default:
+                yield result;
+            }
+            default -> {
                 Engine.log("REST: found unknown type "+type, Engine.LOG_WARN);
                 if (debug) debug("UFO");
-                return null;
-        }
+                yield null;
+            }
+        };
     }
 
     int level = 0;

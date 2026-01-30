@@ -118,7 +118,7 @@ public enum StringLib implements JavaFunction {
 
         int len = f.length();
         int argc = 2;
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < len; i++) {
             char c = f.charAt(i);
             if (c == '%') {
@@ -468,13 +468,13 @@ public enum StringLib implements JavaFunction {
         return 1;
     }
 
-    static void append(StringBuffer buffer, String s, int start, int end) {
+    static void append(StringBuilder buffer, String s, int start, int end) {
         for (int i = start; i < end; i++) {
             buffer.append(s.charAt(i));
         }
     }
 
-    static void extend(StringBuffer buffer, int extraWidth, char padCharacter) {
+    static void extend(StringBuilder buffer, int extraWidth, char padCharacter) {
         int preLength = buffer.length();
         buffer.setLength(preLength + extraWidth);
         for (int i = extraWidth - 1; i >= 0; i--) {
@@ -482,7 +482,7 @@ public enum StringLib implements JavaFunction {
         }
     }
 
-    static void stringBufferUpperCase(StringBuffer buffer, int start) {
+    static void stringBufferUpperCase(StringBuilder buffer, int start) {
         int length = buffer.length();
         for (int i = start; i < length; i++) {
             char c = buffer.charAt(i);
@@ -500,7 +500,7 @@ public enum StringLib implements JavaFunction {
      * @param base the base to use when formatting (typically 8, 10 or 16)
      * @param mminDigits min digits
      */
-    private static void stringBufferAppend(StringBuffer sb, double pValue, int base, boolean printZero, int mminDigits) {
+    private static void stringBufferAppend(StringBuilder sb, double pValue, int base, boolean printZero, int mminDigits) {
         double value = pValue;
         int startPos = sb.length();
         int minDigits = mminDigits;
@@ -515,7 +515,7 @@ public enum StringLib implements JavaFunction {
             sb.append('0');
         } else {
             // Note that the digits are in reverse order now, so we need to correct it.
-            // We can't use StringBuffer.reverse because that reverses the entire string
+            // We can't use StringBuilder.reverse because that reverses the entire string
 
             int swapCount = (1 + endPos - startPos) / 2;
             for (int i = swapCount - 1; i >= 0; i--) {
@@ -532,7 +532,7 @@ public enum StringLib implements JavaFunction {
     /**
      * Only works with non-negative numbers
      */
-    static void appendPrecisionNumber(StringBuffer buffer, double pNumber, int precision, boolean requirePeriod) {
+    static void appendPrecisionNumber(StringBuilder buffer, double pNumber, int precision, boolean requirePeriod) {
         double number = MathLib.roundToPrecision(pNumber, precision);
         double iPart = Math.floor(number);
         double fPart = number - iPart;
@@ -554,7 +554,7 @@ public enum StringLib implements JavaFunction {
     /**
      * Only works with non-negative numbers
      */
-    static void appendSignificantNumber(StringBuffer buffer, double number, int pSignificantDecimals, boolean includeTrailingZeros) {
+    static void appendSignificantNumber(StringBuilder buffer, double number, int pSignificantDecimals, boolean includeTrailingZeros) {
         int significantDecimals = pSignificantDecimals;
         double iPart = Math.floor(number);
 
@@ -601,7 +601,7 @@ public enum StringLib implements JavaFunction {
         }
     }
 
-    static void appendScientificNumber(StringBuffer buffer, double xx, int precision, boolean repr, boolean useSignificantNumbers) {
+    static void appendScientificNumber(StringBuilder buffer, double xx, int precision, boolean repr, boolean useSignificantNumbers) {
         int exponent = 0;
         double x = xx;
 
@@ -672,7 +672,7 @@ public enum StringLib implements JavaFunction {
     static int reverse(LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "not enough arguments");
         String s = getStringArg(callFrame, 1, REVERSE.name);
-        s = new StringBuffer(s).reverse().toString();
+        s = new StringBuilder(s).reverse().toString();
         callFrame.push(s);
         return 1;
     }
@@ -729,7 +729,7 @@ public enum StringLib implements JavaFunction {
     }
 
     static int stringChar(LuaCallFrame callFrame, int nArguments) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < nArguments; i++) {
             int num = getDoubleArg(callFrame, i + 1, CHAR.name).intValue();
             sb.append((char) num);
@@ -1397,7 +1397,7 @@ public enum StringLib implements JavaFunction {
         ms.endIndex = src.length();
 
         int n = 0;
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
         StringPointer e = null;
         while (n < maxSubstitutions) {
             ms.level = 0;
@@ -1422,7 +1422,7 @@ public enum StringLib implements JavaFunction {
         return cf.push(b.append(src.getString()).toString(), new Double(n));
     }
 
-    private static void addValue(MatchState ms, Object repl, StringBuffer b, StringPointer src, StringPointer e) {
+    private static void addValue(MatchState ms, Object repl, StringBuilder b, StringPointer src, StringPointer e) {
         String type = BaseLib.type(repl);
         if (type == BaseLib.TYPE_NUMBER || type == BaseLib.TYPE_STRING) {
             b.append(addString (ms, repl, src, e));
@@ -1448,7 +1448,7 @@ public enum StringLib implements JavaFunction {
     private static String addString(MatchState ms, Object repl, StringPointer s, StringPointer e) {
         String replTemp = BaseLib.tostring(repl, ms.callFrame.thread.state);
         StringPointer replStr = new StringPointer (replTemp);
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < replTemp.length(); i++) {
             if (replStr.getChar ( i ) != L_ESC) {
                 buf.append(replStr.getChar(i));

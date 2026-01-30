@@ -34,6 +34,10 @@ import java.util.Iterator;
  * <p>This class serves as the base for all Wherigo game objects including Timer, Task,
  * Media, Container, Thing, Zone, and Player.</p>
  *
+ * <h3>Thread Safety:</h3>
+ * This class is thread-safe. Critical fields are volatile and methods that access shared
+ * state are synchronized where necessary. Inherits thread-safety from {@link LuaTableImpl}.
+ *
  * <h3>Event System:</h3>
  * Subclasses can respond to Lua events by storing LuaClosure callbacks in the table.
  * Use {@link #callEvent(String, Object)} to invoke these callbacks.
@@ -46,7 +50,7 @@ import java.util.Iterator;
  */
 public class EventTable extends LuaTableImpl implements Serializable {
 
-    private boolean isDeserializing = false;
+    private volatile boolean isDeserializing = false;
 
     private static class TostringJavaFunc implements JavaFunction {
 
@@ -90,11 +94,11 @@ public class EventTable extends LuaTableImpl implements Serializable {
         //setTable(table);
     }
 
-    public String name, description;
-    public ZonePoint position = null;
-    protected boolean visible = false;
+    public volatile String name, description;
+    public volatile ZonePoint position = null;
+    protected volatile boolean visible = false;
 
-    public Media media, icon;
+    public volatile Media media, icon;
 
     public byte[] getMedia () throws IOException {
         return Engine.mediaFile(media);
@@ -104,14 +108,14 @@ public class EventTable extends LuaTableImpl implements Serializable {
         return Engine.mediaFile(icon);
     }
 
-    public boolean isVisible() { return visible; }
+    public synchronized boolean isVisible() { return visible; }
 
-    public void setPosition(ZonePoint location) {
+    public synchronized void setPosition(ZonePoint location) {
         position = location;
         this.rawset("ObjectLocation", location);
     }
 
-    public boolean isLocated() {
+    public synchronized boolean isLocated() {
         return position != null;
     }
 

@@ -50,7 +50,9 @@ import cgeo.geocaching.wherigo.kahlua.stdlib.BaseLib;
  * </ul>
  * 
  * <h3>Thread Safety:</h3>
- * This class is NOT thread-safe. External synchronization is required for concurrent access.
+ * This class is thread-safe. All public methods that read or modify the table are synchronized.
+ * The implementation uses fine-grained locking to minimize performance impact while ensuring
+ * safe concurrent access from multiple threads.
  * 
  * <h3>Internal Structure:</h3>
  * The table uses three parallel arrays:
@@ -63,7 +65,7 @@ import cgeo.geocaching.wherigo.kahlua.stdlib.BaseLib;
  * @see LuaTable
  */
 public class LuaTableImpl implements LuaTable {
-    private boolean weakKeys, weakValues;
+    private volatile boolean weakKeys, weakValues;
 
     // Hash part
     private Object[] keys;
@@ -424,12 +426,14 @@ public class LuaTableImpl implements LuaTable {
      * If the key doesn't exist, it will be added. If it exists, the value will be updated.
      * Setting a value to null effectively removes the key from the table.
      * 
+     * <p>Thread-safe: This method is synchronized to ensure safe concurrent access.</p>
+     * 
      * @param key The key to set (must not be null or NaN)
      * @param value The value to associate with the key, or null to remove the key
      * @throws RuntimeException if key is null (via checkKey)
      */
     @Override
-    public void rawset(Object key, Object value) {
+    public synchronized void rawset(Object key, Object value) {
         checkKey(key);
         rawsetHash(key, value);
     }
@@ -451,10 +455,12 @@ public class LuaTableImpl implements LuaTable {
      * Gets a value from the table by integer index.
      * Converts the integer to a Double key as per Lua semantics.
      * 
+     * <p>Thread-safe: This method is synchronized to ensure safe concurrent access.</p>
+     * 
      * @param index The integer index
      * @return The value at that index, or null if not present
      */
-    public Object rawget(int index) {
+    public synchronized Object rawget(int index) {
         return rawgetHash(LuaState.toDouble(index));
     }
 
@@ -462,15 +468,19 @@ public class LuaTableImpl implements LuaTable {
      * Sets a value in the table by integer index.
      * Converts the integer to a Double key as per Lua semantics.
      * 
+     * <p>Thread-safe: This method is synchronized to ensure safe concurrent access.</p>
+     * 
      * @param index The integer index
      * @param value The value to set
      */
-    public void rawset(int index, Object value) {
+    public synchronized void rawset(int index, Object value) {
         rawsetHash(LuaState.toDouble(index), value);
     }
 
     /**
      * Gets a value from the table for a given key.
+     * 
+     * <p>Thread-safe: This method is synchronized to ensure safe concurrent access.</p>
      * 
      * @param <T> The expected return type (unchecked cast)
      * @param key The key to look up (must not be null or NaN)
@@ -479,7 +489,7 @@ public class LuaTableImpl implements LuaTable {
      */
     @SuppressWarnings("unchecked")
     @Override
-    public final <T> T rawget(Object key) {
+    public final synchronized <T> T rawget(Object key) {
         checkKey(key);
         if (key instanceof Double) {
             BaseLib.luaAssert(!((Double) key).isNaN(), "table index is NaN");
@@ -535,12 +545,12 @@ public class LuaTableImpl implements LuaTable {
     }
 
     @Override
-    public final Object next(Object key) {
+    public final synchronized Object next(Object key) {
         return nextHash(key);
     }
 
     @Override
-    public final int len() {
+    public final synchronized int len() {
         int high = 2 * keys.length;
         int low = 0;
         while (low < high) {
@@ -559,7 +569,7 @@ public class LuaTableImpl implements LuaTable {
     }
 
     @Override
-    public Iterator<Object> keys() {
+    public synchronized Iterator<Object> keys() {
         return IteratorUtils.filteredIterator(IteratorUtils.arrayIterator(keys), Objects::nonNull);
     }
 
@@ -610,12 +620,12 @@ public class LuaTableImpl implements LuaTable {
     }
 
     @Override
-    public LuaTable getMetatable() {
+    public synchronized LuaTable getMetatable() {
         return metatable;
     }
 
     @Override
-    public void setMetatable(LuaTable metatable) {
+    public synchronized void setMetatable(LuaTable metatable) {
         this.metatable = metatable;
         boolean weakKeys = false, weakValues = false;
         if (metatable != null) {

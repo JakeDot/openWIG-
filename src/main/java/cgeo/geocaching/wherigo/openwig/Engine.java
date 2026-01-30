@@ -433,7 +433,7 @@ public class Engine implements Runnable {
         }
     }
 
-    private static void replace (String source, String pattern, String replace, StringBuffer builder) {
+    private static void replace (String source, String pattern, String replace, StringBuilder builder) {
         int pos = 0;
         int pl = pattern.length();
         builder.delete(0, builder.length());
@@ -452,7 +452,7 @@ public class Engine implements Runnable {
      */
     public static String removeHtml (String s) {
         if (s == null) return "";
-        StringBuffer sb = new StringBuffer(s.length());
+        StringBuilder sb = new StringBuilder(s.length());
         replace(s, "<BR>", "\n", sb);
         replace(sb.toString(), "&nbsp;", " ", sb);
         replace(sb.toString(), "&lt;", "<", sb);
@@ -469,7 +469,7 @@ public class Engine implements Runnable {
             }
         }
     };
-    private boolean refreshScheduled = false;
+    private volatile boolean refreshScheduled = false;
 
     public static void refreshUI () {
         Engine currentEngine = getCurrentInstance();

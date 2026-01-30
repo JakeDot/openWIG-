@@ -1,10 +1,10 @@
 /*
- Copyright (c) 2007 - 2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+ Copyright (c) 2007-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
 
@@ -18,20 +18,22 @@
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
+ --
+ File initially copied to c:geo from https://github.com/cgeo/openWIG in April 2025.
+ Release 1.1.0 / 4386a025b88aac759e1e67cb27bcc50692d61d9a, Base Package se.krka.kahlua.vm
  */
-package cgeo.geocaching.wherigo.openwig.kahlua.vm;
+package cgeo.geocaching.wherigo.kahlua.vm;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Random;
-
-import cgeo.geocaching.wherigo.openwig.kahlua.stdlib.BaseLib;
-import cgeo.geocaching.wherigo.openwig.kahlua.stdlib.CoroutineLib;
-import cgeo.geocaching.wherigo.openwig.kahlua.stdlib.MathLib;
-import cgeo.geocaching.wherigo.openwig.kahlua.stdlib.OsLib;
-import cgeo.geocaching.wherigo.openwig.kahlua.stdlib.StringLib;
-import cgeo.geocaching.wherigo.openwig.kahlua.stdlib.TableLib;
+import cgeo.geocaching.wherigo.kahlua.stdlib.BaseLib;
+import cgeo.geocaching.wherigo.kahlua.stdlib.CoroutineLib;
+import cgeo.geocaching.wherigo.kahlua.stdlib.MathLib;
+import cgeo.geocaching.wherigo.kahlua.stdlib.OsLib;
+import cgeo.geocaching.wherigo.kahlua.stdlib.StringLib;
+import cgeo.geocaching.wherigo.kahlua.stdlib.TableLib;
 
 public class LuaState {
     public static final int FIELDS_PER_FLUSH = 50;
@@ -124,20 +126,20 @@ public class LuaState {
 
     static final int MAX_INDEX_RECURSION = 100;
 
-    private static final String metaOps[];
+    private static final String meta_ops[];
 
     static {
-        metaOps = new String[38];
-        metaOps[OP_ADD] = "__add";
-        metaOps[OP_SUB] = "__sub";
-        metaOps[OP_MUL] = "__mul";
-        metaOps[OP_DIV] = "__div";
-        metaOps[OP_MOD] = "__mod";
-        metaOps[OP_POW] = "__pow";
+        meta_ops = new String[38];
+        meta_ops[OP_ADD] = "__add";
+        meta_ops[OP_SUB] = "__sub";
+        meta_ops[OP_MUL] = "__mul";
+        meta_ops[OP_DIV] = "__div";
+        meta_ops[OP_MOD] = "__mod";
+        meta_ops[OP_POW] = "__pow";
 
-        metaOps[OP_EQ] = "__eq";
-        metaOps[OP_LT] = "__lt";
-        metaOps[OP_LE] = "__le";
+        meta_ops[OP_EQ] = "__eq";
+        meta_ops[OP_LT] = "__lt";
+        meta_ops[OP_LE] = "__le";
     }
 
     public LuaState(PrintStream stream) {
@@ -147,7 +149,7 @@ public class LuaState {
     public LuaState() {
         this(System.out, true);
     }
-    
+
     protected LuaState(PrintStream stream, boolean callReset) {
         // The userdataMetatables must be weak to avoid memory leaks
         LuaTable weakKeyMetatable = new LuaTableImpl();
@@ -185,8 +187,8 @@ public class LuaState {
         CoroutineLib.register(this);
         OsLib.register(this);
         TableLib.register(this);
-        
-/*      LuaClosure closure = loadByteCodeFromResource("/stdlib",
+
+/*        LuaClosure closure = loadByteCodeFromResource("/stdlib",
                 getEnvironment());
         if (closure == null) {
             BaseLib.fail("Could not load /stdlib.lbc");
@@ -200,7 +202,7 @@ public class LuaState {
         Object o = currentThread.objectStack[base];
 
         if (o == null) {
-            throw new RuntimeException("tried to call nil");
+            throw new IllegalStateException("tried to call nil");
         }
 
         if (o instanceof JavaFunction) {
@@ -208,7 +210,7 @@ public class LuaState {
         }
 
         if (!(o instanceof LuaClosure)) {
-            throw new RuntimeException("tried to call a non - function");
+            throw new IllegalStateException("tried to call a non-function");
         }
 
         LuaCallFrame callFrame = currentThread.pushNewCallFrame((LuaClosure) o, null,
@@ -256,14 +258,15 @@ public class LuaState {
         return f;
     }
 
-    private final void luaMainloop() {
+    @SuppressWarnings({"PMD.NPathComplexity", "PMD.ExcessiveMethodLength"})
+    private void luaMainloop() {
         LuaCallFrame callFrame = currentThread.currentCallFrame();
         LuaClosure closure = callFrame.closure;
         LuaPrototype prototype = closure.prototype;
         int[] opcodes = prototype.code;
 
         int returnBase = callFrame.returnBase;
-        
+
         while (true) {
             try {
                 int a, b, c;
@@ -404,11 +407,11 @@ public class LuaState {
                     Object res = null;
                     if ((bd = BaseLib.rawTonumber(bo)) == null
                             || (cd = BaseLib.rawTonumber(co)) == null) {
-                        String metaOp = metaOps[opcode];
+                        String meta_op = meta_ops[opcode];
 
-                        Object metafun = getBinMetaOp(bo, co, metaOp);
+                        Object metafun = getBinMetaOp(bo, co, meta_op);
                         if (!(metafun != null)) {
-                            BaseLib.fail((metaOp + " not defined for operands"));
+                            BaseLib.fail((meta_op + " not defined for operands"));
                         }
                         res = call(metafun, bo, co, null);
                     } else {
@@ -488,7 +491,7 @@ public class LuaState {
                                     nStrings++;
                                 }
                                 if (nStrings > 0) {
-                                    StringBuffer concatBuffer = new StringBuffer();
+                                    StringBuilder concatBuffer = new StringBuilder();
 
                                     int firstString = last - nStrings + 1;
                                     while (firstString <= last) {
@@ -510,10 +513,16 @@ public class LuaState {
 
                             Object metafun = getBinMetaOp(leftConcat, res,
                                     "__concat");
-                            if (!(metafun != null)) {
-                                BaseLib.fail(("__concat not defined for operands: " + leftConcat + " and " + res));
+                            if (metafun == null) {
+                                //special case: if one of the operands is null, then relax Lua rules...
+                                if (res == null) {
+                                    res = leftConcat;
+                                } else if (leftConcat != null) {
+                                    BaseLib.fail(("__concat not defined for operands: " + leftConcat + " and " + res));
+                                }
+                            } else {
+                                res = call(metafun, leftConcat, res, null);
                             }
-                            res = call(metafun, leftConcat, res, null);
                             last--;
                         }
                     }
@@ -535,20 +544,20 @@ public class LuaState {
                     Object co = getRegisterOrConstant(callFrame, c, prototype);
 
                     if (bo instanceof Double && co instanceof Double) {
-                        double bdPrimitive = fromDouble(bo);
-                        double cdPrimitive = fromDouble(co);
+                        double bd_primitive = fromDouble(bo);
+                        double cd_primitive = fromDouble(co);
 
                         if (opcode == OP_EQ) {
-                            if ((bdPrimitive == cdPrimitive) == (a == 0)) {
+                            if ((bd_primitive == cd_primitive) == (a == 0)) {
                                 callFrame.pc++;
                             }
                         } else {
                             if (opcode == OP_LT) {
-                                if ((bdPrimitive < cdPrimitive) == (a == 0)) {
+                                if ((bd_primitive < cd_primitive) == (a == 0)) {
                                     callFrame.pc++;
                                 }
                             } else { // opcode must be OP_LE
-                                if ((bdPrimitive <= cdPrimitive) == (a == 0)) {
+                                if ((bd_primitive <= cd_primitive) == (a == 0)) {
                                     callFrame.pc++;
                                 }
                             }
@@ -580,9 +589,9 @@ public class LuaState {
                         } else {
                             boolean invert = false;
 
-                            String metaOp = metaOps[opcode];
+                            String meta_op = meta_ops[opcode];
 
-                            Object metafun = getCompMetaOp(bo, co, metaOp);
+                            Object metafun = getCompMetaOp(bo, co, meta_op);
 
                             /*
                              * Special case: OP_LE uses OP_LT if __le is not
@@ -604,7 +613,7 @@ public class LuaState {
                                 resBool = LuaState.luaEquals(bo, co);
                             } else {
                                 if (!(metafun != null)) {
-                                    BaseLib.fail((metaOp + " not defined for operand"));
+                                    BaseLib.fail((meta_op + " not defined for operand"));
                                 }
                                 Object res = call(metafun, bo, co, null);
                                 resBool = boolEval(res);
@@ -711,8 +720,8 @@ public class LuaState {
                             callFrame.setTop(prototype.maxStacksize);
                         }
                     } else {
-                        throw new RuntimeException(
-                                "Tried to call a non - function: " + fun);
+                        throw new IllegalStateException(
+                                "Tried to call a non-function: " + fun);
                     }
 
                     break;
@@ -758,7 +767,7 @@ public class LuaState {
                         callFrame.init();
                     } else {
                         if (!(fun instanceof JavaFunction)) {
-                            BaseLib.fail(("Tried to call a non - function: " + fun));
+                            BaseLib.fail(("Tried to call a non-function: " + fun));
                         }
                         LuaThread oldThread = currentThread;
                         callJava((JavaFunction) fun, localBase2, returnBase,
@@ -1027,29 +1036,29 @@ public class LuaState {
         }
     }
 
-    public Object getMetaOp(Object o, String metaOp) {
+    public Object getMetaOp(Object o, String meta_op) {
         LuaTable meta = (LuaTable) getmetatable(o, true);
         if (meta == null) {
             return null;
         }
-        return meta.rawget(metaOp);
+        return meta.rawget(meta_op);
     }
 
-    private final Object getCompMetaOp(Object a, Object b, String metaOp) {
+    private final Object getCompMetaOp(Object a, Object b, String meta_op) {
         LuaTable meta1 = (LuaTable) getmetatable(a, true);
         LuaTable meta2 = (LuaTable) getmetatable(b, true);
         if (meta1 != meta2 || meta1 == null) {
             return null;
         }
-        return meta1.rawget(metaOp);
+        return meta1.rawget(meta_op);
     }
 
-    private final Object getBinMetaOp(Object a, Object b, String metaOp) {
-        Object op = getMetaOp(a, metaOp);
+    private final Object getBinMetaOp(Object a, Object b, String meta_op) {
+        Object op = getMetaOp(a, meta_op);
         if (op != null) {
             return op;
         }
-        return getMetaOp(b, metaOp);
+        return getMetaOp(b, meta_op);
     }
 
     private void setUserdataMetatable(Object obj, LuaTable metatable) {
@@ -1164,6 +1173,9 @@ public class LuaState {
     }
 
     public Object tableGet(Object table, Object key) {
+        if (table == null) {
+            throw new IllegalStateException("attempt to access index of null table [" + key + "]");
+        }
         Object curObj = table;
         for (int i = LuaState.MAX_INDEX_RECURSION; i > 0; i--) {
             boolean isTable = curObj instanceof LuaTable;
@@ -1179,8 +1191,8 @@ public class LuaState {
                 if (isTable) {
                     return null;
                 }
-                throw new RuntimeException("attempted index of non - table: "
-                        + curObj);
+                throw new IllegalStateException("attempted index of non-table: "
+                        + curObj + "[" + key + "]");
             }
             if (metaOp instanceof JavaFunction || metaOp instanceof LuaClosure) {
                 Object res = call(metaOp, table, key, null);
@@ -1189,10 +1201,13 @@ public class LuaState {
                 curObj = metaOp;
             }
         }
-        throw new RuntimeException("loop in gettable");
+        throw new IllegalStateException("loop in gettable");
     }
 
     public void tableSet(Object table, Object key, Object value) {
+        if (table == null) {
+            throw new IllegalStateException("attempt to set index of null table [" + key + "=" + value + "]");
+        }
         Object curObj = table;
         for (int i = LuaState.MAX_INDEX_RECURSION; i > 0; i--) {
             Object metaOp;
@@ -1211,7 +1226,8 @@ public class LuaState {
                 }
             } else {
                 metaOp = getMetaOp(curObj, "__newindex");
-                BaseLib.luaAssert(metaOp != null,   "attempted index of non - table");
+                BaseLib.luaAssert(metaOp != null,    "attempted index of non-table: " + curObj
+                + "[" + key + "=" + value + "]");
             }
             if (metaOp instanceof JavaFunction || metaOp instanceof LuaClosure) {
                 call(metaOp, table, key, value);
@@ -1220,10 +1236,10 @@ public class LuaState {
                 curObj = metaOp;
             }
         }
-        throw new RuntimeException("loop in settable");
+        throw new IllegalStateException("loop in settable");
     }
 
-    public void setClassMetatable(Class clazz, LuaTable metatable) {
+    public void setClassMetatable(Class<?> clazz, LuaTable metatable) {
         classMetatables.rawset(clazz, metatable);
     }
 
@@ -1371,27 +1387,15 @@ public class LuaState {
         try {
             return LuaPrototype.loadByteCode(stream, environment);
         } catch (IOException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new IllegalStateException(e.getMessage());
         }
-    }
-    
-    /**
-     * Not thread safe by default, so this does nothing.
-     */
-    public void lock() {
-    }
-
-    /**
-     * Not thread safe by default, so this does nothing.
-     */
-    public void unlock() {
     }
 
     public PrintStream getOut() {
         return out;
     }
 
-    public LuaTable getClassMetatable(Class clazz) {
+    public LuaTable getClassMetatable(final Class<?> clazz) {
         return (LuaTable) classMetatables.rawget(clazz);
     }
 }

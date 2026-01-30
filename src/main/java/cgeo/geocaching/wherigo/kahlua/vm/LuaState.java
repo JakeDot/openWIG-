@@ -491,7 +491,7 @@ public class LuaState {
                                     nStrings++;
                                 }
                                 if (nStrings > 0) {
-                                    StringBuffer concatBuffer = new StringBuffer();
+                                    StringBuilder concatBuffer = new StringBuilder();
 
                                     int firstString = last - nStrings + 1;
                                     while (firstString <= last) {

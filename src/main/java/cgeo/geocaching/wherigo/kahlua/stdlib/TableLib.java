@@ -93,7 +93,7 @@ public enum TableLib implements JavaFunction {
             last = table.len();
         }
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         for (int i = first; i <= last; i++) {
             if (i > first) {
                 buffer.append(separator);
