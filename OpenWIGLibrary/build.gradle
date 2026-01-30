@@ -1,8 +1,12 @@
-apply plugin: 'java'
-apply plugin: 'checkstyle'
+plugins {
+    id 'java'
+    id 'checkstyle'
+}
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
 sourceSets {
     main {
         java {
@@ -17,8 +21,8 @@ sourceSets {
 // Checkstyle configuration
 checkstyle {
     toolVersion = '10.26.1'
-    configDirectory = rootProject.projectDir.parentFile
-    configFile = rootProject.projectDir.parentFile.toPath().resolve("checkstyle.xml").toFile()
+    configDirectory = file('../../')
+    configFile = file('../../checkstyle.xml')
 }
 
 repositories {
