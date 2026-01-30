@@ -103,12 +103,12 @@ public class ZonePoint implements LuaTable, Serializable {
 
     public static final Hashtable<String, Double> conversions = new Hashtable<>(6);
     static {
-        conversions.put("feet", new Double(0.3048));
-        conversions.put("ft", new Double(0.3048));
-        conversions.put("miles", new Double(1609.344));
-        conversions.put("meters", new Double(1));
-        conversions.put("kilometers", new Double(1000));
-        conversions.put("nauticalmiles", new Double(1852));
+        conversions.put("feet", Double.valueOf(0.3048));
+        conversions.put("ft", Double.valueOf(0.3048));
+        conversions.put("miles", Double.valueOf(1609.344));
+        conversions.put("meters", Double.valueOf(1));
+        conversions.put("kilometers", Double.valueOf(1000));
+        conversions.put("nauticalmiles", Double.valueOf(1852));
     }
 
     public static double convertDistanceTo (double value, String unit) {

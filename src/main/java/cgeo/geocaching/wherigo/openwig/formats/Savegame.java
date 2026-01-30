@@ -200,7 +200,7 @@ public class Savegame {
     }
 
     private JavaFunction findJavafuncObject (int id) {
-        JavaFunction jf = idToJavafuncMap.get(new Integer(id));
+        JavaFunction jf = idToJavafuncMap.get(Integer.valueOf(id));
         return jf;
     }
 

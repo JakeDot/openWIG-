@@ -80,7 +80,7 @@ public enum WherigoLib implements JavaFunction {
         env.put("CartFilename", "cartridge.gwc");
         env.put("PathSep", "/"); // no. you may NOT do file i/o on this device.
         env.put("Version", "2.11-compatible(r"+Engine.VERSION+")");
-        env.put("Downloaded", new Double(0));
+        env.put("Downloaded", Double.valueOf(0));
     }
 
     private final Class<?> klass = assignClass();
