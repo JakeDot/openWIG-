@@ -55,7 +55,7 @@ android {
         description = 'Check code standard'
 
 
-        source = ['OpenWIGLibrary/src']
+        source = ['src','OpenWIGLibrary/src']
         include '**/*.java'
 
         classpath = files()
