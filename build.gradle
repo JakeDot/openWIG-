@@ -6,7 +6,7 @@ buildscript {
     }
     dependencies {
         // Android Gradle Plugin
-        classpath 'com.android.tools.build:gradle:8.2.2'
+        classpath 'com.android.tools.build:gradle:9.0.0'
     }
 }
 
@@ -27,7 +27,6 @@ android {
 
     defaultConfig {
         minSdk 26
-        targetSdk 36
     }
 
     sourceSets.main {
@@ -42,6 +41,7 @@ android {
 
         // abort release builds in case of FATAL errors
         checkReleaseBuilds true
+        targetSdk 36
     }
 // Checkstyle configuration
     checkstyle {
@@ -63,6 +63,9 @@ android {
     dependencies {
         // Android annotations
         implementation 'androidx.annotation:annotation:1.9.1'
+    }
+    testOptions {
+        targetSdk 36
     }
 }
 dependencies {
