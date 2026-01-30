@@ -27,29 +27,22 @@ import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTableImpl;
 
-public final class StringLib implements JavaFunction {
+public enum StringLib implements JavaFunction {
+    SUB("sub"),
+    CHAR("char"),
+    BYTE("byte"),
+    LOWER("lower"),
+    UPPER("upper"),
+    REVERSE("reverse"),
+    FORMAT("format"),
+    FIND("find"),
+    MATCH("match"),
+    GSUB("gsub");
 
-    private enum Function {
-        SUB("sub"),
-        CHAR("char"),
-        BYTE("byte"),
-        LOWER("lower"),
-        UPPER("upper"),
-        REVERSE("reverse"),
-        FORMAT("format"),
-        FIND("find"),
-        MATCH("match"),
-        GSUB("gsub");
+    private final String name;
 
-        private final String name;
-
-        Function(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
+    StringLib(String name) {
+        this.name = name;
     }
 
     private static final boolean[] SPECIALS = new boolean[256];
@@ -65,43 +58,26 @@ public final class StringLib implements JavaFunction {
     private static final int CAP_UNFINISHED = (-1);
     private static final int CAP_POSITION = (-2);
 
-    private final Function function;
-    private static StringLib[] functions;  
-
     // NOTE: String.class won't work in J2ME - so this is used as a workaround
     public static final Class STRING_CLASS = "".getClass();
 
-    public StringLib(Function function) {
-        this.function = function;
-    }
-
     public static void register(LuaState state) {
-        initFunctions();
         LuaTable string = new LuaTableImpl();
         state.getEnvironment().rawset("string", string);
-        for (Function f : Function.values()) {
-            string.rawset(f.getName(), functions[f.ordinal()]);
+        for (StringLib f : values()) {
+            string.rawset(f.name, f);
         }
 
         string.rawset("__index", string);
         state.setClassMetatable(STRING_CLASS, string);
     }
 
-    private static synchronized void initFunctions() {
-        if (functions == null) {
-            functions = new StringLib[Function.values().length];
-            for (Function f : Function.values()) {
-                functions[f.ordinal()] = new StringLib(f);
-            }
-        }
-    }
-
     public String toString() {
-        return function.getName();
+        return name;
     }
 
     public int call(LuaCallFrame callFrame, int nArguments)  {
-        switch (function) {
+        switch (this) {
         case SUB: return sub(callFrame, nArguments);
         case CHAR: return stringChar(callFrame, nArguments);
         case BYTE: return stringByte(callFrame, nArguments);
@@ -124,7 +100,7 @@ public final class StringLib implements JavaFunction {
     }
     
     private int format(LuaCallFrame callFrame, int nArguments) {
-        String f = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, "format");
+        String f = (String) BaseLib.getArg(callFrame, 1, BaseLib.Type.STRING.toString(), "format");
 
         int len = f.length();
         int argc = 2;
@@ -660,7 +636,7 @@ public final class StringLib implements JavaFunction {
     }
     
     private String getStringArg(LuaCallFrame callFrame, int argc, String funcname) {
-        return (String) BaseLib.getArg(callFrame, argc, BaseLib.TYPE_STRING, funcname);
+        return (String) BaseLib.getArg(callFrame, argc, BaseLib.Type.STRING.toString(), funcname);
     }
     
     private Double getDoubleArg(LuaCallFrame callFrame, int argc) {
@@ -668,7 +644,7 @@ public final class StringLib implements JavaFunction {
     }
 
     private Double getDoubleArg(LuaCallFrame callFrame, int argc, String funcname) {
-        return (Double) BaseLib.getArg(callFrame, argc, BaseLib.TYPE_NUMBER, funcname);
+        return (Double) BaseLib.getArg(callFrame, argc, BaseLib.Type.NUMBER.toString(), funcname);
     }
 
     private int lower(LuaCallFrame callFrame, int nArguments) {
@@ -962,10 +938,10 @@ public final class StringLib implements JavaFunction {
 
     private static int findAux (LuaCallFrame callFrame, boolean find) {
         String f = find ? "find" : "match";
-        String source = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, f);
-        String pattern = (String) BaseLib.getArg(callFrame, 2, BaseLib.TYPE_STRING, f);
-        Double i = ((Double)(BaseLib.getOptArg(callFrame, 3, BaseLib.TYPE_NUMBER)));
-        boolean plain = LuaState.boolEval(BaseLib.getOptArg(callFrame, 4, BaseLib.TYPE_BOOLEAN));
+        String source = (String) BaseLib.getArg(callFrame, 1, BaseLib.Type.STRING.toString(), f);
+        String pattern = (String) BaseLib.getArg(callFrame, 2, BaseLib.Type.STRING.toString(), f);
+        Double i = ((Double)(BaseLib.getOptArg(callFrame, 3, BaseLib.Type.NUMBER.toString())));
+        boolean plain = LuaState.boolEval(BaseLib.getOptArg(callFrame, 4, BaseLib.Type.BOOLEAN.toString()));
         int init = (i == null ? 0 : i.intValue() - 1);
 
         if (init < 0) {
@@ -1380,8 +1356,8 @@ public final class StringLib implements JavaFunction {
     }
 
     private static int gsub(LuaCallFrame cf, int nargs) {
-        String srcTemp = (String) BaseLib.getArg(cf, 1, BaseLib.TYPE_STRING, "gsub");
-        String pTemp = (String) BaseLib.getArg(cf, 2, BaseLib.TYPE_STRING, "gsub");
+        String srcTemp = (String) BaseLib.getArg(cf, 1, BaseLib.Type.STRING.toString(), "gsub");
+        String pTemp = (String) BaseLib.getArg(cf, 2, BaseLib.Type.STRING.toString(), "gsub");
         Object repl = BaseLib.getArg(cf, 3, null, "gsub");
         {
             String tmp = BaseLib.rawTostring(repl);
@@ -1389,7 +1365,7 @@ public final class StringLib implements JavaFunction {
                 repl = tmp;
             }
         }           
-        Double num = (Double) BaseLib.getOptArg(cf, 4, BaseLib.TYPE_NUMBER);
+        Double num = (Double) BaseLib.getOptArg(cf, 4, BaseLib.Type.NUMBER.toString());
         // if i isn't supplied, we want to substitute all occurrences of the pattern
         int maxSubstitutions = (num == null) ? Integer.MAX_VALUE : num.intValue(); 
 
@@ -1403,9 +1379,9 @@ public final class StringLib implements JavaFunction {
         }
 
         String replType = BaseLib.type(repl);
-        if (!(replType == BaseLib.TYPE_FUNCTION ||
-                        replType == BaseLib.TYPE_STRING || 
-                        replType == BaseLib.TYPE_TABLE)) {
+        if (!(replType == BaseLib.Type.FUNCTION.toString() ||
+                        replType == BaseLib.Type.STRING.toString() || 
+                        replType == BaseLib.Type.TABLE.toString())) {
             BaseLib.fail(("string / function / table expected, got "+replType));
         }
 
@@ -1442,7 +1418,7 @@ public final class StringLib implements JavaFunction {
 
     private static void addValue(MatchState ms, Object repl, StringBuffer b, StringPointer src, StringPointer e) {
         String type = BaseLib.type(repl);
-        if (type == BaseLib.TYPE_NUMBER || type == BaseLib.TYPE_STRING) {
+        if (type == BaseLib.Type.NUMBER.toString() || type == BaseLib.Type.STRING.toString()) {
             b.append(addString (ms, repl, src, e));
         } else {
             String match = src.getString().substring(0, e.getIndex() - src.getIndex());
@@ -1451,9 +1427,9 @@ public final class StringLib implements JavaFunction {
                 match = BaseLib.rawTostring(captures[0]);
             }
             Object res = null;
-            if (type == BaseLib.TYPE_FUNCTION) {
+            if (type == BaseLib.Type.FUNCTION.toString()) {
                 res = ms.callFrame.thread.state.call(repl, match, null, null);
-            } else if (type == BaseLib.TYPE_TABLE) {
+            } else if (type == BaseLib.Type.TABLE.toString()) {
                 res = ((LuaTable) repl).rawget(match);
             }
             if (res == null) {

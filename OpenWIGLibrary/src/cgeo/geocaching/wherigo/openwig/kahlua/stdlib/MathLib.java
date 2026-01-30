@@ -29,83 +29,58 @@ import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTableImpl;
 
-public final class MathLib implements JavaFunction {
+public enum MathLib implements JavaFunction {
+    ABS("abs"),
+    ACOS("acos"),
+    ASIN("asin"),
+    ATAN("atan"),
+    ATAN2("atan2"),
+    CEIL("ceil"),
+    COS("cos"),
+    COSH("cosh"),
+    DEG("deg"),
+    EXP("exp"),
+    FLOOR("floor"),
+    FMOD("fmod"),
+    FREXP("frexp"),
+    LDEXP("ldexp"),
+    LOG("log"),
+    LOG10("log10"),
+    MODF("modf"),
+    POW("pow"),
+    RAD("rad"),
+    RANDOM("random"),
+    RANDOMSEED("randomseed"),
+    SIN("sin"),
+    SINH("sinh"),
+    SQRT("sqrt"),
+    TAN("tan"),
+    TANH("tanh");
 
-    private enum Function {
-        ABS("abs"),
-        ACOS("acos"),
-        ASIN("asin"),
-        ATAN("atan"),
-        ATAN2("atan2"),
-        CEIL("ceil"),
-        COS("cos"),
-        COSH("cosh"),
-        DEG("deg"),
-        EXP("exp"),
-        FLOOR("floor"),
-        FMOD("fmod"),
-        FREXP("frexp"),
-        LDEXP("ldexp"),
-        LOG("log"),
-        LOG10("log10"),
-        MODF("modf"),
-        POW("pow"),
-        RAD("rad"),
-        RANDOM("random"),
-        RANDOMSEED("randomseed"),
-        SIN("sin"),
-        SINH("sinh"),
-        SQRT("sqrt"),
-        TAN("tan"),
-        TANH("tanh");
+    private final String name;
 
-        private final String name;
-
-        Function(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
-    private final Function function;
-    private static MathLib[] functions;
-
-    public MathLib(Function function) {
-        this.function = function;
+    MathLib(String name) {
+        this.name = name;
     }
 
     public static void register(LuaState state) {
-        initFunctions();
         LuaTable math = new LuaTableImpl();
         state.getEnvironment().rawset("math", math);
 
         math.rawset("pi", LuaState.toDouble(Math.PI));
         math.rawset("huge", LuaState.toDouble(Double.POSITIVE_INFINITY));
 
-        for (Function f : Function.values()) {
-            math.rawset(f.getName(), functions[f.ordinal()]);
-        }
-    }
-
-
-    private static synchronized void initFunctions() {
-        if (functions == null) {
-            functions = new MathLib[Function.values().length];
-            for (Function f : Function.values()) {
-                functions[f.ordinal()] = new MathLib(f);
-            }
+        for (MathLib f : values()) {
+            math.rawset(f.name, f);
         }
     }
 
     public String toString() {
-        return "math." + function.getName();
+        return "math." + name;
     }
 
     public int call(LuaCallFrame callFrame, int nArguments) {
-        switch (function) {
+        switch (this) {
         case ABS: return abs(callFrame, nArguments);
         case ACOS: return acos(callFrame, nArguments);
         case ASIN: return asin(callFrame, nArguments);
@@ -137,7 +112,7 @@ public final class MathLib implements JavaFunction {
     }
     
     private static double getDoubleArg(LuaCallFrame callFrame, int argc, String funcname) {
-        return ((Double) BaseLib.getArg(callFrame, argc, BaseLib.TYPE_NUMBER, funcname)).doubleValue();
+        return ((Double) BaseLib.getArg(callFrame, argc, BaseLib.Type.NUMBER.toString(), funcname)).doubleValue();
     }
 
     // Generic math functions

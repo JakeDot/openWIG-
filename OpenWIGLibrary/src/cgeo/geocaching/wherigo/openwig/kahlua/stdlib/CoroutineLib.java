@@ -29,63 +29,39 @@ import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTableImpl;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaThread;
 
-public class CoroutineLib implements JavaFunction {
-
-    private enum Function {
-        CREATE("create"),
-        RESUME("resume"),
-        YIELD("yield"),
-        STATUS("status"),
-        RUNNING("running");
-
-        private final String name;
-
-        Function(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
+public enum CoroutineLib implements JavaFunction {
+    CREATE("create"),
+    RESUME("resume"),
+    YIELD("yield"),
+    STATUS("status"),
+    RUNNING("running");
     
     // NOTE: LuaThread.class won't work in J2ME - so this is used as a workaround
     private static final Class LUA_THREAD_CLASS = new LuaThread(null, null).getClass();
 
-    private final Function function;
-    private static CoroutineLib[] functions;
+    private final String name;
     
-    public CoroutineLib(Function function) {
-        this.function = function;
+    CoroutineLib(String name) {
+        this.name = name;
     }
     
     public String toString() {
-        return "coroutine." + function.getName();
+        return "coroutine." + name;
     }
 
     public static void register(LuaState state) {
-        initFunctions();
         LuaTable coroutine = new LuaTableImpl();
         state.getEnvironment().rawset("coroutine", coroutine);
-        for (Function f : Function.values()) {
-            coroutine.rawset(f.getName(), functions[f.ordinal()]);
+        for (CoroutineLib f : values()) {
+            coroutine.rawset(f.name, f);
         }
         
         coroutine.rawset("__index", coroutine);
         state.setClassMetatable(LUA_THREAD_CLASS, coroutine);
     }
-
-    private static synchronized void initFunctions() {
-        if (functions == null) {
-            functions = new CoroutineLib[Function.values().length];
-            for (Function f : Function.values()) {
-                functions[f.ordinal()] = new CoroutineLib(f);
-            }
-        }
-    }
     
     public int call(LuaCallFrame callFrame, int nArguments) {
-        switch (function) {
+        switch (this) {
         case CREATE: return create(callFrame, nArguments);
         case YIELD: return CoroutineLib.yield(callFrame, nArguments);
         case RESUME: return resume(callFrame, nArguments);

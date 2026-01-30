@@ -32,47 +32,23 @@ import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTableImpl;
 
-public class OsLib implements JavaFunction {
+public enum OsLib implements JavaFunction {
+    DATE("date"),
+    DIFFTIME("difftime"),
+    TIME("time");
 
-    private enum Function {
-        DATE("date"),
-        DIFFTIME("difftime"),
-        TIME("time");
+    private final String name;
 
-        private final String name;
-
-        Function(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-    
-    private final Function function;
-    private static OsLib[] functions;
-
-    private OsLib(Function function) {
-        this.function = function;
+    OsLib(String name) {
+        this.name = name;
     }
 
     public static void register(LuaState state) {
-        initFunctions();
         LuaTable os = new LuaTableImpl();
         state.getEnvironment().rawset("os", os);
 
-        for (Function f : Function.values()) {
-            os.rawset(f.getName(), functions[f.ordinal()]);
-        }
-    }
-
-    private static synchronized void initFunctions() {
-        if (functions == null) {
-            functions = new OsLib[Function.values().length];
-            for (Function f : Function.values()) {
-                functions[f.ordinal()] = new OsLib(f);
-            }
+        for (OsLib f : values()) {
+            os.rawset(f.name, f);
         }
     }
 
@@ -101,7 +77,7 @@ public class OsLib implements JavaFunction {
     private static final int MILLIS_PER_WEEK = MILLIS_PER_DAY * 7;
 
     public int call(LuaCallFrame cf, int nargs) {
-        switch(function) {
+        switch(this) {
         case DATE: return date(cf, nargs);
         case DIFFTIME: return difftime(cf, nargs);
         case TIME: return time(cf, nargs);
@@ -114,7 +90,7 @@ public class OsLib implements JavaFunction {
             double t = (double) System.currentTimeMillis() * TIME_DIVIDEND_INVERTED;
             cf.push(LuaState.toDouble(t));
         } else {
-            LuaTable table = (LuaTable) BaseLib.getArg(cf, 1, BaseLib.TYPE_TABLE, "time");
+            LuaTable table = (LuaTable) BaseLib.getArg(cf, 1, BaseLib.Type.TABLE.toString(), "time");
             double t = (double) getDateFromTable(table).getTime() * TIME_DIVIDEND_INVERTED;
             cf.push(LuaState.toDouble(t));
         }

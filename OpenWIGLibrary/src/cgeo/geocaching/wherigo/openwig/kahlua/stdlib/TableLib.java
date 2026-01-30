@@ -28,57 +28,33 @@ import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTableImpl;
 
-public final class TableLib implements JavaFunction {
+public enum TableLib implements JavaFunction {
+    CONCAT("concat"),
+    INSERT("insert"),
+    REMOVE("remove"),
+    MAXN("maxn");
 
-    private enum Function {
-        CONCAT("concat"),
-        INSERT("insert"),
-        REMOVE("remove"),
-        MAXN("maxn");
+    private final String name;
 
-        private final String name;
-
-        Function(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-    }
-
-    private final Function function;
-    private static TableLib[] functions;
-
-    public TableLib(Function function) {
-        this.function = function;
+    TableLib(String name) {
+        this.name = name;
     }
 
     public static void register(LuaState state) {
-        initFunctions();
         LuaTable table = new LuaTableImpl();
         state.getEnvironment().rawset("table", table);
 
-        for (Function f : Function.values()) {
-            table.rawset(f.getName(), functions[f.ordinal()]);
-        }
-    }
-
-    private static synchronized void initFunctions() {
-        if (functions == null) {
-            functions = new TableLib[Function.values().length];
-            for (Function f : Function.values()) {
-                functions[f.ordinal()] = new TableLib(f);
-            }
+        for (TableLib f : values()) {
+            table.rawset(f.name, f);
         }
     }
 
     public String toString() {
-        return "table." + function.getName();
+        return "table." + name;
     }
 
     public int call(LuaCallFrame callFrame, int nArguments) {
-        switch (function) {
+        switch (this) {
             case CONCAT:
                 return concat(callFrame, nArguments);
             case INSERT:

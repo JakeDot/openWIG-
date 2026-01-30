@@ -29,36 +29,44 @@ import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaState;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaTable;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.LuaThread;
 
-public final class BaseLib implements JavaFunction {
+public enum BaseLib implements JavaFunction {
+    PCALL,
+    PRINT,
+    SELECT,
+    TYPE,
+    TOSTRING,
+    TONUMBER,
+    GETMETATABLE,
+    SETMETATABLE,
+    ERROR,
+    UNPACK,
+    NEXT,
+    SETFENV,
+    GETFENV,
+    RAWEQUAL,
+    RAWSET,
+    RAWGET,
+    COLLECTGARBAGE,
+    DEBUGSTACKTRACE,
+    BYTECODELOADER;
 
-    private enum Function {
-        PCALL("pcall"),
-        PRINT("print"),
-        SELECT("select"),
-        TYPE("type"),
-        TOSTRING("tostring"),
-        TONUMBER("tonumber"),
-        GETMETATABLE("getmetatable"),
-        SETMETATABLE("setmetatable"),
-        ERROR("error"),
-        UNPACK("unpack"),
-        NEXT("next"),
-        SETFENV("setfenv"),
-        GETFENV("getfenv"),
-        RAWEQUAL("rawequal"),
-        RAWSET("rawset"),
-        RAWGET("rawget"),
-        COLLECTGARBAGE("collectgarbage"),
-        DEBUGSTACKTRACE("debugstacktrace"),
-        BYTECODELOADER("bytecodeloader");
+    public enum Type {
+        NIL("nil"),
+        STRING("string"),
+        NUMBER("number"),
+        BOOLEAN("boolean"),
+        FUNCTION("function"),
+        TABLE("table"),
+        THREAD("thread"),
+        USERDATA("userdata");
 
         private final String name;
 
-        Function(String name) {
+        Type(String name) {
             this.name = name;
         }
 
-        public String getName() {
+        public String toString() {
             return name;
         }
     }
@@ -66,47 +74,20 @@ public final class BaseLib implements JavaFunction {
     private static final Runtime RUNTIME = Runtime.getRuntime();
     public static final Object MODE_KEY = "__mode";
     private static final Object DOUBLE_ONE = new Double(1.0);
-    
-    public static final String TYPE_NIL = "nil";
-    public static final String TYPE_STRING = "string";
-    public static final String TYPE_NUMBER = "number";
-    public static final String TYPE_BOOLEAN = "boolean";
-    public static final String TYPE_FUNCTION = "function";
-    public static final String TYPE_TABLE = "table";
-    public static final String TYPE_THREAD = "thread";
-    public static final String TYPE_USERDATA = "userdata";
-
-    private final Function function;
-    private static BaseLib[] functions;
-
-    public BaseLib(Function function) {
-        this.function = function;
-    }
 
     public static void register(LuaState state) {
-        initFunctions();
-
-        for (Function f : Function.values()) {
-            state.getEnvironment().rawset(f.getName(), functions[f.ordinal()]);
-        }
-    }
-
-    private static synchronized void initFunctions() {
-        if (functions == null) {
-            functions = new BaseLib[Function.values().length];
-            for (Function f : Function.values()) {
-                functions[f.ordinal()] = new BaseLib(f);
-            }
+        for (BaseLib f : values()) {
+            state.getEnvironment().rawset(f.name().toLowerCase(), f);
         }
     }
 
     public String toString() {
-        return function.getName();
+        return name().toLowerCase();
     }
 
 
     public int call(LuaCallFrame callFrame, int nArguments) {
-        switch (function) {
+        switch (this) {
         case PCALL: return pcall(callFrame, nArguments);
         case PRINT: return print(callFrame, nArguments);
         case SELECT: return select(callFrame, nArguments);
@@ -134,21 +115,21 @@ public final class BaseLib implements JavaFunction {
     }
     
     private int debugstacktrace(LuaCallFrame callFrame, int nArguments) {
-        LuaThread thread = (LuaThread) getOptArg(callFrame, 1, BaseLib.TYPE_THREAD);
+        LuaThread thread = (LuaThread) getOptArg(callFrame, 1, BaseLib.Type.THREAD.toString());
         if (thread == null) {
             thread = callFrame.thread;
         }
-        Double levelDouble = (Double) getOptArg(callFrame, 2, BaseLib.TYPE_NUMBER);
+        Double levelDouble = (Double) getOptArg(callFrame, 2, BaseLib.Type.NUMBER.toString());
         int level = 0;
         if (levelDouble != null) {
             level = levelDouble.intValue();
         }
-        Double countDouble = (Double) getOptArg(callFrame, 3, BaseLib.TYPE_NUMBER);
+        Double countDouble = (Double) getOptArg(callFrame, 3, BaseLib.Type.NUMBER.toString());
         int count = Integer.MAX_VALUE;
         if (countDouble != null) {
             count = countDouble.intValue(); 
         }
-        Double haltAtDouble = (Double) getOptArg(callFrame, 4, BaseLib.TYPE_NUMBER);
+        Double haltAtDouble = (Double) getOptArg(callFrame, 4, BaseLib.Type.NUMBER.toString());
         int haltAt = 0;
         if (haltAtDouble != null) {
             haltAt = haltAtDouble.intValue(); 
@@ -315,7 +296,7 @@ public final class BaseLib implements JavaFunction {
 
     private int error(LuaCallFrame callFrame, int nArguments) {
         if (nArguments >= 1) {
-            String stacktrace = (String) getOptArg(callFrame, 2, BaseLib.TYPE_STRING);
+            String stacktrace = (String) getOptArg(callFrame, 2, BaseLib.Type.STRING.toString());
             if (stacktrace == null) {
                 stacktrace = "";
             }
@@ -411,12 +392,12 @@ public final class BaseLib implements JavaFunction {
                 "' (" + type + " expected, got no value)");
         }
         // type coercion
-        if (type == TYPE_STRING) {
+        if (type == Type.STRING.toString()) {
             String res = rawTostring(o);
             if (res != null) {
                 return res;
             }
-        } else if (type == TYPE_NUMBER) {
+        } else if (type == Type.NUMBER.toString()) {
             Double d = rawTonumber(o);
             if (d != null) {
                 return d;
@@ -447,9 +428,9 @@ public final class BaseLib implements JavaFunction {
             return null;
         }
         // type coercion
-        if (type == TYPE_STRING) {
+        if (type == Type.STRING.toString()) {
             return rawTostring(o);
-        } else if (type == TYPE_NUMBER) {
+        } else if (type == Type.NUMBER.toString()) {
             return rawTonumber(o);
         }
         // no type checking, this is optional after all
@@ -497,27 +478,27 @@ public final class BaseLib implements JavaFunction {
 
     public static String type(Object o) {
         if (o == null) {
-            return TYPE_NIL;
+            return Type.NIL.toString();
         }
         if (o instanceof String) {
-            return TYPE_STRING;
+            return Type.STRING.toString();
         }
         if (o instanceof Double) {
-            return TYPE_NUMBER;
+            return Type.NUMBER.toString();
         }
         if (o instanceof Boolean) {
-            return TYPE_BOOLEAN;
+            return Type.BOOLEAN.toString();
         }
         if (o instanceof JavaFunction || o instanceof LuaClosure) {
-            return TYPE_FUNCTION;
+            return Type.FUNCTION.toString();
         }
         if (o instanceof LuaTable) {
-            return TYPE_TABLE;
+            return Type.TABLE.toString();
         }
         if (o instanceof LuaThread) {
-            return TYPE_THREAD;
+            return Type.THREAD.toString();
         }
-        return TYPE_USERDATA;
+        return Type.USERDATA.toString();
     }
 
     private static int tostring(LuaCallFrame callFrame, int nArguments) {
@@ -530,7 +511,7 @@ public final class BaseLib implements JavaFunction {
 
     public static String tostring(Object o, LuaState state) {
         if (o == null) {
-            return TYPE_NIL;
+            return Type.NIL.toString();
         }
         if (o instanceof String) {
             return (String) o;
