@@ -1,10 +1,14 @@
 package cz.matejcik.openwig;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.Vector;
 
 import se.krka.kahlua.stdlib.TableLib;
-import se.krka.kahlua.vm.*;
+import se.krka.kahlua.vm.JavaFunction;
+import se.krka.kahlua.vm.LuaCallFrame;
+import se.krka.kahlua.vm.LuaTable;
+import se.krka.kahlua.vm.LuaTableImpl;
 
 public class Cartridge extends EventTable {
     public Vector zones = new Vector();
@@ -28,7 +32,9 @@ public class Cartridge extends EventTable {
         Engine.instance.savegame.addJavafunc(requestSync);
     }
 
-    protected String luaTostring () { return "a ZCartridge instance"; }
+    protected String luaTostring () {
+        return "a ZCartridge instance";
+    }
     
     public Cartridge () {
         table.rawset("RequestSync", requestSync);
@@ -38,18 +44,18 @@ public class Cartridge extends EventTable {
         
     public void walk (ZonePoint zp) {       
         for (int i = 0; i < zones.size(); i++) {
-            Zone z = (Zone)zones.elementAt(i);
+            Zone z = (Zone) zones.elementAt(i);
             z.walk(zp);
         }
     }
     
     public void tick () {
         for (int i = 0; i < zones.size(); i++) {
-            Zone z = (Zone)zones.elementAt(i);
+            Zone z = (Zone) zones.elementAt(i);
             z.tick();
         }
         for (int i = 0; i < timers.size(); i++) {
-            Timer t = (Timer)timers.elementAt(i);
+            Timer t = (Timer) timers.elementAt(i);
             t.updateRemaining();
         }
 
@@ -58,8 +64,10 @@ public class Cartridge extends EventTable {
     public int visibleZones () {
         int count = 0;
         for (int i = 0; i < zones.size(); i++) {
-            Zone z = (Zone)zones.elementAt(i);
-            if (z.isVisible()) count++;
+            Zone z = (Zone) zones.elementAt(i);
+            if (z.isVisible()) {
+                count++;
+            }
         }
         return count;
     }
@@ -67,7 +75,7 @@ public class Cartridge extends EventTable {
     public int visibleThings () {
         int count = 0;
         for (int i = 0; i < zones.size(); i++) {
-            Zone z = (Zone)zones.elementAt(i);
+            Zone z = (Zone) zones.elementAt(i);
             count += z.visibleThings();
         }
         return count;
@@ -76,7 +84,7 @@ public class Cartridge extends EventTable {
     public LuaTable currentThings () {
         LuaTable ret = new LuaTableImpl();
         for (int i = 0; i < zones.size(); i++) {
-            Zone z = (Zone)zones.elementAt(i);
+            Zone z = (Zone) zones.elementAt(i);
             z.collectThings(ret);
         }
         return ret;
@@ -85,8 +93,10 @@ public class Cartridge extends EventTable {
     public int visibleUniversalActions () {
         int count = 0;
         for (int i = 0; i < universalActions.size(); i++) {
-            Action a = (Action)universalActions.elementAt(i);
-            if (a.isEnabled() && a.getActor().visibleToPlayer()) count++;
+            Action a = (Action) universalActions.elementAt(i);
+            if (a.isEnabled() && a.getActor().visibleToPlayer()) {
+                count++;
+            }
         }
         return count;
     }
@@ -94,8 +104,10 @@ public class Cartridge extends EventTable {
     public int visibleTasks () {
         int count = 0;
         for (int i = 0; i < tasks.size(); i++) {
-            Task a = (Task)tasks.elementAt(i);
-            if (a.isVisible()) count++;
+            Task a = (Task) tasks.elementAt(i);
+            if (a.isVisible()) {
+                count++;
+            }
         }
         return count;
     }
@@ -106,17 +118,22 @@ public class Cartridge extends EventTable {
     }
 
     private void sortObject (Object o) {
-        if (o instanceof Task) tasks.addElement(o);
-        else if (o instanceof Zone) zones.addElement(o);
-        else if (o instanceof Timer) timers.addElement(o);
-        else if (o instanceof Thing) things.addElement(o);
+        if (o instanceof Task) {
+            tasks.addElement(o);
+        } else if (o instanceof Zone) {
+            zones.addElement(o);
+        } else if (o instanceof Timer) {
+            timers.addElement(o);
+        } else if (o instanceof Thing) {
+            things.addElement(o);
+        }
     }
 
     public void deserialize (DataInputStream in)
     throws IOException {
         super.deserialize(in);
         Engine.instance.cartridge = this;
-        allZObjects = (LuaTable)table.rawget("AllZObjects");
+        allZObjects = (LuaTable) table.rawget("AllZObjects");
         Object next = null;
         while ((next = allZObjects.next(next)) != null) {
             sortObject(allZObjects.rawget(next));

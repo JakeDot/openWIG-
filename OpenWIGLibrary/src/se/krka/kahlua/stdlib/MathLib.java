@@ -1,10 +1,10 @@
 /*
-Copyright (c) 2007-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+Copyright (c) 2007 - 2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
@@ -159,7 +159,7 @@ public final class MathLib implements JavaFunction {
     }
     
     private static double getDoubleArg(LuaCallFrame callFrame, int argc, String funcname) {
-        return ((Double)BaseLib.getArg(callFrame, argc, BaseLib.TYPE_NUMBER, funcname)).doubleValue();
+        return ((Double) BaseLib.getArg(callFrame, argc, BaseLib.TYPE_NUMBER, funcname)).doubleValue();
     }
 
     // Generic math functions
@@ -278,7 +278,7 @@ public final class MathLib implements JavaFunction {
                 negate = true;
                 v1 = -v1;
             }
-            res = v1 - Math.floor(v1/v2) * v2;
+            res = v1 - Math.floor(v1 / v2) * v2;
             if (negate) {
                 res = -res;
             }
@@ -584,7 +584,7 @@ public final class MathLib implements JavaFunction {
         return exp(exponent * ln(base));
     }
 
-    /* Thanks rici lake for ipow-implementation */
+    /* Thanks rici lake for ipow - implementation */
     public static double ipow(double base, int exponent) {
         boolean inverse = false;
         if (MathLib.isNegative(exponent)) {
@@ -627,10 +627,10 @@ public final class MathLib implements JavaFunction {
     {
         double argsq, value;
 
-        argsq = arg*arg;
-        value = ((((p4*argsq + p3)*argsq + p2)*argsq + p1)*argsq + p0);
+        argsq = arg * arg;
+        value = ((((p4 * argsq + p3)*argsq + p2)*argsq + p1)*argsq + p0);
         value = value/(((((argsq + q4)*argsq + q3)*argsq + q2)*argsq + q1)*argsq + q0);
-        return value*arg;
+        return value * arg;
     }
 
     // reduce
@@ -640,9 +640,9 @@ public final class MathLib implements JavaFunction {
             return mxatan(arg);
         }
         if(arg > sq2p1) {
-            return PIO2 - mxatan(1/arg);
+            return PIO2 - mxatan(1 / arg);
         }
-    return PIO2/2 + mxatan((arg-1)/(arg+1));
+    return PIO2 / 2 + mxatan((arg - 1)/(arg + 1));
     }
 
     // implementation of atan
@@ -658,7 +658,7 @@ public final class MathLib implements JavaFunction {
     public static double atan2(double arg1, double arg2)
     {
         // both are 0 or arg1 is +/- inf
-        if(arg1+arg2 == arg1) {
+        if(arg1 + arg2 == arg1) {
             if(arg1 > 0) {
                 return PIO2;
             }
@@ -667,7 +667,7 @@ public final class MathLib implements JavaFunction {
             }
             return 0;
         }
-        arg1 = atan(arg1/arg2);
+        arg1 = atan(arg1 / arg2);
         if(arg2 < 0) {
             if(arg1 <= 0) {
                 return arg1 + Math.PI;
@@ -692,11 +692,11 @@ public final class MathLib implements JavaFunction {
         if(arg > 1) {
             return Double.NaN;
         }
-        temp = Math.sqrt(1 - arg*arg);
+        temp = Math.sqrt(1 - arg * arg);
         if(arg > 0.7) {
-            temp = PIO2 - atan(temp/arg);
+            temp = PIO2 - atan(temp / arg);
         } else {
-            temp = atan(arg/temp);
+            temp = atan(arg / temp);
         }
         if(sign > 0) {
             temp = -temp;

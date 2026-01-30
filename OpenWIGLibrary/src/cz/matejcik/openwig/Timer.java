@@ -10,7 +10,7 @@ public class Timer extends EventTable {
 
     private static JavaFunction start = new JavaFunction() {
         public int call (LuaCallFrame callFrame, int nArguments) {
-            Timer t = (Timer)callFrame.get(0);
+            Timer t = (Timer) callFrame.get(0);
             t.start();
             return 0;
         }
@@ -18,7 +18,7 @@ public class Timer extends EventTable {
     
     private static JavaFunction stop = new JavaFunction() {
         public int call (LuaCallFrame callFrame, int nArguments) {
-            Timer t = (Timer)callFrame.get(0);
+            Timer t = (Timer) callFrame.get(0);
             t.stop();
             return 0;
         }
@@ -26,7 +26,7 @@ public class Timer extends EventTable {
     
     private static JavaFunction tick = new JavaFunction() {
         public int call (LuaCallFrame callFrame, int nArguments) {
-            Timer t = (Timer)callFrame.get(0);
+            Timer t = (Timer) callFrame.get(0);
             //t.tick();
             t.callEvent("OnTick", null);
             return 0;
@@ -74,7 +74,7 @@ public class Timer extends EventTable {
     
     protected void setItem (String key, Object value) {
         if ("Type".equals(key) && value instanceof String) {
-            String v = (String)value;
+            String v = (String) value;
             int t = type;
             if ("Countdown".equals(v)) {
                 t = COUNTDOWN;
@@ -89,7 +89,7 @@ public class Timer extends EventTable {
             }
             type = t;
         } else if ("Duration".equals(key) && value instanceof Double) {
-            long d = (long)LuaState.fromDouble(value);
+            long d = (long) LuaState.fromDouble(value);
             table.rawset("Remaining", ZERO);
             duration = d * 1000;
         } else super.setItem(key, value);
@@ -151,7 +151,7 @@ public class Timer extends EventTable {
             table.rawset("Remaining", ZERO);
         } else {
             long stm = System.currentTimeMillis();
-            long remaining = (duration/1000) - ((stm - lastTick)/1000);
+            long remaining = (duration / 1000) - ((stm - lastTick)/1000);
             table.rawset("Remaining", LuaState.toDouble(remaining));
         }
     }

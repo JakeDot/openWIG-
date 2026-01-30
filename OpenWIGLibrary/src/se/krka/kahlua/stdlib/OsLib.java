@@ -4,7 +4,7 @@ Copyright(c) 2008 Kevin Lundberg <kevinrlundberg@gmail.com>
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files(the "Software"), to deal
 in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
@@ -117,7 +117,7 @@ public class OsLib implements JavaFunction {
     private int difftime(LuaCallFrame cf, int nargs) {
         double t2 = BaseLib.rawTonumber(cf.get(0)).doubleValue();
         double t1 = BaseLib.rawTonumber(cf.get(1)).doubleValue();
-        cf.push(LuaState.toDouble(t2-t1));
+        cf.push(LuaState.toDouble(t2 - t1));
         return 1;
     }
 
@@ -148,7 +148,7 @@ public class OsLib implements JavaFunction {
             calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
             si++;  // skip '!'
         } else {
-            calendar = Calendar.getInstance(tzone); // TODO: user-defined timezone
+            calendar = Calendar.getInstance(tzone); // TODO: user - defined timezone
         }
         calendar.setTime(new Date(time));
 
@@ -194,8 +194,8 @@ public class OsLib implements JavaFunction {
     
     private static String strftime(char format, Calendar cal) {
         switch(format) {
-            case 'a': return shortDayNames[cal.get(Calendar.DAY_OF_WEEK)-1];
-            case 'A': return longDayNames[cal.get(Calendar.DAY_OF_WEEK)-1];
+            case 'a': return shortDayNames[cal.get(Calendar.DAY_OF_WEEK) - 1];
+            case 'A': return longDayNames[cal.get(Calendar.DAY_OF_WEEK) - 1];
             case 'b': return shortMonthNames[cal.get(Calendar.MONTH)];
             case 'B': return longMonthNames[cal.get(Calendar.MONTH)];
             case 'c': return cal.getTime().toString();
@@ -237,7 +237,7 @@ public class OsLib implements JavaFunction {
     public static LuaTable getTableFromDate(Calendar c) {
         LuaTable time = new LuaTableImpl();
         time.rawset(YEAR, LuaState.toDouble(c.get(Calendar.YEAR)));
-        time.rawset(MONTH, LuaState.toDouble(c.get(Calendar.MONTH)+1));
+        time.rawset(MONTH, LuaState.toDouble(c.get(Calendar.MONTH) + 1));
         time.rawset(DAY, LuaState.toDouble(c.get(Calendar.DAY_OF_MONTH)));
         time.rawset(HOUR, LuaState.toDouble(c.get(Calendar.HOUR_OF_DAY)));
         time.rawset(MIN, LuaState.toDouble(c.get(Calendar.MINUTE)));
@@ -256,31 +256,31 @@ public class OsLib implements JavaFunction {
      */
     public static Date getDateFromTable(LuaTable time) {
         Calendar c = Calendar.getInstance(tzone);
-        c.set(Calendar.YEAR,(int)LuaState.fromDouble(time.rawget(YEAR)));
-        c.set(Calendar.MONTH,(int)LuaState.fromDouble(time.rawget(MONTH))-1);
-        c.set(Calendar.DAY_OF_MONTH,(int)LuaState.fromDouble(time.rawget(DAY)));
+        c.set(Calendar.YEAR,(int) LuaState.fromDouble(time.rawget(YEAR)));
+        c.set(Calendar.MONTH,(int) LuaState.fromDouble(time.rawget(MONTH)) - 1);
+        c.set(Calendar.DAY_OF_MONTH,(int) LuaState.fromDouble(time.rawget(DAY)));
         Object hour = time.rawget(HOUR);
         Object minute = time.rawget(MIN);
         Object seconds = time.rawget(SEC);
         Object milliseconds = time.rawget(MILLISECOND);
         //Object isDst = time.rawget(ISDST);
         if (hour != null) {
-            c.set(Calendar.HOUR_OF_DAY,(int)LuaState.fromDouble(hour));
+            c.set(Calendar.HOUR_OF_DAY,(int) LuaState.fromDouble(hour));
         } else {
             c.set(Calendar.HOUR_OF_DAY, 0);
         }
         if (minute != null) {
-            c.set(Calendar.MINUTE,(int)LuaState.fromDouble(minute));
+            c.set(Calendar.MINUTE,(int) LuaState.fromDouble(minute));
         } else {
             c.set(Calendar.MINUTE, 0);
         }
         if (seconds != null) {
-            c.set(Calendar.SECOND,(int)LuaState.fromDouble(seconds));
+            c.set(Calendar.SECOND,(int) LuaState.fromDouble(seconds));
         } else {
             c.set(Calendar.SECOND, 0);
         }
         if (milliseconds != null) {
-            c.set(Calendar.MILLISECOND, (int)LuaState.fromDouble(milliseconds));
+            c.set(Calendar.MILLISECOND, (int) LuaState.fromDouble(milliseconds));
         } else {
             c.set(Calendar.MILLISECOND, 0);
         }
@@ -295,7 +295,7 @@ public class OsLib implements JavaFunction {
         c2.set(Calendar.DAY_OF_MONTH, 1);
         long diff = c.getTime().getTime() - c2.getTime().getTime();
 
-        return (int)Math.ceil((double)diff / MILLIS_PER_DAY);        
+        return (int) Math.ceil((double) diff / MILLIS_PER_DAY);        
     }
     
     public static int getWeekOfYear(Calendar c, boolean weekStartsSunday, boolean jan1midweek) {
@@ -313,7 +313,7 @@ public class OsLib implements JavaFunction {
 
         int w = (int)(diff / MILLIS_PER_WEEK);
         
-        if (jan1midweek && 7-dayOfWeek >= 4)
+        if (jan1midweek && 7 - dayOfWeek >= 4)
             w++;
         
         return w;

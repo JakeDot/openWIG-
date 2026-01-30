@@ -79,12 +79,12 @@ public class CartridgeFile {
         latitude = source.readDouble();
         longitude = source.readDouble();
         source.skip(8); // zeroes
-        source.skip(4+4); // unknown long values
+        source.skip(4 + 4); // unknown long values
         splashId = source.readShort();
         iconId = source.readShort();
         type = source.readString();
         member = source.readString();
-        source.skip(4+4); // unknown long values
+        source.skip(4 + 4); // unknown long values
         name = source.readString();
         source.readString(); // GUID
         description = source.readString();

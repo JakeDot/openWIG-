@@ -34,13 +34,13 @@ public class Media extends EventTable {
     
     protected void setItem (String key, Object value) { 
         if ("AltText".equals(key)) {
-            altText = (String)value;
+            altText = (String) value;
         } else if ("Resources".equals(key)) {
-            LuaTable lt = (LuaTable)value;
+            LuaTable lt = (LuaTable) value;
             int n = lt.len();
             for (int i = 1; i <= n; i++) {
-                LuaTable res = (LuaTable)lt.rawget(new Double(i));
-                String t = (String)res.rawget("Type");
+                LuaTable res = (LuaTable) lt.rawget(new Double(i));
+                String t = (String) res.rawget("Type");
                 if ("fdl".equals(t)) continue;
                 type = t.toLowerCase();
             }
@@ -48,14 +48,14 @@ public class Media extends EventTable {
     }
     
     public String jarFilename () {
-        return String.valueOf(id)+"."+(type==null ? "" : type);
+        return String.valueOf(id)+"."+(type == null ? "" : type);
     }
     
     public void play () {
         try {
             String mime = null;
-            if ("wav".equals(type)) mime = "audio/x-wav";
-            else if ("mp3".equals(type)) mime = "audio/mpeg";
+            if ("wav".equals(type)) mime = "audio / x - wav";
+            else if ("mp3".equals(type)) mime = "audio / mpeg";
             Engine.ui.playSound(Engine.mediaFile(this), mime);
         } catch (IOException e) {
             // meh

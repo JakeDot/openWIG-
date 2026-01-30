@@ -1,10 +1,10 @@
 /*
-Copyright (c) 2007-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+Copyright (c) 2007 - 2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
@@ -52,8 +52,8 @@ public final class StringLib implements JavaFunction {
     
     private static final int LUA_MAXCAPTURES = 32;
     private static final char L_ESC = '%';
-    private static final int CAP_UNFINISHED = ( -1 );
-    private static final int CAP_POSITION = ( -2 );
+    private static final int CAP_UNFINISHED = (-1);
+    private static final int CAP_POSITION = (-2);
 
     private static final String[] names;
     private static StringLib[] functions;  
@@ -668,7 +668,7 @@ public final class StringLib implements JavaFunction {
     }
 
     private Double getDoubleArg(LuaCallFrame callFrame, int argc, String funcname) {
-        return (Double)BaseLib.getArg(callFrame, argc, BaseLib.TYPE_NUMBER, funcname);
+        return (Double) BaseLib.getArg(callFrame, argc, BaseLib.TYPE_NUMBER, funcname);
     }
 
     private int lower(LuaCallFrame callFrame, int nArguments) {
@@ -794,7 +794,7 @@ public final class StringLib implements JavaFunction {
 
         public MatchState () {
             capture = new Capture[ LUA_MAXCAPTURES ];
-            for ( int i = 0; i < LUA_MAXCAPTURES; i ++ ) {
+            for (int i = 0; i < LUA_MAXCAPTURES; i ++) {
                 capture[i] = new Capture ();
             }
         }
@@ -844,7 +844,7 @@ public final class StringLib implements JavaFunction {
         }
 
         public StringPointer getClone() {
-            StringPointer newSP = new StringPointer( this.getOriginalString(), this.getIndex() );
+            StringPointer newSP = new StringPointer(this.getOriginalString(), this.getIndex());
             return newSP;
         }
 
@@ -852,7 +852,7 @@ public final class StringLib implements JavaFunction {
             return index;
         }
 
-        public void setIndex ( int ind ) {
+        public void setIndex (int ind) {
             index = ind;
         }
 
@@ -869,7 +869,7 @@ public final class StringLib implements JavaFunction {
         }
 
         public String getString(int i) {
-            return string.substring ( index + i, string.length () );
+            return string.substring (index + i, string.length ());
         }
 
         public char getChar() {
@@ -877,47 +877,47 @@ public final class StringLib implements JavaFunction {
         }
 
         public char getChar(int strIndex) {
-            if ( index + strIndex >= string.length () )
+            if (index + strIndex >= string.length ())
                 return '\0';
             else
-                return string.charAt ( index + strIndex );
+                return string.charAt (index + strIndex);
         }
 
         public int length() {
             return string.length () - index;
         }
 
-        public int postIncrStringI ( int num ) {
+        public int postIncrStringI (int num) {
             int oldIndex = index;
             index += num;
             return oldIndex;
         }
 
-        public int preIncrStringI ( int num ) {
+        public int preIncrStringI (int num) {
             index += num;
             return index;
         }
 
-        public char postIncrString ( int num ) {
+        public char postIncrString (int num) {
             char c = getChar();
             index += num;
             return c;
         }
 
-        public char preIncrString ( int num ) {
+        public char preIncrString (int num) {
             index += num;
             return getChar();
         }
 
         public int compareTo(StringPointer cmp, int len) {
-            return this.string.substring(this.index,this.index+len).compareTo(
-                    cmp.string.substring(cmp.index, cmp.index+len));
+            return this.string.substring(this.index,this.index + len).compareTo(
+                    cmp.string.substring(cmp.index, cmp.index + len));
         }
     }
 
-    private static Object pushOneCapture ( MatchState ms, int i, StringPointer s, StringPointer e ) {
+    private static Object pushOneCapture (MatchState ms, int i, StringPointer s, StringPointer e) {
         if (i >= ms.level) {
-            if ( i == 0 ) { // ms->level == 0, too
+            if (i == 0) { // ms->level == 0, too
                 String res = s.string.substring(s.index, e.index);
                 ms.callFrame.push(res);
                 return res;
@@ -934,15 +934,15 @@ public final class StringLib implements JavaFunction {
                 return res;
             } else {
                 int index = ms.capture[i].init.index;
-                String res = ms.capture[i].init.string.substring(index, index+l);
+                String res = ms.capture[i].init.string.substring(index, index + l);
                 ms.callFrame.push(res);
                 return res;
             }
         }
     }
 
-    private static int pushCaptures ( MatchState ms, StringPointer s, StringPointer e ) {
-        int nlevels = ( ms.level == 0 && s != null ) ? 1 : ms.level;
+    private static int pushCaptures (MatchState ms, StringPointer s, StringPointer e) {
+        int nlevels = (ms.level == 0 && s != null) ? 1 : ms.level;
         BaseLib.luaAssert(nlevels <= LUA_MAXCAPTURES, "too many captures");
         for (int i = 0; i < nlevels; i++) {
             pushOneCapture (ms, i, s, e);
@@ -960,7 +960,7 @@ public final class StringLib implements JavaFunction {
         return true;
     }
 
-    private static int findAux (LuaCallFrame callFrame, boolean find ) {
+    private static int findAux (LuaCallFrame callFrame, boolean find) {
         String f = find ? names[FIND] : names[MATCH];
         String source = (String) BaseLib.getArg(callFrame, 1, BaseLib.TYPE_STRING, f);
         String pattern = (String) BaseLib.getArg(callFrame, 2, BaseLib.TYPE_STRING, f);
@@ -968,20 +968,20 @@ public final class StringLib implements JavaFunction {
         boolean plain = LuaState.boolEval(BaseLib.getOptArg(callFrame, 4, BaseLib.TYPE_BOOLEAN));
         int init = (i == null ? 0 : i.intValue() - 1);
 
-        if ( init < 0 ) {
+        if (init < 0) {
             // negative numbers count back from the end of the string.
             init += source.length();
-            if ( init < 0 ) {
+            if (init < 0) {
                 init = 0; // if we are still negative, just start at the beginning.
             }
-        } else if ( init > source.length() ) {
+        } else if (init > source.length()) {
             init = source.length();
         }
 
-        if ( find && ( plain || noSpecialChars(pattern) ) ) { // explicit plain request or no special characters?
+        if (find && (plain || noSpecialChars(pattern))) { // explicit plain request or no special characters?
             // do a plain search
             int pos = source.indexOf(pattern, init);
-            if ( pos > -1 ) {
+            if (pos > -1) {
                 return callFrame.push(LuaState.toDouble(pos + 1), LuaState.toDouble(pos + pattern.length()));
             }
         } else {
@@ -990,12 +990,12 @@ public final class StringLib implements JavaFunction {
 
             MatchState ms = new MatchState ();
             boolean anchor = false;
-            if ( p.getChar () == '^' ) {
+            if (p.getChar () == '^') {
                 anchor = true;
-                p.postIncrString ( 1 );
+                p.postIncrString (1);
             }
             StringPointer s1 = s.getClone();
-            s1.postIncrString ( init );
+            s1.postIncrString (init);
 
             ms.callFrame = callFrame;
             ms.srcInit = s.getClone();
@@ -1003,69 +1003,69 @@ public final class StringLib implements JavaFunction {
             do {
                 StringPointer res;
                 ms.level = 0;
-                if ( ( res = match ( ms, s1, p ) ) != null ) {
-                    if ( find ) {
+                if ((res = match (ms, s1, p)) != null) {
+                    if (find) {
                         return callFrame.push(new Double(s.length () - s1.length () + 1), new Double(s.length () - res.length ())) +
-                        pushCaptures ( ms, null, null );
+                        pushCaptures (ms, null, null);
                     } else {
-                        return pushCaptures ( ms, s1, res );
+                        return pushCaptures (ms, s1, res);
                     }
                 }
 
-            } while ( s1.postIncrStringI ( 1 ) < ms.endIndex && !anchor );
+            } while (s1.postIncrStringI (1) < ms.endIndex && !anchor);
         }
         return callFrame.pushNil();  // not found
     }
 
-    private static StringPointer startCapture ( MatchState ms, StringPointer s, StringPointer p, int what ) {
+    private static StringPointer startCapture (MatchState ms, StringPointer s, StringPointer p, int what) {
         StringPointer res;
         int level = ms.level;
         BaseLib.luaAssert(level < LUA_MAXCAPTURES, "too many captures");
 
         ms.capture[level].init = s.getClone();
-        ms.capture[level].init.setIndex ( s.getIndex () );
+        ms.capture[level].init.setIndex (s.getIndex ());
         ms.capture[level].len = what;
         ms.level = level + 1;
-        if ( ( res = match ( ms, s, p ) ) == null ) /* match failed? */ {
+        if ((res = match (ms, s, p)) == null) /* match failed? */ {
             ms.level --;  /* undo capture */
         }
         return res;
     }
 
-    private static int captureToClose ( MatchState ms ) {
+    private static int captureToClose (MatchState ms) {
         int level = ms.level;
-        for ( level --; level >= 0; level -- ) {
-            if ( ms.capture[level].len == CAP_UNFINISHED ) {
+        for (level --; level >= 0; level --) {
+            if (ms.capture[level].len == CAP_UNFINISHED) {
                 return level;
             }
         }
         throw new RuntimeException("invalid pattern capture");
     }
 
-    private static StringPointer endCapture ( MatchState ms, StringPointer s, StringPointer p ) {
-        int l = captureToClose ( ms );
+    private static StringPointer endCapture (MatchState ms, StringPointer s, StringPointer p) {
+        int l = captureToClose (ms);
         StringPointer res;
         ms.capture[l].len = ms.capture[l].init.length () - s.length ();  /* close capture */
-        if ( ( res = match ( ms, s, p ) ) == null ) /* match failed? */ {
+        if ((res = match (ms, s, p)) == null) /* match failed? */ {
             ms.capture[l].len = CAP_UNFINISHED;  /* undo capture */
         }
         return res;
     }
 
-    private static int checkCapture ( MatchState ms, int l ) {
-        l -= '1'; // convert chars 1-9 to actual ints 1-9
+    private static int checkCapture (MatchState ms, int l) {
+        l -= '1'; // convert chars 1 - 9 to actual ints 1 - 9
         BaseLib.luaAssert(l < 0 || l >= ms.level || ms.capture[l].len == CAP_UNFINISHED,
         "invalid capture index");
         return l;
     }
 
-    private static StringPointer matchCapture ( MatchState ms, StringPointer s, int l ) {
+    private static StringPointer matchCapture (MatchState ms, StringPointer s, int l) {
         int len;
-        l = checkCapture ( ms, l );
+        l = checkCapture (ms, l);
         len = ms.capture[l].len;
-        if ( ( ms.endIndex - s.length () ) >= len && ms.capture[l].init.compareTo(s, len) == 0 ) {
+        if ((ms.endIndex - s.length ()) >= len && ms.capture[l].init.compareTo(s, len) == 0) {
             StringPointer sp = s.getClone();
-            sp.postIncrString ( len );
+            sp.postIncrString (len);
             return sp;
         }
         else {
@@ -1073,26 +1073,26 @@ public final class StringLib implements JavaFunction {
         }
     }
 
-    private static StringPointer matchBalance ( MatchState ms, StringPointer ss, StringPointer p ) {
+    private static StringPointer matchBalance (MatchState ms, StringPointer ss, StringPointer p) {
 
-        BaseLib.luaAssert(!(p.getChar () == 0 || p.getChar ( 1 ) == 0), "unbalanced pattern");
+        BaseLib.luaAssert(!(p.getChar () == 0 || p.getChar (1) == 0), "unbalanced pattern");
 
         StringPointer s = ss.getClone();
-        if ( s.getChar () != p.getChar () ) {
+        if (s.getChar () != p.getChar ()) {
             return null;
         } else {
             int b = p.getChar ();
-            int e = p.getChar ( 1 );
+            int e = p.getChar (1);
             int cont = 1;
 
-            while ( s.preIncrStringI ( 1 ) < ms.endIndex ) {
-                if ( s.getChar () == e ) {
-                    if (  -- cont == 0 ) {
+            while (s.preIncrStringI (1) < ms.endIndex) {
+                if (s.getChar () == e) {
+                    if (-- cont == 0) {
                         StringPointer sp = s.getClone();
-                        sp.postIncrString ( 1 );
+                        sp.postIncrString (1);
                         return sp;
                     }
-                } else if ( s.getChar () == b ) {
+                } else if (s.getChar () == b) {
                     cont ++;
                 }
             }
@@ -1100,28 +1100,28 @@ public final class StringLib implements JavaFunction {
         return null;  /* string ends out of balance */
     }
 
-    private static StringPointer classEnd ( MatchState ms, StringPointer pp ) {
+    private static StringPointer classEnd (MatchState ms, StringPointer pp) {
         StringPointer p = pp.getClone();
-        switch ( p.postIncrString ( 1 ) ) {
+        switch (p.postIncrString (1)) {
         case L_ESC: {
             BaseLib.luaAssert(p.getChar () != '\0', "malformed pattern (ends with '%')");
-            p.postIncrString ( 1 );
+            p.postIncrString (1);
             return p;
         }
         case '[': {
-            if ( p.getChar () == '^' ) {
-                p.postIncrString ( 1 );
+            if (p.getChar () == '^') {
+                p.postIncrString (1);
             }
             do { // look for a `]' 
                 BaseLib.luaAssert(p.getChar () != '\0', "malformed pattern (missing ']')");
 
-                if ( p.postIncrString ( 1 ) == L_ESC && p.getChar () != '\0' ) {
-                    p.postIncrString ( 1 );  // skip escapes (e.g. `%]')
+                if (p.postIncrString (1) == L_ESC && p.getChar () != '\0') {
+                    p.postIncrString (1);  // skip escapes (e.g. `%]')
                 }
 
-            } while ( p.getChar () != ']' );
+            } while (p.getChar () != ']');
 
-            p.postIncrString ( 1 );
+            p.postIncrString (1);
             return p;
         }
         default: {
@@ -1130,33 +1130,33 @@ public final class StringLib implements JavaFunction {
         }
     }
 
-    private static boolean singleMatch ( char c, StringPointer p, StringPointer ep ) {
-        switch ( p.getChar () ) {
+    private static boolean singleMatch (char c, StringPointer p, StringPointer ep) {
+        switch (p.getChar ()) {
         case '.':
             return true;  // matches any char
         case L_ESC:
-            return matchClass ( p.getChar ( 1 ), c );
+            return matchClass (p.getChar (1), c);
         case '[': {
             StringPointer sp = ep.getClone();
-            sp.postIncrString ( -1 );
-            return matchBracketClass ( c, p, sp );
+            sp.postIncrString (-1);
+            return matchBracketClass (c, p, sp);
         }
         default:
-            return ( p.getChar () == c );
+            return (p.getChar () == c);
         }
     }
 
-    private static StringPointer minExpand ( MatchState ms, StringPointer ss, StringPointer p, StringPointer ep ) {
+    private static StringPointer minExpand (MatchState ms, StringPointer ss, StringPointer p, StringPointer ep) {
         StringPointer sp = ep.getClone();
         StringPointer s = ss.getClone();
 
-        sp.postIncrString ( 1 );
+        sp.postIncrString (1);
         while (true) {
-            StringPointer res = match ( ms, s, sp );
-            if ( res != null ) {
+            StringPointer res = match (ms, s, sp);
+            if (res != null) {
                 return res;
-            } else if ( s.getIndex () < ms.endIndex && singleMatch ( s.getChar (), p, ep ) ) {
-                s.postIncrString ( 1 );  // try with one more repetition 
+            } else if (s.getIndex () < ms.endIndex && singleMatch (s.getChar (), p, ep)) {
+                s.postIncrString (1);  // try with one more repetition 
             } else {
                 return null;
             }
@@ -1244,7 +1244,7 @@ public final class StringLib implements JavaFunction {
                     }
                     p.postIncrString(4);
                     isContinue = true;
-                    continue; // else return match(ms, s, p+4);
+                    continue; // else return match(ms, s, p + 4);
                 }
                 case 'f': { // frontier?
                     p.postIncrString (2);
@@ -1270,7 +1270,7 @@ public final class StringLib implements JavaFunction {
                         }
                         p.postIncrString(2);
                         isContinue = true;
-                        continue; // else return match(ms, s, p+2) 
+                        continue; // else return match(ms, s, p + 2) 
                     }
                     isDefault = true; // case default 
                 }
@@ -1302,9 +1302,9 @@ public final class StringLib implements JavaFunction {
                 case '?':  { // optional
                     StringPointer res;
                     StringPointer s1 = s.getClone();
-                    s1.postIncrString ( 1 );
+                    s1.postIncrString (1);
                     StringPointer ep1 = ep.getClone();
-                    ep1.postIncrString ( 1 );
+                    ep1.postIncrString (1);
 
                     if (m && ((res = match(ms, s1, ep1)) != null)) {
                         return res;
@@ -1312,7 +1312,7 @@ public final class StringLib implements JavaFunction {
                     p = ep;
                     p.postIncrString(1);
                     isContinue = true;
-                    continue; // else return match(ms, s, ep+1);
+                    continue; // else return match(ms, s, ep + 1);
                 }
                 case '*': { // 0 or more repetitions 
                     return maxExpand(ms, s, p, ep);
@@ -1333,7 +1333,7 @@ public final class StringLib implements JavaFunction {
 
                     p = ep;
                     isContinue = true;
-                    continue; // else return match(ms, s+1, ep);
+                    continue; // else return match(ms, s + 1, ep);
                 }
                 }
             }
@@ -1361,27 +1361,27 @@ public final class StringLib implements JavaFunction {
     }
 
     private static boolean isPunct(char c) {
-        return ( c >= 0x21 && c <= 0x2F ) || 
-        ( c >= 0x3a && c <= 0x40 ) || 
-        ( c >= 0x5B && c <= 0x60 ) || 
-        ( c >= 0x7B && c <= 0x7E );
+        return (c >= 0x21 && c <= 0x2F) || 
+        (c >= 0x3a && c <= 0x40) || 
+        (c >= 0x5B && c <= 0x60) || 
+        (c >= 0x7B && c <= 0x7E);
     }
 
     private static boolean isSpace(char c) {
-        return ( c >= 0x09 && c <= 0x0D ) || c == 0x20 ;
+        return (c >= 0x09 && c <= 0x0D) || c == 0x20 ;
     }
 
     private static boolean isControl(char c) {
-        return ( c >= 0x00 && c <= 0x1f ) || c == 0x7f;
+        return (c >= 0x00 && c <= 0x1f) || c == 0x7f;
     }
 
     private static boolean isHex(char c) {
-        return ( c >= '0' && c <= '9' ) || ( c >= 'a' && c <= 'f' ) || ( c >= 'A' && c <= 'F' );
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
     }
 
     private static int gsub(LuaCallFrame cf, int nargs) {
-        String srcTemp = (String)BaseLib.getArg(cf, 1, BaseLib.TYPE_STRING, names[GSUB]);
-        String pTemp = (String)BaseLib.getArg(cf, 2, BaseLib.TYPE_STRING, names[GSUB]);
+        String srcTemp = (String) BaseLib.getArg(cf, 1, BaseLib.TYPE_STRING, names[GSUB]);
+        String pTemp = (String) BaseLib.getArg(cf, 2, BaseLib.TYPE_STRING, names[GSUB]);
         Object repl = BaseLib.getArg(cf, 3, null, names[GSUB]);
         {
             String tmp = BaseLib.rawTostring(repl);
@@ -1389,7 +1389,7 @@ public final class StringLib implements JavaFunction {
                 repl = tmp;
             }
         }           
-        Double num = (Double)BaseLib.getOptArg(cf, 4, BaseLib.TYPE_NUMBER);
+        Double num = (Double) BaseLib.getOptArg(cf, 4, BaseLib.TYPE_NUMBER);
         // if i isn't supplied, we want to substitute all occurrences of the pattern
         int maxSubstitutions = (num == null) ? Integer.MAX_VALUE : num.intValue(); 
 
@@ -1399,14 +1399,14 @@ public final class StringLib implements JavaFunction {
         boolean anchor = false;
         if (pattern.getChar() == '^') {
             anchor = true;
-            pattern.postIncrString ( 1 );
+            pattern.postIncrString (1);
         }
 
         String replType = BaseLib.type(repl);
         if (!(replType == BaseLib.TYPE_FUNCTION ||
                         replType == BaseLib.TYPE_STRING || 
                         replType == BaseLib.TYPE_TABLE)) {
-            BaseLib.fail(("string/function/table expected, got "+replType));
+            BaseLib.fail(("string / function / table expected, got "+replType));
         }
 
         MatchState ms = new MatchState ();
@@ -1454,7 +1454,7 @@ public final class StringLib implements JavaFunction {
             if (type == BaseLib.TYPE_FUNCTION) {
                 res = ms.callFrame.thread.state.call(repl, match, null, null);
             } else if (type == BaseLib.TYPE_TABLE) {
-                res = ((LuaTable)repl).rawget(match);
+                res = ((LuaTable) repl).rawget(match);
             }
             if (res == null) {
                 res = match;
@@ -1468,7 +1468,7 @@ public final class StringLib implements JavaFunction {
         StringPointer replStr = new StringPointer (replTemp);
         StringBuffer buf = new StringBuffer();
         for (int i = 0; i < replTemp.length(); i++) {
-            if (replStr.getChar ( i ) != L_ESC) {
+            if (replStr.getChar (i) != L_ESC) {
                 buf.append(replStr.getChar(i));
             } else {
                 i ++;  // skip ESC
@@ -1477,7 +1477,7 @@ public final class StringLib implements JavaFunction {
                 } else if (replStr.getChar(i) == '0') {
                     String str = s.getString ();
                     int len = s.length() - e.length();
-                    if (len > str.length() ) {
+                    if (len > str.length()) {
                         len = str.length();
                     }
                     buf.append(str.substring(0, len));
@@ -1489,11 +1489,11 @@ public final class StringLib implements JavaFunction {
                     }
                     Object o = captures[captureIndex];
                     if(o instanceof Double) {
-                        Double doubleValue = ((Double)o);
-                        if( doubleValue.doubleValue() - doubleValue.intValue() == 0 ) {
-                            buf.append(String.valueOf(((Double)o).intValue())); 
+                        Double doubleValue = ((Double) o);
+                        if(doubleValue.doubleValue() - doubleValue.intValue() == 0) {
+                            buf.append(String.valueOf(((Double) o).intValue())); 
                         } else {
-                            buf.append(String.valueOf(((Double)o).doubleValue()));
+                            buf.append(String.valueOf(((Double) o).doubleValue()));
                         }
                     } else {
                         buf.append(o);

@@ -1,10 +1,10 @@
 /*
- Copyright (c) 2007-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+ Copyright (c) 2007 - 2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
 
@@ -208,7 +208,7 @@ public class LuaState {
         }
 
         if (!(o instanceof LuaClosure)) {
-            throw new RuntimeException("tried to call a non-function");
+            throw new RuntimeException("tried to call a non - function");
         }
 
         LuaCallFrame callFrame = currentThread.pushNewCallFrame((LuaClosure) o, null,
@@ -712,7 +712,7 @@ public class LuaState {
                         }
                     } else {
                         throw new RuntimeException(
-                                "Tried to call a non-function: " + fun);
+                                "Tried to call a non - function: " + fun);
                     }
 
                     break;
@@ -758,7 +758,7 @@ public class LuaState {
                         callFrame.init();
                     } else {
                         if (!(fun instanceof JavaFunction)) {
-                            BaseLib.fail(("Tried to call a non-function: " + fun));
+                            BaseLib.fail(("Tried to call a non - function: " + fun));
                         }
                         LuaThread oldThread = currentThread;
                         callJava((JavaFunction) fun, localBase2, returnBase,
@@ -1179,7 +1179,7 @@ public class LuaState {
                 if (isTable) {
                     return null;
                 }
-                throw new RuntimeException("attempted index of non-table: "
+                throw new RuntimeException("attempted index of non - table: "
                         + curObj);
             }
             if (metaOp instanceof JavaFunction || metaOp instanceof LuaClosure) {
@@ -1211,7 +1211,7 @@ public class LuaState {
                 }
             } else {
                 metaOp = getMetaOp(curObj, "__newindex");
-                BaseLib.luaAssert(metaOp != null,   "attempted index of non-table");
+                BaseLib.luaAssert(metaOp != null,   "attempted index of non - table");
             }
             if (metaOp instanceof JavaFunction || metaOp instanceof LuaClosure) {
                 call(metaOp, table, key, value);

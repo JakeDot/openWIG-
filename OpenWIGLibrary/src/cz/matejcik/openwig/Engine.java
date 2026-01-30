@@ -121,7 +121,7 @@ public class Engine implements Runnable {
         savegame.buildJavafuncMap(state.getEnvironment());
 
         ui.debugMsg("Loading stdlib...");
-        InputStream stdlib = getClass().getResourceAsStream("/cz/matejcik/openwig/stdlib.lbc");
+        InputStream stdlib = getClass().getResourceAsStream("/cz / matejcik / openwig / stdlib.lbc");
         LuaClosure closure = LuaPrototype.loadByteCode(stdlib, state.getEnvironment());
         ui.debugMsg("calling...\n");
         state.call(closure, null, null, null);
@@ -155,7 +155,7 @@ public class Engine implements Runnable {
         ui.debugMsg("Loading gwc...");
         if (gwcfile == null) throw new IOException("invalid cartridge file");
                 
-        ui.debugMsg("pre-setting properties...");
+        ui.debugMsg("pre - setting properties...");
         player.rawset("CompletionCode", gwcfile.code);
         player.rawset("Name", gwcfile.member);
 
@@ -229,7 +229,7 @@ public class Engine implements Runnable {
         }
     }
 
-    /** utility function to dump stack trace and show a semi-meaningful error */
+    /** utility function to dump stack trace and show a semi - meaningful error */
     public static void stacktrace (Throwable e) {
         e.printStackTrace();
         String msg;
@@ -252,16 +252,16 @@ public class Engine implements Runnable {
 
     /** builds and calls a dialog from a Message table */
     public static void message (LuaTable message) {
-        String[] texts = {removeHtml((String)message.rawget("Text"))};
+        String[] texts = {removeHtml((String) message.rawget("Text"))};
         log("CALL: MessageBox - " + texts[0].substring(0, Math.min(100,texts[0].length())), LOG_CALL);
-        Media[] media = {(Media)message.rawget("Media")};
+        Media[] media = {(Media) message.rawget("Media")};
         String button1 = null, button2 = null;
-        LuaTable buttons = (LuaTable)message.rawget("Buttons");
+        LuaTable buttons = (LuaTable) message.rawget("Buttons");
         if (buttons != null) {
-            button1 = (String)buttons.rawget(new Double(1));
-            button2 = (String)buttons.rawget(new Double(2));
+            button1 = (String) buttons.rawget(new Double(1));
+            button2 = (String) buttons.rawget(new Double(2));
         }
-        LuaClosure callback = (LuaClosure)message.rawget("Callback");
+        LuaClosure callback = (LuaClosure) message.rawget("Callback");
         ui.pushDialog(texts, media, button1, button2, callback);
     }
 

@@ -77,13 +77,13 @@ public class EventTable implements LuaTable, Serializable {
         } else if ("Visible".equals(key)) {
             visible = LuaState.boolEval(value);
         } else if ("ObjectLocation".equals(key)) {
-            //setPosition(ZonePoint.copy((ZonePoint)value));
+            //setPosition(ZonePoint.copy((ZonePoint) value));
             // i know there was need to copy. but why? it is messing up deserialization
-            position = (ZonePoint)value;
+            position = (ZonePoint) value;
         } else if ("Media".equals(key)) {
-            media = (Media)value;
+            media = (Media) value;
         } else if ("Icon".equals(key)) {
-            icon = (Media)value;
+            icon = (Media) value;
         }
     }
 
@@ -103,14 +103,14 @@ public class EventTable implements LuaTable, Serializable {
         while ((n = table.next(n)) != null) {
             Object val = table.rawget(n);
             rawset(n, val);
-            //if (n instanceof String) setItem((String)n, val);
+            //if (n instanceof String) setItem((String) n, val);
         }
     }
 
     public void callEvent(String name, Object param) {
         /*
          workaround: suppress RuntimeException if callEvent() is called at deserialiation
-         @see https://github.com/cgeo/openWIG/issues/8#issuecomment-612182631
+         @see https://github.com/cgeo/openWIG/issues/8#issuecomment - 612182631
          TODO: fix EventTable and ALL of its subclasses as described in the link
         */
         if (isDeserializing) {
@@ -120,7 +120,7 @@ public class EventTable implements LuaTable, Serializable {
         try {
             Object o = table.rawget(name);
             if (o instanceof LuaClosure) {
-                Engine.log("EVNT: " + toString() + "." + name + (param!=null ? " (" + param.toString() + ")" : ""), Engine.LOG_CALL);
+                Engine.log("EVNT: " + toString() + "." + name + (param != null ? " (" + param.toString() + ")" : ""), Engine.LOG_CALL);
                 LuaClosure event = (LuaClosure) o;
                 Engine.state.call(event, this, param, null);
                 Engine.log("EEND: " + toString() + "." + name, Engine.LOG_CALL);
@@ -154,7 +154,7 @@ public class EventTable implements LuaTable, Serializable {
     public Object rawget (Object key) {
         // TODO unify rawget/getItem
         if (key instanceof String)
-            return getItem((String)key);
+            return getItem((String) key);
         else
             return table.rawget(key);
     }

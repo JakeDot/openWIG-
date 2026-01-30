@@ -2,7 +2,8 @@ package cz.matejcik.openwig;
 
 import java.util.Vector;
 
-import se.krka.kahlua.vm.*;
+import se.krka.kahlua.vm.LuaState;
+import se.krka.kahlua.vm.LuaTable;
 
 public class Action extends EventTable {
     
@@ -25,17 +26,22 @@ public class Action extends EventTable {
         this.table = table; // XXX deep copy needed?
         Object o = null;
         while ((o = table.next(o)) != null) {
-            if (o instanceof String) setItem((String)o, table.rawget(o));
+            if (o instanceof String) {
+                setItem((String) o, table.rawget(o));
+            }
         }
     }
 
     public void associateWithTargets () {
-        if (!hasParameter()) return;
+        if (!hasParameter()) {
+            return;
+        }
         if (isReciprocal()) {
             for (int j = 0; j < targets.size(); j++) {
-                Thing t = (Thing)targets.elementAt(j);
-                if (!t.actions.contains(this))
+                Thing t = (Thing) targets.elementAt(j);
+                if (!t.actions.contains(this)) {
                     t.actions.addElement(this);
+                }
             }
         }
         if (isUniversal() && !Engine.instance.cartridge.universalActions.contains(this)) {
@@ -44,10 +50,12 @@ public class Action extends EventTable {
     }
 
     public void dissociateFromTargets () {
-        if (!hasParameter()) return;
+        if (!hasParameter()) {
+            return;
+        }
         if (isReciprocal()) {
             for (int j = 0; j < targets.size(); j++) {
-                Thing t = (Thing)targets.elementAt(j);
+                Thing t = (Thing) targets.elementAt(j);
                 t.actions.removeElement(this);
             }
         }
@@ -56,11 +64,13 @@ public class Action extends EventTable {
         }
     }
 
-    protected String luaTostring () { return "a ZCommand instance"; }
+    protected String luaTostring () {
+        return "a ZCommand instance";
+    }
     
     protected void setItem (String key, Object value) {
         if ("Text".equals(key)) {
-            text = (String)value;
+            text = (String) value;
         } else if ("CmdWith".equals(key)) {
             boolean np = LuaState.boolEval(value);
             if (np != parameter) {
@@ -81,7 +91,7 @@ public class Action extends EventTable {
             associateWithTargets();
         } else if ("WorksWithList".equals(key)) {
             dissociateFromTargets();
-            LuaTable lt = (LuaTable)value;
+            LuaTable lt = (LuaTable) value;
             Object i = null;
             while ((i = lt.next(i)) != null) {
                 targets.addElement(lt.rawget(i));
@@ -101,9 +111,13 @@ public class Action extends EventTable {
         Object key = null;
         while ((key = where.inventory.next(key)) != null) {
             Object o = where.inventory.rawget(key);
-            if (!(o instanceof Thing)) continue;
-            Thing t = (Thing)o;
-            if (t.isVisible() && (targets.contains(t) || isUniversal())) count++;
+            if (!(o instanceof Thing)) {
+                continue;
+            }
+            Thing t = (Thing) o;
+            if (t.isVisible() && (targets.contains(t) || isUniversal())) {
+                count++;
+            }
         }
         return count;
     }
@@ -113,9 +127,13 @@ public class Action extends EventTable {
         Object key = null;
         while ((key = v.next(key)) != null) {
             Object o = v.rawget(key);
-            if (!(o instanceof Thing)) continue;
-            Thing t = (Thing)o;
-            if (t.isVisible() && (targets.contains(t) || isUniversal())) count++;
+            if (!(o instanceof Thing)) {
+                continue;
+            }
+            Thing t = (Thing) o;
+            if (t.isVisible() && (targets.contains(t) || isUniversal())) {
+                count++;
+            }
         }
         return count;
     }

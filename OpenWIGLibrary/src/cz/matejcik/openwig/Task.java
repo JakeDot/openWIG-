@@ -35,7 +35,7 @@ public class Task extends EventTable {
                 callEvent("OnSetComplete", null);
             }
         } else if ("CorrectState".equals(key) && value instanceof String) {
-            String v = (String)value;
+            String v = (String) value;
             int s = DONE;
             if ("Incorrect".equalsIgnoreCase(v) || "NotCorrect".equalsIgnoreCase(v)) {
                 s = FAILED;

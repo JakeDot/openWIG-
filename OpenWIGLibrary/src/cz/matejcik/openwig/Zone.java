@@ -47,7 +47,7 @@ public class Zone extends Thing {
     public double bbTop, bbBottom, bbLeft, bbRight; // zone's bounding box
     public double pbbTop, pbbBottom, pbbLeft, pbbRight; // pbb = proximity bounding box
     public ZonePoint bbCenter = new ZonePoint(0,0,0);
-    private double diameter; // approximate zone diameter - distance from bounding-box center to farthest vertex
+    private double diameter; // approximate zone diameter - distance from bounding - box center to farthest vertex
     private double insideTolerance = 5, proximityTolerance = 10, distantTolerance = 20; // hysteresis tolerance
 
     private static final double DEFAULT_PROXIMITY = 1500.0;
@@ -59,7 +59,7 @@ public class Zone extends Thing {
             points = new ZonePoint[n];
             for (int i = 1; i <= n; i++) {
                 ZonePoint zp = (ZonePoint) lt.rawget(new Double(i));
-                points[i-1] = zp;
+                points[i - 1] = zp;
             }
             if (active) {
                 preprocess();
@@ -92,7 +92,7 @@ public class Zone extends Thing {
             preprocess();
             proximityRange = LuaState.fromDouble(value);
         } else if ("ShowObjects".equals(key)) {
-            String v = (String)value;
+            String v = (String) value;
             if ("Always".equals(v)) {
                 showObjects = S_ALWAYS;
             } else if ("OnProximity".equals(v)) {
@@ -103,7 +103,7 @@ public class Zone extends Thing {
                 showObjects = S_NEVER;
             }
         } else if ("OriginalPoint".equals(key)) {
-            position = (ZonePoint)value;
+            position = (ZonePoint) value;
         } else super.setItem(key, value);
     }
     
@@ -143,7 +143,7 @@ public class Zone extends Thing {
                 Engine.callEvent(this, "OnDistant", null);
                 break;
             case NOWHERE:
-                Engine.log("ZONE: out-of-range "+name, Engine.LOG_PROP);
+                Engine.log("ZONE: out - of - range "+name, Engine.LOG_PROP);
                 Engine.callEvent(this, "OnNotInRange", null);
                 break;
             default:
@@ -152,7 +152,7 @@ public class Zone extends Thing {
         Engine.refreshUI();
     }
 
-    /** calculate bounding-box values */
+    /** calculate bounding - box values */
     private void preprocess () {
         if (points == null || points.length == 0) return;
 
@@ -182,7 +182,7 @@ public class Zone extends Thing {
         for (int i = 0; i < points.length; i++) {
             double x = points[i].latitude - bbCenter.latitude;
             double y = points[i].longitude - bbCenter.longitude;
-            double dd = x*x + y*y;
+            double dd = x * x + y * y;
             if (dd > dist) {
                 xx = points[i].latitude; yy = points[i].longitude;
                 dist = dd;
@@ -324,7 +324,7 @@ public class Zone extends Thing {
             Object o = inventory.rawget(key);
             if (o instanceof Player) continue;
             if (!(o instanceof Thing)) continue;
-            if (((Thing)o).isVisible()) count++;
+            if (((Thing) o).isVisible()) count++;
         }
         return count;
     }
@@ -335,7 +335,7 @@ public class Zone extends Thing {
         Object key = null;
         while ((key = inventory.next(key)) != null) {
             Object z = inventory.rawget(key);
-            if (z instanceof Thing && ((Thing)z).isVisible())
+            if (z instanceof Thing && ((Thing) z).isVisible())
                 TableLib.rawappend(c, z);
         }
     }

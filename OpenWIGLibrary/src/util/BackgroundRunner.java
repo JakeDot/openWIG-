@@ -50,7 +50,7 @@ public class BackgroundRunner extends Thread {
             events = false;
             while (!queue.isEmpty()) {
                 events = true;
-                Runnable c = (Runnable)queue.firstElement();
+                Runnable c = (Runnable) queue.firstElement();
                 queue.removeElementAt(0);
                 try {
                     c.run();

@@ -1,10 +1,10 @@
 /*
-Copyright (c) 2008-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+Copyright (c) 2008 - 2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
@@ -214,7 +214,7 @@ public class LuaThread {
     }
 
     public LuaCallFrame getParent(int level) {
-        BaseLib.luaAssert(level >= 0, "Level must be non-negative");
+        BaseLib.luaAssert(level >= 0, "Level must be non - negative");
         int index = callFrameTop - level - 1;
         BaseLib.luaAssert(index >= 0, "Level too high");
         return callFrameStack[index];

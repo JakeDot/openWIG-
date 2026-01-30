@@ -72,13 +72,13 @@ public class WherigoLib implements JavaFunction {
     static {
         env.put("Device", "undefined");
         env.put("DeviceID", "undefined");
-        env.put("Platform", "MIDP-2.0/CLDC-1.1");
-        env.put("CartFolder", "c:/what/is/it/to/you");
-        env.put("SyncFolder", "c:/what/is/it/to/you");
-        env.put("LogFolder", "c:/what/is/it/to/you");
+        env.put("Platform", "MIDP - 2.0 / CLDC - 1.1");
+        env.put("CartFolder", "c:/what / is / it / to / you");
+        env.put("SyncFolder", "c:/what / is / it / to / you");
+        env.put("LogFolder", "c:/what / is / it / to / you");
         env.put("CartFilename", "cartridge.gwc");
         env.put("PathSep", "/"); // no. you may NOT do file i/o on this device.
-        env.put("Version", "2.11-compatible(r"+Engine.VERSION+")");
+        env.put("Version", "2.11 - compatible(r"+Engine.VERSION+")");
         env.put("Downloaded", new Double(0));
     }
     
@@ -159,14 +159,14 @@ public class WherigoLib implements JavaFunction {
         wig.rawset("LOCATIONSCREEN", new Double(UI.LOCATIONSCREEN));
         wig.rawset("TASKSCREEN", new Double(UI.TASKSCREEN));
         
-        LuaTable pack = (LuaTable)environment.rawget("package");
-        LuaTable loaded = (LuaTable)pack.rawget("loaded");
+        LuaTable pack = (LuaTable) environment.rawget("package");
+        LuaTable loaded = (LuaTable) pack.rawget("loaded");
         loaded.rawset("Wherigo", wig);
         
         LuaTable envtable = new LuaTableImpl(); /* Wherigo's Env table */
         Enumeration e = env.keys();
         while (e.hasMoreElements()) {
-            String key = (String)e.nextElement();
+            String key = (String) e.nextElement();
             envtable.rawset(key, env.get(key));
         }
         envtable.rawset("Device", Engine.instance.gwcfile.device);
@@ -204,7 +204,7 @@ public class WherigoLib implements JavaFunction {
             case ZTIMER:
             case ZTASK:
                 try {
-                    return construct((EventTable)klass.newInstance(), callFrame, nArguments);
+                    return construct((EventTable) klass.newInstance(), callFrame, nArguments);
                 } catch (InstantiationException e) {
                     /* will not happen */
                     return 0;
@@ -233,7 +233,7 @@ public class WherigoLib implements JavaFunction {
     private int made (LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 2, "insufficient arguments for object:made");
         try {
-            WherigoLib maker = (WherigoLib)callFrame.get(0);
+            WherigoLib maker = (WherigoLib) callFrame.get(0);
             Object makee = callFrame.get(1);
             return callFrame.push(LuaState.toBoolean(maker.klass == makee.getClass()));
         } catch (ClassCastException e) { throw new RuntimeException("bad arguments to object:made"); }
@@ -243,14 +243,14 @@ public class WherigoLib implements JavaFunction {
         Object param = callFrame.get(0);
         Cartridge c = null;
         if (param instanceof Cartridge) {
-            c = (Cartridge)param;
+            c = (Cartridge) param;
         } else if (param instanceof LuaTable) {
-            LuaTable lt = (LuaTable)param;
-            c = (Cartridge)lt.rawget("Cartridge");
-            what.setTable((LuaTable)param);
+            LuaTable lt = (LuaTable) param;
+            c = (Cartridge) lt.rawget("Cartridge");
+            what.setTable((LuaTable) param);
             if (what instanceof Container) {
-                Container cont = (Container)what;
-                Container target = (Container)lt.rawget("Container");
+                Container cont = (Container) what;
+                Container target = (Container) lt.rawget("Container");
                 if (target != null)
                     cont.moveTo(target);
             }
@@ -282,7 +282,7 @@ public class WherigoLib implements JavaFunction {
      */
     private int distance (LuaCallFrame callFrame, int nArguments) {
         double a = LuaState.fromDouble(callFrame.get(0));
-        String b = (String)callFrame.get(1);
+        String b = (String) callFrame.get(1);
         double dist = ZonePoint.convertDistanceFrom(a, b);
         callFrame.push(LuaState.toDouble(dist));
         return 1;
@@ -296,27 +296,27 @@ public class WherigoLib implements JavaFunction {
      */
     private int distanceGetValue (LuaCallFrame callFrame, int nArguments) {
         double a = LuaState.fromDouble(callFrame.get(0));
-        String b = (String)callFrame.get(1);
+        String b = (String) callFrame.get(1);
         double dist = ZonePoint.convertDistanceTo(a, b);
         callFrame.push(LuaState.toDouble(dist));
         return 1;
     }
     
     private int messageBox (LuaCallFrame callFrame, int nArguments) {
-        LuaTable lt = (LuaTable)callFrame.get(0);
+        LuaTable lt = (LuaTable) callFrame.get(0);
         Engine.message(lt);
         return 0;
     }
     
     private int dialog (LuaCallFrame callFrame, int nArguments) {
-        LuaTable lt = (LuaTable)callFrame.get(0);
+        LuaTable lt = (LuaTable) callFrame.get(0);
         int n = lt.len();
         String[] texts = new String[n];
         Media[] media = new Media[n];
         for (int i = 1; i <= n; i++) {
-            LuaTable item = (LuaTable)lt.rawget(new Double(i));
-            texts[i-1] = Engine.removeHtml((String)item.rawget("Text"));
-            media[i-1] = (Media)item.rawget("Media");
+            LuaTable item = (LuaTable) lt.rawget(new Double(i));
+            texts[i - 1] = Engine.removeHtml((String) item.rawget("Text"));
+            media[i - 1] = (Media) item.rawget("Media");
         }
         Engine.dialog(texts, media);
         return 0;
@@ -332,17 +332,17 @@ public class WherigoLib implements JavaFunction {
     }
     
     private int getinput (LuaCallFrame callFrame, int nArguments) {
-        EventTable lt = (EventTable)callFrame.get(0);
+        EventTable lt = (EventTable) callFrame.get(0);
         Engine.input(lt);
         return 1;
     }
     
     private int showscreen (LuaCallFrame callFrame, int nArguments) {
-        int screen = (int)LuaState.fromDouble(callFrame.get(0));
+        int screen = (int) LuaState.fromDouble(callFrame.get(0));
         EventTable et = null;
         if (nArguments > 1) {
             Object o = callFrame.get(1);
-            if (o instanceof EventTable) et = (EventTable)o;
+            if (o instanceof EventTable) et = (EventTable) o;
         }
         Engine.log("CALL: ShowScreen("+screen+") " + (et == null ? "" : et.name), Engine.LOG_CALL);
         Engine.ui.showScreen(screen, et);
@@ -351,7 +351,7 @@ public class WherigoLib implements JavaFunction {
     
     private int translatePoint (LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 3, "insufficient arguments for TranslatePoint");
-        ZonePoint z = (ZonePoint)callFrame.get(0);
+        ZonePoint z = (ZonePoint) callFrame.get(0);
         double dist = LuaState.fromDouble(callFrame.get(1));
         double angle = LuaState.fromDouble(callFrame.get(2));
         callFrame.push(z.translate(angle, dist));
@@ -360,8 +360,8 @@ public class WherigoLib implements JavaFunction {
     
     private int vectorToPoint (LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 2, "insufficient arguments for VectorToPoint");
-        ZonePoint a = (ZonePoint)callFrame.get(0);
-        ZonePoint b = (ZonePoint)callFrame.get(1);
+        ZonePoint a = (ZonePoint) callFrame.get(0);
+        ZonePoint b = (ZonePoint) callFrame.get(1);
         double bearing = ZonePoint.angle2azimuth(b.bearing(a));
         double distance = b.distance(a);
         callFrame.push(LuaState.toDouble(distance));
@@ -370,14 +370,14 @@ public class WherigoLib implements JavaFunction {
     }
 
     private int playAudio (LuaCallFrame callFrame, int nArguments) {
-        Media m = (Media)callFrame.get(0);
+        Media m = (Media) callFrame.get(0);
         m.play();
         return 0;
     }
 
     private int showStatusText (LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "insufficient arguments for ShowStatusText");
-        String text = (String)callFrame.get(0);
+        String text = (String) callFrame.get(0);
         if (text != null && text.length() == 0) text = null;
         Engine.ui.setStatusText(text);
         return 0;
@@ -388,8 +388,8 @@ public class WherigoLib implements JavaFunction {
         Object arg = callFrame.get(0);
         String text;
         if (arg instanceof LuaTable) {
-            LuaTable lt = (LuaTable)arg;
-            text = (String)lt.rawget("Text");
+            LuaTable lt = (LuaTable) arg;
+            text = (String) lt.rawget("Text");
         } else {
             text = arg.toString();
         }

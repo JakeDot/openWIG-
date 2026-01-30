@@ -86,7 +86,7 @@ public class Savegame {
             resetObjectStore();
 
             // specialcase cartridge: (TODO make a generic mechanism for this)
-            Engine.instance.cartridge = (cz.matejcik.openwig.Cartridge)restoreValue(dis, null);
+            Engine.instance.cartridge = (cz.matejcik.openwig.Cartridge) restoreValue(dis, null);
             
             restoreValue(dis, table);
         } catch (IOException e) {
@@ -107,18 +107,18 @@ public class Savegame {
     public void buildJavafuncMap (LuaTable environment) {
         LuaTable[] packages = new LuaTable[] {
             environment,
-            (LuaTable)environment.rawget("string"),
-            (LuaTable)environment.rawget("math"),
-            (LuaTable)environment.rawget("coroutine"),
-            (LuaTable)environment.rawget("os"),
-            (LuaTable)environment.rawget("table")
+            (LuaTable) environment.rawget("string"),
+            (LuaTable) environment.rawget("math"),
+            (LuaTable) environment.rawget("coroutine"),
+            (LuaTable) environment.rawget("os"),
+            (LuaTable) environment.rawget("table")
         };
         for (int i = 0; i < packages.length; i++) {
             LuaTable table = packages[i];
             Object next = null;
             while ((next = table.next(next)) != null) {
                 Object jf = table.rawget(next);
-                if (jf instanceof JavaFunction) addJavafunc((JavaFunction)jf);
+                if (jf instanceof JavaFunction) addJavafunc((JavaFunction) jf);
             }
         }
     }
@@ -143,13 +143,13 @@ public class Savegame {
     }
 
     private int findJavafuncId (JavaFunction javafunc) {
-        Integer id = (Integer)javafuncToIdMap.get(javafunc);
+        Integer id = (Integer) javafuncToIdMap.get(javafunc);
         if (id != null) return id.intValue();
         else throw new RuntimeException("javafunc not found in map!");
     }
 
     private JavaFunction findJavafuncObject (int id) {
-        JavaFunction jf = (JavaFunction)idToJavafuncMap.get(new Integer(id));
+        JavaFunction jf = (JavaFunction) idToJavafuncMap.get(new Integer(id));
         return jf;
     }
 
@@ -159,7 +159,7 @@ public class Savegame {
             out.writeByte(LUA_NIL);
             return;
         }
-        Integer i = (Integer)objectStore.get(obj);
+        Integer i = (Integer) objectStore.get(obj);
         if (i != null) {
             out.writeByte(LUA_REFERENCE);
             if (debug) debug("reference "+i.intValue()+" ("+obj.toString()+")");
@@ -172,15 +172,15 @@ public class Savegame {
                 out.writeByte(LUA_OBJECT);
                 out.writeUTF(obj.getClass().getName());
                 if (debug) debug(obj.getClass().getName() + " (" + obj.toString()+")");
-                ((Serializable)obj).serialize(out);
+                ((Serializable) obj).serialize(out);
             } else if (obj instanceof LuaTable) {
                 out.writeByte(LUA_TABLE);
                 if (debug) debug("table("+obj.toString()+"):\n");
-                serializeLuaTable((LuaTable)obj, out);
+                serializeLuaTable((LuaTable) obj, out);
             } else if (obj instanceof LuaClosure) {
                 out.writeByte(LUA_CLOSURE);
                 if (debug) debug("closure("+obj.toString()+")");
-                serializeLuaClosure((LuaClosure)obj, out);
+                serializeLuaClosure((LuaClosure) obj, out);
             } else {
                 // we're busted
                 out.writeByte(LUA_NIL);
@@ -198,17 +198,17 @@ public class Savegame {
         } else if (obj instanceof String) {
             out.writeByte(LUA_STRING);
             if (debug) debug("\""+obj.toString()+"\"");
-            out.writeUTF((String)obj);
+            out.writeUTF((String) obj);
         } else if (obj instanceof Boolean) {
             if (debug) debug(obj.toString());
             out.writeByte(LUA_BOOLEAN);
-            out.writeBoolean(((Boolean)obj).booleanValue());
+            out.writeBoolean(((Boolean) obj).booleanValue());
         } else if (obj instanceof Double) {
             out.writeByte(LUA_DOUBLE);
             if (debug) debug(obj.toString());
-            out.writeDouble(((Double)obj).doubleValue());
+            out.writeDouble(((Double) obj).doubleValue());
         } else if (obj instanceof JavaFunction) {
-            int i = findJavafuncId((JavaFunction)obj);
+            int i = findJavafuncId((JavaFunction) obj);
             if (debug) debug("javafunc("+i+")-"+obj.toString());
             out.writeByte(LUA_JAVAFUNC);
             out.writeInt(i);
@@ -276,7 +276,7 @@ public class Savegame {
             case LUA_TABLE:
                 LuaTable lti;
                 if (target instanceof LuaTable)
-                    lti = (LuaTable)target;
+                    lti = (LuaTable) target;
                 else
                     lti = new LuaTableImpl();
                 restCache(lti);
@@ -294,7 +294,7 @@ public class Savegame {
                     if (debug) debug("object of type "+cls+"...\n");
                     Class c = classForName(cls);
                     if (Serializable.class.isAssignableFrom(c)) {
-                        s = (Serializable)c.newInstance();
+                        s = (Serializable) c.newInstance();
                     }
                 } catch (Throwable e) {
                     if (debug) debug("(failed to deserialize "+cls+")\n");

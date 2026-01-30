@@ -2,7 +2,7 @@ package cz.matejcik.openwig.platform;
 
 import java.io.IOException;
 
-/** Simplified platform-independent interface to random-access data files. */
+/** Simplified platform - independent interface to random - access data files. */
 public interface SeekableFile {
     /** Moves internal file pointer so that next read will start
      * at specified position.
@@ -21,19 +21,19 @@ public interface SeekableFile {
      */
     public long skip (long what) throws IOException;
 
-    /** Returns a two-byte integer number stored at current
+    /** Returns a two - byte integer number stored at current
      * position in little-endian encoding.
      */
     public short readShort () throws IOException;
-    /** Returns a four-byte integer number stored at current
+    /** Returns a four - byte integer number stored at current
      * position in little-endian encoding.
      */
     public int readInt () throws IOException;
-    /** Returns a double-precision floating-point number
+    /** Returns a double - precision floating - point number
      * stored at current position in little-endian encoding.
      */
     public double readDouble () throws IOException;
-    /** Returns an eight-byte integer number stored at current
+    /** Returns an eight - byte integer number stored at current
      * position in little-endian encoding.
      */
     public long readLong () throws IOException;
@@ -45,7 +45,7 @@ public interface SeekableFile {
      * @throws IOException
      */
     public void readFully (byte[] buf) throws IOException;
-    /** Reads and returns a null-terminated string.
+    /** Reads and returns a null - terminated string.
      * <p>
      * No requirement on encoding, but UTF-8 would be nice.
      */

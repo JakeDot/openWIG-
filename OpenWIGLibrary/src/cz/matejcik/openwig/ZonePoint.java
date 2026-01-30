@@ -84,7 +84,7 @@ public class ZonePoint implements LuaTable, Serializable {
     
     public static double convertDistanceTo (double value, String unit) {
         if (unit != null && conversions.containsKey(unit)) {
-            return value / ((Double)conversions.get(unit)).doubleValue();
+            return value / ((Double) conversions.get(unit)).doubleValue();
         } else {
             return value;
         }
@@ -92,7 +92,7 @@ public class ZonePoint implements LuaTable, Serializable {
     
     public static double convertDistanceFrom (double value, String unit) {
         if (unit != null && conversions.containsKey(unit)) {
-            return value * ((Double)conversions.get(unit)).doubleValue();
+            return value * ((Double) conversions.get(unit)).doubleValue();
         } else {
             return value;
         }
@@ -115,7 +115,7 @@ public class ZonePoint implements LuaTable, Serializable {
             d = part / 100.0;
             return Double.toString(d)+" km";
         } else if (dist > 100) { // abcd m
-            return Double.toString((long)dist)+" m";
+            return Double.toString((long) dist)+" m";
         } else { // abcd.ef m
             part = (long)(dist * 100);
             d = part / 100.0;
@@ -129,7 +129,7 @@ public class ZonePoint implements LuaTable, Serializable {
             neg = true;
             angle *= -1;
         }
-        int degrees = (int)angle;
+        int degrees = (int) angle;
         angle = (angle - degrees) * 60;
         String an = String.valueOf(angle);
         if (an.indexOf('.') != -1)

@@ -1,11 +1,11 @@
 /*
-Copyright (c) 2007-2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
+Copyright (c) 2007 - 2009 Kristofer Karlsson <kristofer.karlsson@gmail.com>
 and Jan Matejek <ja@matejcik.cz>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
@@ -96,7 +96,7 @@ public final class TableLib implements JavaFunction {
 
     private static int concat (LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "expected table, got no arguments");
-        LuaTable table = (LuaTable)callFrame.get(0);
+        LuaTable table = (LuaTable) callFrame.get(0);
 
         String separator = "";
         if (nArguments >= 2) {
@@ -148,7 +148,7 @@ public final class TableLib implements JavaFunction {
     public static void insert(LuaState state, LuaTable table, int position, Object element) {
         int len = table.len();
         for (int i = len; i >= position; i--) {
-            state.tableSet(table, LuaState.toDouble(i+1), state.tableGet(table, LuaState.toDouble(i)));
+            state.tableSet(table, LuaState.toDouble(i + 1), state.tableGet(table, LuaState.toDouble(i)));
         }
         state.tableSet(table, LuaState.toDouble(position), element);
     }
@@ -170,7 +170,7 @@ public final class TableLib implements JavaFunction {
 
     private static int insert (LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 2, "Not enough arguments");
-        LuaTable t = (LuaTable)callFrame.get(0);
+        LuaTable t = (LuaTable) callFrame.get(0);
         int pos = t.len() + 1;
         Object elem = null;
         if (nArguments > 2) {
@@ -191,7 +191,7 @@ public final class TableLib implements JavaFunction {
         Object ret = state.tableGet(table, LuaState.toDouble(position));
         int len = table.len();
         for (int i = position; i < len; i++) {
-            state.tableSet(table, LuaState.toDouble(i), state.tableGet(table, LuaState.toDouble(i+1)));
+            state.tableSet(table, LuaState.toDouble(i), state.tableGet(table, LuaState.toDouble(i + 1)));
         }
         state.tableSet(table, LuaState.toDouble(len), null);
         return ret;
@@ -201,7 +201,7 @@ public final class TableLib implements JavaFunction {
         Object ret = table.rawget(LuaState.toDouble(position));
         int len = table.len();
         for (int i = position; i <= len; i++) {
-            table.rawset(LuaState.toDouble(i), table.rawget(LuaState.toDouble(i+1)));
+            table.rawset(LuaState.toDouble(i), table.rawget(LuaState.toDouble(i + 1)));
         }
         return ret;
     }
@@ -212,8 +212,8 @@ public final class TableLib implements JavaFunction {
         while ((key = table.next(key)) != null) {
             if (item.equals(table.rawget(key))) {
                 if (key instanceof Double) {
-                    double k = ((Double)key).doubleValue();
-                    int i = (int)k;
+                    double k = ((Double) key).doubleValue();
+                    int i = (int) k;
                     if (k == i) rawremove(table, i);
                 } else {
                     table.rawset(key, null);
@@ -234,7 +234,7 @@ public final class TableLib implements JavaFunction {
 
     private static int remove (LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "expected table, got no arguments");
-        LuaTable t = (LuaTable)callFrame.get(0);
+        LuaTable t = (LuaTable) callFrame.get(0);
         int pos = t.len();
         if (nArguments > 1) {
             pos = BaseLib.rawTonumber(callFrame.get(1)).intValue();
@@ -245,12 +245,12 @@ public final class TableLib implements JavaFunction {
     
     private static int maxn (LuaCallFrame callFrame, int nArguments) {
         BaseLib.luaAssert(nArguments >= 1, "expected table, got no arguments");
-        LuaTable t = (LuaTable)callFrame.get(0);
+        LuaTable t = (LuaTable) callFrame.get(0);
         Object key = null;
         int max = 0;
         while ((key = t.next(key)) != null) {
             if (key instanceof Double) {
-                int what = (int)LuaState.fromDouble(key);
+                int what = (int) LuaState.fromDouble(key);
                 if (what > max) max = what;
             }
         }

@@ -37,18 +37,18 @@ public class Thing extends Container {
         if ("Commands".equals(key)) {
             // clear out existing actions
             for (int i = 0; i < actions.size(); i++) {
-                Action a = (Action)actions.elementAt(i);
+                Action a = (Action) actions.elementAt(i);
                 a.dissociateFromTargets();
             }
             actions.removeAllElements();
 
             // add new actions
-            LuaTable lt = (LuaTable)value;
+            LuaTable lt = (LuaTable) value;
             Object i = null;
             while ((i = lt.next(i)) != null) {
-                Action a = (Action)lt.rawget(i);
-                //a.name = (String)i;
-                if (i instanceof Double) a.name = BaseLib.numberToString((Double)i);
+                Action a = (Action) lt.rawget(i);
+                //a.name = (String) i;
+                if (i instanceof Double) a.name = BaseLib.numberToString((Double) i);
                 else a.name = i.toString();
                 a.setActor(this);
                 actions.addElement(a);
@@ -60,7 +60,7 @@ public class Thing extends Container {
     public int visibleActions() {
         int count = 0;
         for (int i = 0; i < actions.size(); i++) {
-            Action c = (Action)actions.elementAt(i);
+            Action c = (Action) actions.elementAt(i);
             if (!c.isEnabled()) continue;
             if (c.getActor() == this || c.getActor().visibleToPlayer()) count++;
         }

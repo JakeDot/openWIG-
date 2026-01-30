@@ -63,7 +63,7 @@ public interface UI {
      */
     public void setStatusText (String text);
 
-    /** Shows a multi-page dialog to the user.
+    /** Shows a multi - page dialog to the user.
      * <p>
      * If another dialog or input is open, it should be closed
      * before displaying this dialog.

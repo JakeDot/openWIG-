@@ -2,7 +2,7 @@ package cz.matejcik.openwig.platform;
 
 import java.io.*;
 
-/** Platform-independent interface to file handles.
+/** Platform - independent interface to file handles.
  * Provides ability to check whether a file exists, create or delete it
  * and open data streams for reading or writing.
  * Implementation must ensure that the underlying file is accessible for

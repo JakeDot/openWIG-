@@ -46,7 +46,7 @@ public class Player extends Thing {
     public void leaveZone (Zone z) {
         TableLib.removeItem(insideOfZones, z);
         if (insideOfZones.len() > 0)
-            container = (Container)insideOfZones.rawget(new Double(insideOfZones.len()));
+            container = (Container) insideOfZones.rawget(new Double(insideOfZones.len()));
         //TableLib.removeItem(z.inventory, this);
     }
 
@@ -64,7 +64,7 @@ public class Player extends Thing {
         Object key = null;
         while ((key = inventory.next(key)) != null) {
             Object o = inventory.rawget(key);
-            if (o instanceof Thing && ((Thing)o).isVisible()) count++;
+            if (o instanceof Thing && ((Thing) o).isVisible()) count++;
         }
         return count;
     }
