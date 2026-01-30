@@ -20,7 +20,7 @@
  THE SOFTWARE.
  */
 
-package se.krka.kahlua.vm;
+package cgeo.geocaching.wherigo.openwig.kahlua.vm;
 
 import java.util.Map;
 
@@ -31,14 +31,18 @@ public interface LuaTable<K,V> extends Iterable<Map.Entry<K,V>> {
         }
     }
 	LuaTable<K, V> getMetatable();
-	
+
 	<T extends K> void rawset(T key, V value);
 	<T extends K> V rawget(T key);
-	
+
 	V next(K key);
 	int len();
 
     default <T extends K, U extends V> void rawset(Map.Entry<T,U> entry) {
         rawset((K) entry.getKey(), entry.getValue());
+    }
+
+    default EntryIterator<K,V> iterator() {
+        return new EntryIterator<>(this);
     }
 }

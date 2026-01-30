@@ -27,7 +27,7 @@ import java.lang.ref.WeakReference;
 import cgeo.geocaching.wherigo.openwig.kahlua.stdlib.BaseLib;
 
 
-public final class LuaTableImpl implements LuaTable {
+public final class LuaTableImpl implements LuaTable<Object, Object> {
     private boolean weakKeys, weakValues;
 
     // Hash part
@@ -50,7 +50,7 @@ public final class LuaTableImpl implements LuaTable {
         8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
         8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8
     };
-    
+
     private static int luaOLog2 (int x) {
         int l = -1;
         while (x >= 256) {
@@ -60,7 +60,7 @@ public final class LuaTableImpl implements LuaTable {
         return l + log_2[x];
 
     }
-    
+
     private static int neededBits (int x) {
         return 1 + luaOLog2(x);
     }
@@ -143,7 +143,7 @@ public final class LuaTableImpl implements LuaTable {
 
         if (currentKey == null) {
             return -1;
-        }       
+        }
         /*
          * Doubles need special treatment due to how
          * java implements equals and hashcode for Double
@@ -190,7 +190,7 @@ public final class LuaTableImpl implements LuaTable {
                 return -1;
             }
             currentKey = getKey(index);
-        }       
+        }
     }
 
     private final int hashPrimitiveNewKey(Object key, int mp) {
@@ -273,7 +273,7 @@ public final class LuaTableImpl implements LuaTable {
                 usedTotal++;
             }
         }
-        
+
         int hashCapacity = 2 * nearestPowerOfTwo(usedTotal);
         if (hashCapacity < 2) {
             hashCapacity = 2;
@@ -300,7 +300,7 @@ public final class LuaTableImpl implements LuaTable {
     private LuaTable metatable;
 
     public final void rawset(Object key, Object value) {
-        checkKey(key);          
+        checkKey(key);
         rawsetHash(key, value);
     }
 
@@ -316,7 +316,7 @@ public final class LuaTableImpl implements LuaTable {
         }
         setValue(index, value);
     }
-    
+
     public Object rawget(int index) {
         return rawgetHash(LuaState.toDouble(index));
     }
@@ -324,7 +324,7 @@ public final class LuaTableImpl implements LuaTable {
     public void rawset(int index, Object value) {
         rawsetHash(LuaState.toDouble(index), value);
     }
-    
+
     public final Object rawget(Object key) {
         checkKey(key);
         if (key instanceof Double) {
@@ -350,7 +350,7 @@ public final class LuaTableImpl implements LuaTable {
         if (!weakKeys) {
             keyIndexCacheKey = key;
             keyIndexCacheValue = index;
-        }       
+        }
         return index;
     }
 
@@ -401,13 +401,13 @@ public final class LuaTableImpl implements LuaTable {
         }
         return low;
     }
-    
+
     public static int luaHashcode(Object a) {
         if (a instanceof Double) {
             Double ad = (Double) a;
             long l = Double.doubleToLongBits(ad.doubleValue()) & 0x7fffffffffffffffL;
             return (int) (l ^ (l >>> 32));
-        }       
+        }
         if (a instanceof String) {
             return a.hashCode();
         }
@@ -464,5 +464,4 @@ public final class LuaTableImpl implements LuaTable {
         }
         updateWeakSettings(weakKeys, weakValues);
     }
-
 }

@@ -5,7 +5,7 @@ import java.io.*;
 import cgeo.geocaching.wherigo.openwig.kahlua.stdlib.BaseLib;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.*;
 
-public class EventTable implements LuaTable, Serializable {
+public class EventTable implements LuaTable<Object, Object>, Serializable {
 
     public LuaTable table = new LuaTableImpl();
 
@@ -162,4 +162,27 @@ public class EventTable implements LuaTable, Serializable {
     public Object next (Object key) { return table.next(key); }
 
     public int len () { return table.len(); }
+
+    @Override
+    public java.util.Iterator<java.util.Map.Entry<Object, Object>> iterator() {
+        return new java.util.Iterator<java.util.Map.Entry<Object, Object>>() {
+            private Object currentKey = null;
+
+            @Override
+            public boolean hasNext() {
+                currentKey = EventTable.this.next(currentKey);
+                return currentKey != null;
+            }
+
+            @Override
+            public java.util.Map.Entry<Object, Object> next() {
+                if (currentKey == null) {
+                    throw new java.util.NoSuchElementException();
+                }
+                Object value = rawget(currentKey);
+                java.util.Map.Entry<Object, Object> entry = new java.util.AbstractMap.SimpleEntry<>(currentKey, value);
+                return entry;
+            }
+        };
+    }
 }

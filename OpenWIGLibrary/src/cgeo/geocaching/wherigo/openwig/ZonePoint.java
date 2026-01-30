@@ -6,30 +6,30 @@ import java.util.Hashtable;
 import cgeo.geocaching.wherigo.openwig.kahlua.stdlib.MathLib;
 import cgeo.geocaching.wherigo.openwig.kahlua.vm.*;
 
-public class ZonePoint implements LuaTable, Serializable {
+public class ZonePoint implements LuaTable<Object, Object>, Serializable {
     public double latitude = 0;
     public double longitude = 0;
     public double altitude = 0;
-    
+
     public static final double LATITUDE_COEF = 110940.00000395167;
     public static final double METRE_COEF = 9.013881377e-6;
     public static final double PI_180 = Math.PI / 180;
     public static final double DEG_PI = 180 / Math.PI;
     public static final double PI_2 = Math.PI / 2;
-    
+
     public static ZonePoint copy (ZonePoint z) {
         if (z == null) return null;
         else return new ZonePoint (z);
     }
 
     public ZonePoint () { }
-    
+
     public ZonePoint (ZonePoint z) {
         latitude = z.latitude;
         longitude = z.longitude;
         altitude = z.altitude;
     }
-    
+
     public ZonePoint (double lat, double lon, double alt) {
         latitude = lat;
         longitude = lon;
@@ -47,23 +47,23 @@ public class ZonePoint implements LuaTable, Serializable {
         latitude = z.latitude;
         longitude = z.longitude;
     }
-    
+
     public static double lat2m (double degrees) {
         return degrees * LATITUDE_COEF;
     }
-    
+
     public static double lon2m (double latitude, double degrees) {
         return degrees * PI_180 * Math.cos(latitude * PI_180) * 6367449;
     }
-    
+
     public static double m2lat (double metres) {
         return metres * METRE_COEF;
     }
-    
+
     public static double m2lon (double latitude, double metres) {
         return metres / (PI_180 * Math.cos(latitude * PI_180) * 6367449);
     }
-    
+
     public double distance (double lat, double lon) {
         return distance(lat, lon, latitude, longitude);
     }
@@ -71,7 +71,7 @@ public class ZonePoint implements LuaTable, Serializable {
     public double distance (ZonePoint z) {
         return distance(z.latitude, z.longitude, latitude, longitude);
     }
-    
+
     public static final Hashtable conversions = new Hashtable(6);
     static {
         conversions.put("feet", new Double(0.3048));
@@ -81,7 +81,7 @@ public class ZonePoint implements LuaTable, Serializable {
         conversions.put("kilometers", new Double(1000));
         conversions.put("nauticalmiles", new Double(1852));
     }
-    
+
     public static double convertDistanceTo (double value, String unit) {
         if (unit != null && conversions.containsKey(unit)) {
             return value / ((Double) conversions.get(unit)).doubleValue();
@@ -89,7 +89,7 @@ public class ZonePoint implements LuaTable, Serializable {
             return value;
         }
     }
-    
+
     public static double convertDistanceFrom (double value, String unit) {
         if (unit != null && conversions.containsKey(unit)) {
             return value * ((Double) conversions.get(unit)).doubleValue();
@@ -103,11 +103,11 @@ public class ZonePoint implements LuaTable, Serializable {
         double my = Math.abs(ZonePoint.lon2m(lat2, lon1 - lon2));
         return Math.sqrt(mx * mx + my * my);
     }
-    
+
     public String friendlyDistance (double lat, double lon) {
         return makeFriendlyDistance(distance(lat, lon));
     }
-    
+
     public static String makeFriendlyDistance (double dist) {
         double d = 0; long part = 0;
         if (dist > 1500) { // abcd.ef km
@@ -144,23 +144,23 @@ public class ZonePoint implements LuaTable, Serializable {
     public static String makeFriendlyLongitude (double angle) {
         return makeFriendlyAngle(angle).replace('+', 'E').replace('-', 'W');
     }
-    
+
     public double bearing (double lat, double lon) {
         // calculates bearing from specified point to here
         return MathLib.atan2(lat2m(latitude - lat), lon2m(lat, longitude - lon));
     }
-    
+
     public double bearing (ZonePoint zp) {
         return bearing(zp.latitude, zp.longitude);
     }
-    
+
     public static double angle2azimuth (double angle) {
         double degrees = -((angle - PI_2) * DEG_PI);
         while (degrees < 0) degrees += 360;
         while (degrees >= 360) degrees -= 360;
         return degrees;
     }
-    
+
     public static double azimuth2angle (double azim) {
         double ret = -(azim * PI_180) + PI_2;
         while (ret > Math.PI) ret -= Math.PI * 2;
@@ -211,5 +211,10 @@ public class ZonePoint implements LuaTable, Serializable {
 
     public String toString () {
         return "ZonePoint("+latitude+","+longitude+","+altitude+")" /* + "-" + super.toString()*/;
+    }
+
+    @Override
+    public java.util.Iterator<java.util.Map.Entry<Object, Object>> iterator() {
+        return java.util.Collections.emptyIterator();
     }
 }
