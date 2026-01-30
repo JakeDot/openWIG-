@@ -17,6 +17,8 @@ abstract public class EventTable implements KahluaTable, OWSerializable {
 
 	private KahluaTable metatable = Engine.platform.newTable();
 
+	private boolean isDeserializing = false;
+
 	private static class TostringJavaFunc implements JavaFunction {
 
 		public EventTable parent;
@@ -42,10 +44,12 @@ abstract public class EventTable implements KahluaTable, OWSerializable {
 	}
 
 	public void deserialize (DataInputStream in) throws IOException {
+		isDeserializing = true;
 		Engine.instance.savegame.restoreValue(in, this);
+		isDeserializing = false;
 		//setTable(table);
 	}
-	
+
 	public String name, description;
 	public ZonePoint position = null;
 	protected boolean visible = false;
@@ -61,7 +65,7 @@ abstract public class EventTable implements KahluaTable, OWSerializable {
 	}
 
 	public boolean isVisible() { return visible; }
-	
+
 	public void setPosition(ZonePoint location) {
 		position = location;
 		table.rawset("ObjectLocation", location);
@@ -99,7 +103,6 @@ abstract public class EventTable implements KahluaTable, OWSerializable {
 			else return KahluaUtil.toDouble(0);
 		} else return table.rawget(key);
 	}
-	
 	public void setTable (KahluaTable table) {
 		KahluaTableIterator i = table.iterator();
 		while (i.advance()) {
@@ -107,8 +110,17 @@ abstract public class EventTable implements KahluaTable, OWSerializable {
 			//if (n instanceof String) setItem((String)n, val);
 		}
 	}
-	
+
 	public void callEvent(String name, Object param) {
+		/*
+		 workaround: suppress RuntimeException if callEvent() is called at deserialiation
+		 @see https://github.com/cgeo/openWIG/issues/8#issuecomment-612182631
+		 TODO: fix EventTable and ALL of its subclasses as described in the link
+		*/
+		if (isDeserializing) {
+			return;
+		}
+
 		try {
 			Object o = table.rawget(name);
 			if (o instanceof LuaClosure) {
@@ -121,11 +133,11 @@ abstract public class EventTable implements KahluaTable, OWSerializable {
 			Engine.stacktrace(t);
 		}
 	}
-	
+
 	public boolean hasEvent(String name) {
 		return (table.rawget(name)) instanceof LuaClosure;
 	}
-	
+
 	public String toString()  {
 		return (name == null ? "(unnamed)" : name);
 	}
