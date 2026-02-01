@@ -30,7 +30,7 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
  * </ul>
  * <p>
  * There is always exactly one Player instance per game, accessible via
- * Engine.instance.player.
+ * Engine.getCurrentInstance().player.
  */
 public class Player extends Thing {
 

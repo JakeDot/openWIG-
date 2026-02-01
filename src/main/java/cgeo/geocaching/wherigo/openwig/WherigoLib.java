@@ -340,8 +340,11 @@ public enum WherigoLib implements JavaFunction {
             Object o = callFrame.get(1);
             if (o instanceof EventTable e) et = e;
         }
-        Engine.log("CALL: ShowScreen("+screen+") " + (et == null ? "" : et.name), Engine.LOG_CALL);
-        Engine.ui.showScreen(screen, et);
+        final Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null) {
+            Engine.log("CALL: ShowScreen("+screen+") " + (et == null ? "" : et.name), Engine.LOG_CALL);
+            currentEngine.uiInstance.showScreen(screen, et);
+        }
         return 0;
     }
 
@@ -375,7 +378,10 @@ public enum WherigoLib implements JavaFunction {
         BaseLib.luaAssert(nArguments >= 1, "insufficient arguments for ShowStatusText");
         String text = (String)callFrame.get(0);
         if (text != null && text.length() == 0) text = null;
-        Engine.ui.setStatusText(text);
+        final Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null) {
+            currentEngine.uiInstance.setStatusText(text);
+        }
         return 0;
     }
 
@@ -398,7 +404,10 @@ public enum WherigoLib implements JavaFunction {
       String cmd = (String) callFrame.get(0);
       if (cmd != null && cmd.length() == 0)
         cmd = null;
-      Engine.ui.command(cmd);
+      final Engine currentEngine = Engine.getCurrentInstance();
+      if (currentEngine != null) {
+          currentEngine.uiInstance.command(cmd);
+      }
       return 0;
     }
 }

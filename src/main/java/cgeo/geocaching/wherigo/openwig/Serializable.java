@@ -28,7 +28,10 @@ public interface Serializable extends java.io.Serializable {
      * @throws IOException if an I/O error occurs
      */
     default void serialize(DataOutputStream out) throws IOException {
-        Engine.instance.savegame.storeValue(this, out);
+        final Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null) {
+            currentEngine.savegame.storeValue(this, out);
+        }
     }
 
     /**
@@ -41,6 +44,9 @@ public interface Serializable extends java.io.Serializable {
      * @throws IOException if an I/O error occurs
      */
     default void deserialize(DataInputStream in) throws IOException {
-        Engine.instance.savegame.restoreValue(in, this);
+        final Engine currentEngine = Engine.getCurrentInstance();
+        if (currentEngine != null) {
+            currentEngine.savegame.restoreValue(in, this);
+        }
     }
 }

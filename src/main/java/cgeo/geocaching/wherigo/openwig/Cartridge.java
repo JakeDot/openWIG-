@@ -31,7 +31,7 @@ import cgeo.geocaching.wherigo.kahlua.vm.LuaTableImpl;
  * </ul>
  * <p>
  * There is always exactly one Cartridge instance per game, accessible via
- * Engine.instance.cartridge. It represents the loaded .gwc cartridge file.
+ * Engine.getCurrentInstance().cartridge. It represents the loaded .gwc cartridge file.
  */
 public class Cartridge extends EventTable {
     private Engine engine; // Reference to the engine instance

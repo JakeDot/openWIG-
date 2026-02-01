@@ -23,11 +23,9 @@ import java.util.*;
  * This is the heart of OpenWIG. It instantiates the Lua machine and acts
  * as an interface between GPS position source, GUI and the Lua Wherigo script.
  * <p>
- * Engine is a partial singleton - although its singleness is not guarded, it
- * doesn't make sense to run more than one Engine at once, because most components
- * access Engine.instance statically (this is more a convenience than a purposeful
- * decision - it would be massively impractical to have reference to Engine in
- * every last component that might somehow use it).
+ * Engine uses ThreadLocal storage to support parallel cartridge execution.
+ * Each thread can have its own Engine instance, accessible via getCurrentInstance().
+ * This allows multiple cartridges to run simultaneously on different threads.
  * <p>
  * To create a new Engine, you need a CartridgeFile, a reference to UI and LocationService.
  * Optionally, you can provide an OutputStream that will be used for logging.
@@ -46,20 +44,6 @@ public class Engine implements Runnable {
 
     /** ThreadLocal storage for engine instances to support parallel cartridge execution */
     private static final ThreadLocal<Engine> threadLocalInstance = new ThreadLocal<>();
-
-    /** the main instance - deprecated, use instance-based approach for parallel cartridges */
-    @Deprecated
-    public static Engine instance;
-    /** Lua state - deprecated, use instance-based approach for parallel cartridges */
-    @Deprecated
-    public static LuaState state;
-
-    /** reference to UI implementation - deprecated, use instance-based approach for parallel cartridges */
-    @Deprecated
-    public static UI ui;
-    /** reference to LocationService - deprecated, use instance-based approach for parallel cartridges */
-    @Deprecated
-    public static LocationService gps;
 
     /** Instance-specific Lua state for this engine */
     public LuaState luaState;
@@ -97,23 +81,11 @@ public class Engine implements Runnable {
     /**
      * Gets the Engine instance for the current thread.
      * This allows multiple engines to run in parallel on different threads.
-     * Falls back to the static instance if no thread-local instance is set.
      * 
      * @return the Engine instance for the current thread, or null if none exists
      */
     public static Engine getCurrentInstance() {
-        Engine threadEngine = threadLocalInstance.get();
-        return threadEngine != null ? threadEngine : instance;
-    }
-
-    /** creates a new global Engine instance - deprecated, use constructor for parallel cartridges */
-    @Deprecated
-    public static Engine newInstance (CartridgeFile cf, OutputStream log, UI ui, LocationService service) throws IOException {
-        ui.debugMsg("Creating engine...\n");
-        Engine.ui = ui;
-        Engine.gps = service;
-        instance = new Engine(cf, log, ui, service);
-        return instance;
+        return threadLocalInstance.get();
     }
 
     /** Creates a new Engine instance for running a cartridge
@@ -163,12 +135,6 @@ public class Engine implements Runnable {
         
         // Set ThreadLocal instance for this thread
         threadLocalInstance.set(this);
-        
-        // Set static references for backward compatibility
-        state = luaState;
-        instance = this;
-        ui = uiInstance;
-        gps = gpsInstance;
 
         /*write("Registering base libs...\n");
         BaseLib.register(luaState);
@@ -256,13 +222,6 @@ public class Engine implements Runnable {
             // Clear ThreadLocal for this thread
             threadLocalInstance.remove();
             
-            // Clear static references if this is the current instance
-            if (instance == this) {
-                instance = null;
-                state = null;
-                ui = null;
-                gps = null;
-            }
             if (eventRunner != null) eventRunner.kill();
             eventRunner = null;
         }
