@@ -99,7 +99,7 @@ public class Container extends EventTable {
 
     public boolean visibleToPlayer () {
         if (!isVisible()) return false;
-        Engine currentEngine = Engine.getCurrentInstance();
+        final Engine currentEngine = Engine.getCurrentInstance();
         if (currentEngine != null && container == currentEngine.player) return true;
         if (container instanceof Zone z) {
             return z.showThings();
@@ -107,18 +107,24 @@ public class Container extends EventTable {
         return false;
     }
 
-    public Object rawget (Object key) {
-        if ("Container".equals(key)) return container;
-        else return super.rawget(key);
+    @Override
+    public Object getItem (final String key) {
+        if ("Container".equals(key)) {
+            return container;
+        }
+        return super.getItem(key);
     }
 
     @Override
-    public void deserialize (DataInputStream in)
+    public void deserialize (final DataInputStream in)
     throws IOException {
         super.deserialize(in);
-        inventory = (LuaTable)table.rawget("Inventory");
-        Object o = table.rawget("Container");
-        if (o instanceof Container c) container = c;
-        else container = null;
+        inventory = (LuaTable) super.rawget("Inventory");
+        final Object o = super.rawget("Container");
+        if (o instanceof Container c) {
+            container = c;
+        } else {
+            container = null;
+        }
     }
 }

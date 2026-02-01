@@ -120,13 +120,19 @@ public class Player extends Thing {
         }
     }
 
-    public void rawset (Object key, Object value) {
-        if ("ObjectLocation".equals(key)) return;
-        super.rawset(key, value);
+    @Override
+    public void setItem (final String key, final Object value) {
+        if ("ObjectLocation".equals(key)) {
+            return;
+        }
+        super.setItem(key, value);
     }
 
-    public Object rawget (Object key) {
-        if ("ObjectLocation".equals(key)) return ZonePoint.copy(position);
-        return super.rawget(key);
+    @Override
+    public Object getItem (final String key) {
+        if ("ObjectLocation".equals(key)) {
+            return ZonePoint.copy(position);
+        }
+        return super.getItem(key);
     }
 }

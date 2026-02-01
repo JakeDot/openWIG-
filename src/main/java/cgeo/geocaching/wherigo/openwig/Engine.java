@@ -298,30 +298,25 @@ public class Engine implements Runnable {
     }
 
     /** utility function to dump stack trace and show a semi-meaningful error */
-    public void stacktrace (Throwable e) {
+    public static void stacktrace (final Throwable e) {
+        final Engine currentEngine = getCurrentInstance();
+        if (currentEngine == null) {
+            e.printStackTrace();
+            return;
+        }
+        
         e.printStackTrace();
         final StringBuilder msg = new StringBuilder(e.toString());
-        if (luaState != null) {
-            System.out.println(luaState.currentThread.stackTrace);
-            msg.append("\nstack trace: " + luaState.currentThread.stackTrace);
+        if (currentEngine.luaState != null) {
+            System.out.println(currentEngine.luaState.currentThread.stackTrace);
+            msg.append("\nstack trace: " + currentEngine.luaState.currentThread.stackTrace);
         }
-        for(StackTraceElement ste : e.getStackTrace()) {
+        for (final StackTraceElement ste : e.getStackTrace()) {
             msg.append("\nat " + ste);
         }
         final String msgString = msg.toString();
-        log(msgString, LOG_ERROR);
-        uiInstance.showError(msgString);
-    }
-    
-    /** Deprecated static version for backward compatibility */
-    @Deprecated
-    public static void stacktrace (Throwable e) {
-        Engine currentEngine = getCurrentInstance();
-        if (currentEngine != null) {
-            currentEngine.stacktrace(e);
-        } else {
-            e.printStackTrace();
-        }
+        currentEngine.log(msgString, LOG_ERROR);
+        currentEngine.uiInstance.showError(msgString);
     }
 
     /** stops Engine */

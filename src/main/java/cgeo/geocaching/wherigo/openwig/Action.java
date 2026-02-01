@@ -46,11 +46,13 @@ public class Action extends EventTable {
         // for serialization
     }
 
-    public Action (LuaTable table) {
-        this.table = table; // XXX deep copy needed?
+    public Action (final LuaTable table) {
+        // Copy table contents to this EventTable
         Object o = null;
         while ((o = table.next(o)) != null) {
-            if (o instanceof String s) setItem(s, table.rawget(o));
+            if (o instanceof String s) {
+                setItem(s, table.rawget(o));
+            }
         }
     }
 
