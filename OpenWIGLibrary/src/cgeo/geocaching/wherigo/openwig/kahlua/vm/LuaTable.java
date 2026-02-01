@@ -4,7 +4,7 @@
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
 
@@ -22,13 +22,31 @@
 
 package cgeo.geocaching.wherigo.openwig.kahlua.vm;
 
-public interface LuaTable {
-    void setMetatable(LuaTable metatable);
-    LuaTable getMetatable();
+import java.util.Map;
+import cgeo.geocaching.wherigo.openwig.util.EntryIterator;
+
+public interface LuaTable<K,V> extends Iterable<Map.Entry<K,V>> {
+	default void setMetatable(LuaTable<? extends K, ? extends V> metatable) {
+        for (Map.Entry<? extends K, ? extends V> e : metatable) {
+            rawset(e.getKey(), e.getValue());
+        }
+    }
+	LuaTable<K, V> getMetatable();
+
+	void rawset(K key, V value);
+	V rawget(K key);
+
+	int len();
+
+    default void rawset(Map.Entry<K,V> entry) {
+        rawset(entry.getKey(), entry.getValue());
+    }
     
-    void rawset(Object key, Object value);
-    Object rawget(Object key);
-    
-    Object next(Object key);
-    int len();
+    default K next(K key) {
+        return null;
+    }
+
+    default java.util.Iterator<Map.Entry<K,V>> iterator() {
+        return new EntryIterator<>(this);
+    }
 }
