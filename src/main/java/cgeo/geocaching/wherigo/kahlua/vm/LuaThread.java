@@ -170,13 +170,13 @@ public class LuaThread {
 
         int loopIndex = liveUpvalues.size();
         while (--loopIndex >= 0) {
-            UpValue uv = liveUpvalues.elementAt(loopIndex);
+            UpValue uv = liveUpvalues.get(loopIndex);
             if (uv.index < closeIndex) {
                 return;
             }
             uv.value = objectStack[uv.index];
             uv.thread = null;
-            liveUpvalues.removeElementAt(loopIndex);
+            liveUpvalues.remove(loopIndex);
         }
     }
 
@@ -184,7 +184,7 @@ public class LuaThread {
         // TODO: use binary search instead?
         int loopIndex = liveUpvalues.size();
         while (--loopIndex >= 0) {
-            UpValue uv = liveUpvalues.elementAt(loopIndex);
+            UpValue uv = liveUpvalues.get(loopIndex);
             if (uv.index == scanIndex) {
                 return uv;
             }
@@ -196,7 +196,7 @@ public class LuaThread {
         uv.thread = this;
         uv.index = scanIndex;
 
-        liveUpvalues.insertElementAt(uv, loopIndex + 1);
+        liveUpvalues.add(loopIndex + 1, uv);
         return uv;
     }
 

@@ -29,6 +29,37 @@ android {
         minSdk 26
     }
 
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+        debug {
+            minifyEnabled false
+        }
+        nightly {
+            minifyEnabled false
+        }
+        rc {
+            minifyEnabled false
+        }
+        legacy {
+            minifyEnabled false
+        }
+    }
+
+    flavorDimensions = ["javaCompilerTime"]
+    productFlavors {
+        basic {
+            dimension = "javaCompilerTime"
+        }
+        nojit {
+            dimension = "javaCompilerTime"
+        }
+        foss {
+            dimension = "javaCompilerTime"
+        }
+    }
+
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
